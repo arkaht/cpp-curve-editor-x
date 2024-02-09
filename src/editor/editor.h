@@ -36,6 +36,7 @@ namespace curve_editor_x
 	private:
 		const Color BACKGROUND_COLOR = LIGHTGRAY;
 		const Color TEXT_COLOR = DARKGRAY;
+		const Color TEXT_ERROR_COLOR = RED;
 		const Color CURVE_FRAME_COLOR = DARKGRAY;
 		const Color CURVE_COLOR { 255, 90, 90, 255 };
 		const Color TANGENT_COLOR { 120, 120, 120, 255 };
@@ -45,11 +46,11 @@ namespace curve_editor_x
 		const float CURVE_THICKNESS = 2.0f;
 		const float POINT_SIZE = CURVE_THICKNESS * 3.0f;
 		const float POINT_SELECTED_OFFSET_SIZE = 3.0f;
-		const float CURVE_FRAME_PADDING = POINT_SIZE * 1.5f;
+		const float CURVE_FRAME_PADDING = 32.0f;
 
 		const float SELECTION_RADIUS = 8.0f;
 
-		const float TITLE_FONT_SIZE = 20.0f;
+		const int   TITLE_FONT_SIZE = 20;
 		const float TITLE_DOCK_MARGIN_BOTTOM = 4.0f;
 
 		const float ZOOM_SENSITIVITY = 0.1f;

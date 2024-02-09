@@ -8,16 +8,19 @@
  *  After creating a spline, you should be able to export it to 
  *  disk and import it in your own code using the library.
  * 
- *  Internally using Hermite (maths) & Bézier (rendering) splines.
+ *  Internally using Bézier splines, offering most control other 
+ *  Hermite (mostly for tangent modes).
  * 
  *  References:
  *  - "The Continuity of Splines": https://www.youtube.com/watch?v=jvPPXbo87ds
  *  - "Cubic Hermite spline": https://en.wikipedia.org/wiki/Cubic_Hermite_spline
+ *  - "Bézier spline": https://en.wikipedia.org/wiki/B%C3%A9zier_curve
  * 
  *  TODO LIST (by priority order):
  *  - [x] viewport user-movement (drag & scroll)
  *  - [x] points user-control (selection & drag)
- *  - [/] tangents user-control
+ *  - [x] tangents user-control
+ *  - [ ] tangents mode (broken, aligned, mirrored)
  *  - [ ] quick evaluate (ctrl + hover)
  *  - [ ] grid-snapping
  *  - [ ] export to file

@@ -13,17 +13,16 @@ void Editor::init()
 	_curve.add_point( { 0.0f, 1.0f } );
 	_curve.add_point( { 0.75f, 5.0f } );
 
-	_curve.add_point( { 2.0f, -2.0f } );
+	_curve.add_point( { -2.0f, -2.0f } );
 	_curve.add_point( { 4.0f, 2.0f } );
+	_curve.add_point( { 1.0f, -1.0f } );
 
-	_curve.add_point( { 5.0f, 3.0f } );
-	_curve.add_point( { 6.0f, 1.0f } );
-
-	_curve.add_point( { 8.0f, 6.0f } );
-	_curve.add_point( { 3.0f, 2.0f } );
-
+	_curve.add_point( { -1.0f, -0.5f } );
+	_curve.add_point( { 6.0f, 2.0f } );
 	_curve.add_point( { 10.0f, 0.0f } );
-	_curve.add_point( { 5.0f, 0.0f } );
+
+	_curve.add_point( { -5.0f, 0.0f } );
+	_curve.add_point( { 15.0f, -5.0f } );
 
 	/*curve.add_point( { 0.0f, 0.0f } );
 	curve.add_point( { 100.0f, 50.0f } );
@@ -35,6 +34,8 @@ void Editor::init()
 
 void Editor::update( float dt )
 {
+	if ( !_curve.is_valid() ) return;
+
 	//printf( "dt:%f\n", dt );
 
 	Vector2 mouse_pos = GetMousePosition();
@@ -125,10 +126,15 @@ void Editor::update( float dt )
 		point.y += mouse_delta.y / _viewport.height * _zoom;*/
 
 		Point new_point = _transform_screen_to_curve( mouse_pos );
+
+		//  Tangents are in local space so we need to convert them
+		//  from global space
 		if ( !_curve.is_control_point( _selected_point_id ) )
 		{
-			int control_point_id = _curve.get_control_point_id( _selected_point_id );
-			new_point = new_point - _curve.get_point( control_point_id );
+			int control_point_id = 
+				_curve.get_control_point_id( _selected_point_id );
+			new_point = 
+				new_point - _curve.get_point( control_point_id );
 		}
 
 		_curve.set_point(
@@ -142,15 +148,30 @@ void Editor::render()
 {
 	ClearBackground( BACKGROUND_COLOR );
 
-	//  draw title
-	const char* title_c_str = _title.c_str();
-	DrawText( 
-		title_c_str, 
-		_frame.x, _frame.y, 
-		TITLE_FONT_SIZE, 
-		TEXT_COLOR 
-	);
+	int points_count = _curve.get_points_count();
 
+	//  draw title
+	{
+		const char* title_c_str = _title.c_str();
+		DrawText( 
+			title_c_str, 
+			(int)_frame.x, (int)_frame.y, 
+			TITLE_FONT_SIZE, 
+			TEXT_COLOR 
+		);
+
+		const char* points_c_str = 
+			TextFormat( "%d points", points_count );
+		int points_width = 
+			MeasureText( points_c_str, TITLE_FONT_SIZE );
+		DrawText(
+			points_c_str,
+			(int)_frame.x + _frame.width - points_width,
+			(int)_frame.y,
+			TITLE_FONT_SIZE,
+			TEXT_COLOR
+		);
+	}
 	//  draw frame
 	DrawRectangleLinesEx( 
 		_frame_outline, 
@@ -158,12 +179,11 @@ void Editor::render()
 		CURVE_FRAME_COLOR 
 	);
 
-	int points_count = _curve.get_points_count();
-	if ( points_count > 0 ) 
+	if ( _curve.is_valid() ) 
 	{
 		BeginScissorMode( 
-			_frame_outline.x, _frame_outline.y, 
-			_frame_outline.width, _frame_outline.height 
+			(int)_frame_outline.x, (int)_frame_outline.y, 
+			(int)_frame_outline.width, (int)_frame_outline.height 
 		);
 
 		//  draw mouse position
@@ -178,34 +198,17 @@ void Editor::render()
 			extrems.min_y, extrems.max_y );*/
 
 		//  draw curves
-		/*Point point_zero = _curve.get_point( 0 );
-		Vector2 point_a = _transform_curve_to_screen( point_zero );
-		Vector2 point_b {};
-		for ( int i = 1; i < points_count; i++ )
+		for ( int i = 0; i < points_count - 1; i += 3 )
 		{
-			const Point& point = _curve.get_point( i );
-			point_b = _transform_curve_to_screen( point );
-
-			DrawLineBezier( 
-				point_a,
-				point_b,
-				CURVE_THICKNESS,
-				CURVE_COLOR
-			);
-
-			point_a = point_b;
-		}*/
-		for ( int i = 0; i < points_count - 2; i += 2 )
-		{
+			//  get points
 			Point p0 = _curve.get_point( i );
-			Point v0 = _curve.get_point( i + 1 );
-			Point p1 = _curve.get_point( i + 2 );
-			Point v1 = _curve.get_point( i + 3 );
+			Point t0 = _curve.get_point( i + 1 );
+			Point t1 = _curve.get_point( i + 2 );
+			Point p1 = _curve.get_point( i + 3 );
 
-			//  Hermite-to-Bézier curve conversion
 			Vector2 pos0 = _transform_curve_to_screen( p0 );
-			Vector2 pos1 = _transform_curve_to_screen( p0 + v0 / 3.0f );
-			Vector2 pos2 = _transform_curve_to_screen( p1 - v1 / 3.0f );
+			Vector2 pos1 = _transform_curve_to_screen( p0 + t0 );
+			Vector2 pos2 = _transform_curve_to_screen( p1 + t1 );
 			Vector2 pos3 = _transform_curve_to_screen( p1 );
 
 			//  draw spline
@@ -221,17 +224,17 @@ void Editor::render()
 			//  draw tangents
 			DrawLineV( 
 				pos0, 
-				_transform_curve_to_screen( p0 + v0 ), 
+				pos1, 
 				TANGENT_COLOR 
 			);
 			DrawLineV(
 				pos3, 
-				_transform_curve_to_screen( p1 + v1 ), 
+				pos2, 
 				TANGENT_COLOR 
 			);
 		}
 
-		int steps = 100;
+		/*int steps = 100;
 		for ( int i = 0; i < steps; i++ )
 		{
 			DrawCircleV( 
@@ -241,7 +244,7 @@ void Editor::render()
 				CURVE_THICKNESS, 
 				PURPLE 
 			);
-		}
+		}*/
 
 		//  draw points
 		for ( int i = 0; i < points_count; i++ )
@@ -252,11 +255,69 @@ void Editor::render()
 
 		EndScissorMode();
 	}
+	else
+	{
+		//  setup text strings
+		const int TEXT_SIZE = 2;
+		const char* texts[TEXT_SIZE] {
+			"INVALID POINTS COUNT!",
+			TextFormat( 
+				"%d points instead of %d or %d", 
+				points_count,
+				(int)floorf( ( points_count + 1 ) / 3.0f ) * 3 + 1,
+				(int)ceilf( ( points_count + 1 ) / 3.0f ) * 3 + 1
+			),
+		};
+
+		//  setup text rendering
+		Font font = GetFontDefault();
+		float font_size = 20.0f;
+		float spacing = 2.0f;
+		Vector2 pos {
+			_frame.x + _frame.width * 0.5f,
+			_frame.y + _frame.height * 0.5f
+		};
+
+		//  draw all lines
+		for ( int i = 0; i < TEXT_SIZE; i++ )
+		{
+			const char* text = texts[i];
+
+			//  measure line size
+			Vector2 text_size = MeasureTextEx( 
+				font, 
+				text, 
+				font_size, 
+				spacing 
+			);
+
+			//  draw centered line
+			DrawTextPro( 
+				font,
+				text, 
+				Vector2 {
+					pos.x - text_size.x * 0.5f,
+					pos.y - text_size.y * 0.5f,
+				},
+				Vector2 {},
+				0.0f,
+				font_size,
+				spacing,
+				TEXT_ERROR_COLOR
+			);
+
+			//  offset next line
+			pos.y += text_size.y + 2.0f;
+		}
+	}
 }
 
 void Editor::fit_viewport_to_curve()
 {
-	_curve_extrems = _curve.get_extrems();
+	if ( _curve.is_valid() )
+	{
+		_curve_extrems = _curve.get_extrems();
+	}
 	_zoom = 1.0f;
 
 	_invalidate_layout();
@@ -318,7 +379,7 @@ Vector2 Editor::_transform_curve_to_screen( const Point& point ) const
 		_viewport.x, _viewport.x + _viewport.width * _zoom,
 		//  y-mapping
 		_curve_extrems.min_y, _curve_extrems.max_y, 
-		_viewport.y, _viewport.y + _viewport.height * _zoom
+		_viewport.y + _viewport.height * _zoom, _viewport.y
 	);
 }
 
@@ -330,7 +391,7 @@ Vector2 Editor::_transform_screen_to_curve( const Vector2& pos ) const
 		_viewport.x, _viewport.x + _viewport.width * _zoom,
 		_curve_extrems.min_x, _curve_extrems.max_x, 
 		//  y-mapping
-		_viewport.y, _viewport.y + _viewport.height * _zoom,
+		_viewport.y + _viewport.height * _zoom, _viewport.y,
 		_curve_extrems.min_y, _curve_extrems.max_y
 	);
 }
