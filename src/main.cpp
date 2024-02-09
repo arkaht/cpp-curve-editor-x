@@ -1,0 +1,78 @@
+
+/*
+ *  Curve X ─ a simple and open-source 2D spline editor
+ *  
+ *  This application aims to serve as a 3rd party tool to create 
+ *  splines for your indie games, softwares or anything you want.
+ *  
+ *  After creating a spline, you should be able to export it to 
+ *  disk and import it in your own code using the library.
+ * 
+ *  Internally using Hermite (maths) & Bézier (rendering) splines.
+ * 
+ *  References:
+ *  - "The Continuity of Splines": https://www.youtube.com/watch?v=jvPPXbo87ds
+ * 
+ *  TODO LIST (by priority order):
+ *  - [x] viewport user-movement (drag & scroll)
+ *  - [x] points user-control (selection & drag)
+ *  - [ ] tangents user-control
+ *  - [ ] quick evaluate (ctrl + hover)
+ *  - [ ] grid-snapping
+ *  - [ ] export to file
+ *  - [ ] import from file
+ */
+
+//  Includes
+
+#include <iostream>
+
+#include "raylib.h"
+#include "raymath.h"
+
+#include <curve-x/curve.h>
+#include <editor/editor.h>
+
+using namespace curve_x;
+using namespace curve_editor_x;
+
+//  Application settings
+
+const int	WINDOW_WIDTH = 800;
+const int	WINDOW_HEIGHT = 600;
+const char*	WINDOW_TITLE = "Curve-X ─ Editor";
+const int	WINDOW_TARGET_FPS = 60;
+
+const float	WINDOW_PADDING = 16.0f;
+
+//  Application code
+
+int main( void )
+{
+	Editor editor( 
+		Rectangle {
+			WINDOW_PADDING,
+			WINDOW_PADDING,
+			WINDOW_WIDTH  - WINDOW_PADDING * 2.0f,
+			WINDOW_HEIGHT - WINDOW_PADDING * 2.0f,
+		}
+	);
+
+	InitWindow( WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE );
+	SetTargetFPS( WINDOW_TARGET_FPS );
+
+	editor.init();
+
+	while ( !WindowShouldClose() )
+	{
+		editor.update( GetFrameTime() );
+
+		BeginDrawing();
+		editor.render();
+		EndDrawing();
+	}
+
+	CloseWindow();
+
+	return 0;
+}
