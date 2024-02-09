@@ -2,9 +2,29 @@
 
 using namespace curve_x;
 
-float Curve::evaluate( float time ) const
+Curve::Curve()
+{}
+
+Curve::Curve( std::vector<Point> points )
+	: _points( points ) {}
+
+Point Curve::evaluate( float t ) const
 {
-	return 0.0f;
+	//  TODO: find points with 1D mapping
+	const Point p0 = _points[0];
+	const Point v0 = _points[1];
+	const Point p1 = _points[2];
+	const Point v1 = _points[3];
+
+	const float t2 = t * t;
+	const float t3 = t * t * t;
+
+	//  https://en.wikipedia.org/wiki/Cubic_Hermite_spline
+	return 
+		p0 * ( 2.0f * t3 - 3.0f * t2 + 1.0f )
+	  + v0 * ( t3 - 2.0f * t2 + t )
+	  + p1 * ( -2.0f * t3 + 3.0f * t2 )
+	  + v1 * ( t3 - t2 );
 }
 
 void Curve::add_point( const Point& point )
@@ -17,6 +37,11 @@ void Curve::set_point( int id, const Point& point )
 	_points[id] = point;
 }
 
+bool Curve::is_control_point( int id ) const
+{
+	return id % 2 == 0;
+}
+
 void Curve::get_extrems( 
 	float& min_x, float& max_x, 
 	float& min_y, float& max_y 
@@ -27,7 +52,7 @@ void Curve::get_extrems(
 
 	for ( int i = 0; i < _points.size(); i++ )
 	{
-		const Point& point = _points[i];
+		const Point& point = get_global_point( i );
 
 		if ( point.x > max_x )
 		{
@@ -63,6 +88,34 @@ CurveExtrems Curve::get_extrems() const
 	return extrems;
 }
 
-Point Curve::get_point( int id ) const { return _points[id]; }
+int Curve::get_control_point_id( int id ) const
+{
+	/*int curve_id = id % 3;
+	if ( curve_id == 1 ) return id - 1;
+	if ( curve_id == 2 ) return id + 1;*/
 
-int Curve::get_points_count() const { return (int)_points.size(); }
+	return is_control_point( id ) ? id : id - 1;
+}
+
+Point Curve::get_global_point( int id ) const
+{
+	Point point = get_point( id );
+
+	//  add control point for velocity point
+	if ( !is_control_point( id ) ) 
+	{
+		point = get_point( get_control_point_id( id ) ) + point;
+	}
+
+	return point;
+}
+
+Point Curve::get_point( int id ) const
+{ 
+	return _points[id]; 
+}
+
+int Curve::get_points_count() const 
+{ 
+	return (int)_points.size(); 
+}

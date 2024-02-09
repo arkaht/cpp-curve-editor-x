@@ -12,11 +12,12 @@
  * 
  *  References:
  *  - "The Continuity of Splines": https://www.youtube.com/watch?v=jvPPXbo87ds
+ *  - "Cubic Hermite spline": https://en.wikipedia.org/wiki/Cubic_Hermite_spline
  * 
  *  TODO LIST (by priority order):
  *  - [x] viewport user-movement (drag & scroll)
  *  - [x] points user-control (selection & drag)
- *  - [ ] tangents user-control
+ *  - [/] tangents user-control
  *  - [ ] quick evaluate (ctrl + hover)
  *  - [ ] grid-snapping
  *  - [ ] export to file

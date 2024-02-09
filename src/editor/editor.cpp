@@ -12,7 +12,18 @@ void Editor::init()
 
 	_curve.add_point( { 0.0f, 1.0f } );
 	_curve.add_point( { 0.75f, 5.0f } );
-	_curve.add_point( { 2.0f, 0.0f } );
+
+	_curve.add_point( { 2.0f, -2.0f } );
+	_curve.add_point( { 4.0f, 2.0f } );
+
+	_curve.add_point( { 5.0f, 3.0f } );
+	_curve.add_point( { 6.0f, 1.0f } );
+
+	_curve.add_point( { 8.0f, 6.0f } );
+	_curve.add_point( { 3.0f, 2.0f } );
+
+	_curve.add_point( { 10.0f, 0.0f } );
+	_curve.add_point( { 5.0f, 0.0f } );
 
 	/*curve.add_point( { 0.0f, 0.0f } );
 	curve.add_point( { 100.0f, 50.0f } );
@@ -79,7 +90,7 @@ void Editor::update( float dt )
 	_hovered_point_id = -1;
 	for ( int i = 0; i < _curve.get_points_count(); i++ )
 	{
-		const Point& point = _curve.get_point( i );
+		const Point& point = _curve.get_global_point( i );
 		const Vector2 screen_point = _transform_curve_to_screen( point );
 
 		if ( CheckCollisionPointCircle( 
@@ -113,9 +124,16 @@ void Editor::update( float dt )
 		point.x += mouse_delta.x / _viewport.width * _zoom;
 		point.y += mouse_delta.y / _viewport.height * _zoom;*/
 
+		Point new_point = _transform_screen_to_curve( mouse_pos );
+		if ( !_curve.is_control_point( _selected_point_id ) )
+		{
+			int control_point_id = _curve.get_control_point_id( _selected_point_id );
+			new_point = new_point - _curve.get_point( control_point_id );
+		}
+
 		_curve.set_point(
 			_selected_point_id, 
-			_transform_screen_to_curve( mouse_pos )
+			new_point
 		);
 	}
 }
@@ -160,7 +178,7 @@ void Editor::render()
 			extrems.min_y, extrems.max_y );*/
 
 		//  draw curves
-		Point point_zero = _curve.get_point( 0 );
+		/*Point point_zero = _curve.get_point( 0 );
 		Vector2 point_a = _transform_curve_to_screen( point_zero );
 		Vector2 point_b {};
 		for ( int i = 1; i < points_count; i++ )
@@ -176,12 +194,59 @@ void Editor::render()
 			);
 
 			point_a = point_b;
+		}*/
+		for ( int i = 0; i < points_count - 2; i += 2 )
+		{
+			Point p0 = _curve.get_point( i );
+			Point v0 = _curve.get_point( i + 1 );
+			Point p1 = _curve.get_point( i + 2 );
+			Point v1 = _curve.get_point( i + 3 );
+
+			//  Hermite-to-Bézier curve conversion
+			Vector2 pos0 = _transform_curve_to_screen( p0 );
+			Vector2 pos1 = _transform_curve_to_screen( p0 + v0 / 3.0f );
+			Vector2 pos2 = _transform_curve_to_screen( p1 - v1 / 3.0f );
+			Vector2 pos3 = _transform_curve_to_screen( p1 );
+
+			//  draw spline
+			DrawSplineSegmentBezierCubic(
+				pos0,
+				pos1,
+				pos2,
+				pos3,
+				CURVE_THICKNESS,
+				CURVE_COLOR
+			);
+
+			//  draw tangents
+			DrawLineV( 
+				pos0, 
+				_transform_curve_to_screen( p0 + v0 ), 
+				TANGENT_COLOR 
+			);
+			DrawLineV(
+				pos3, 
+				_transform_curve_to_screen( p1 + v1 ), 
+				TANGENT_COLOR 
+			);
+		}
+
+		int steps = 100;
+		for ( int i = 0; i < steps; i++ )
+		{
+			DrawCircleV( 
+				_transform_curve_to_screen( 
+					_curve.evaluate( (float)i / steps ) 
+				), 
+				CURVE_THICKNESS, 
+				PURPLE 
+			);
 		}
 
 		//  draw points
 		for ( int i = 0; i < points_count; i++ )
 		{
-			const Point& point = _curve.get_point( i );
+			const Point& point = _curve.get_global_point( i );
 			_render_point( i, _transform_curve_to_screen( point ) );
 		}
 
@@ -217,12 +282,21 @@ void Editor::_invalidate_layout()
 
 void Editor::_render_point( int id, const Vector2& pos )
 {
-	//  draw point
+	Color color = _curve.is_control_point( id )
+		? POINT_COLOR
+		: TANGENT_COLOR;
+
 	bool is_hovered = id == _hovered_point_id || id == _selected_point_id;
+	if ( is_hovered )
+	{
+		color = POINT_SELECTED_COLOR;
+	}
+
+	//  draw point
 	DrawCircleV( 
 		pos, 
 		POINT_SIZE * 0.5f, 
-		is_hovered ? POINT_SELECTED_COLOR : POINT_COLOR
+		color
 	);
 
 	//  draw selected
