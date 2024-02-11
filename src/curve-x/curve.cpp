@@ -1,5 +1,7 @@
 #include "curve.h"
 
+#include <cassert>
+
 using namespace curve_x;
 
 Curve::Curve()
@@ -34,6 +36,13 @@ Point Curve::evaluate( float t ) const
 void Curve::add_point( const Point& point )
 {
 	_points.push_back( point );
+
+	//  create a default tangent mode
+	int max_tangent_id = get_point_tangent_id( get_points_count() );
+	if ( max_tangent_id > (int)_modes.size() - 1 )
+	{
+		_modes.push_back( TangentMode::Mirrored );
+	}
 }
 
 void Curve::set_point( int id, const Point& point )
@@ -41,10 +50,89 @@ void Curve::set_point( int id, const Point& point )
 	_points[id] = point;
 }
 
+void Curve::set_tangent_point( int point_id, const Point& point )
+{
+	//  TODO: decide to keep or not the assert
+	assert( !is_control_point( point_id ) );
+
+	int peer_point_id = get_tangent_peer_point_id( point_id );
+	if ( is_valid_point_id( peer_point_id ) )
+	{
+		int tangent_id = get_point_tangent_id( point_id );
+		TangentMode tangent_mode = get_tangent_mode( tangent_id );
+
+		switch ( tangent_mode )
+		{
+			case TangentMode::Mirrored:
+			{
+				set_point( peer_point_id, -point );
+				break;
+			}
+			case TangentMode::Aligned:
+			{
+				const Point peer_point = get_point( peer_point_id );
+				float length = peer_point.length();
+				const Point aligned_point = 
+					-point.normalized() * length;
+
+				set_point( peer_point_id, aligned_point );
+				break;	
+			}
+			case TangentMode::Broken:
+				break;
+		}
+	}
+
+	set_point( point_id, point );
+}
+
+int Curve::get_tangent_peer_point_id( int point_id ) const
+{
+	int curve_id = point_id % 3;
+	if ( curve_id == 1 ) return point_id - 2;
+	if ( curve_id == 2 ) return point_id + 2;
+
+	return -1;
+}
+
+int Curve::get_point_tangent_id( int point_id ) const
+{
+	return (int)roundf( point_id / 3.0f );
+}
+
+void Curve::set_tangent_mode( 
+	int tangent_id, 
+	TangentMode mode,
+	bool should_apply_constraint 
+)
+{
+	_modes[tangent_id] = mode;
+
+	if ( should_apply_constraint )
+	{
+		//  ignore first & last modes
+		if ( tangent_id == 0 || tangent_id == (int)_modes.size() - 1 ) return;
+
+		//  apply tangent mode constraint
+		int point_id = tangent_id * 3 + 1;
+		set_tangent_point( point_id, get_point( point_id ) );
+	}
+}
+
+TangentMode Curve::get_tangent_mode( int tangent_id ) const
+{
+	return _modes[tangent_id];
+}
+
 bool Curve::is_valid() const
 {
 	int count = get_points_count();
 	return count > 0 && ( count - 1 ) % 3 == 0;
+}
+
+bool Curve::is_valid_point_id( int point_id ) const
+{
+	return point_id >= 0 && point_id < get_points_count();
 }
 
 bool Curve::is_control_point( int id ) const
@@ -98,31 +186,31 @@ CurveExtrems Curve::get_extrems() const
 	return extrems;
 }
 
-int Curve::get_control_point_id( int id ) const
+int Curve::get_control_point_id( int point_id ) const
 {
-	int curve_id = id % 3;
-	if ( curve_id == 1 ) return id - 1;
-	if ( curve_id == 2 ) return id + 1;
+	int curve_id = point_id % 3;
+	if ( curve_id == 1 ) return point_id - 1;
+	if ( curve_id == 2 ) return point_id + 1;
 
-	return id;
+	return point_id;
 }
 
-Point Curve::get_global_point( int id ) const
+Point Curve::get_global_point( int point_id ) const
 {
-	Point point = get_point( id );
+	Point point = get_point( point_id );
 
 	//  add control point for velocity point
-	if ( !is_control_point( id ) ) 
+	if ( !is_control_point( point_id ) ) 
 	{
-		point = get_point( get_control_point_id( id ) ) + point;
+		point = get_point( get_control_point_id( point_id ) ) + point;
 	}
 
 	return point;
 }
 
-Point Curve::get_point( int id ) const
+Point Curve::get_point( int point_id ) const
 { 
-	return _points[id]; 
+	return _points[point_id]; 
 }
 
 int Curve::get_points_count() const 

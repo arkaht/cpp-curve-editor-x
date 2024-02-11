@@ -27,7 +27,17 @@ namespace curve_editor_x
 	private:
 		void _invalidate_layout();
 
-		void _render_point( int id, const Vector2& pos );
+		void _render_point( int point_id, const Vector2& pos );
+		void _render_circle_point( 
+			const Vector2& pos, 
+			const Color& color,
+			bool is_selected
+		);
+		void _render_square_point( 
+			const Vector2& pos, 
+			const Color& color,
+			bool is_selected
+		);
 
 		Vector2 _transform_curve_to_screen( const Point& point ) const;
 		Vector2 _transform_screen_to_curve( const Vector2& pos ) const;

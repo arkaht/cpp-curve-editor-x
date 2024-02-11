@@ -21,6 +21,10 @@ void Editor::init()
 	_curve.add_point( { 6.0f, 2.0f } );
 	_curve.add_point( { 10.0f, 0.0f } );
 
+	_curve.add_point( { -1.0f, -0.5f } );
+	_curve.add_point( { 10.0f, -3.0f } );
+	_curve.add_point( { 1.0f, 0.5f } );
+
 	_curve.add_point( { -5.0f, 0.0f } );
 	_curve.add_point( { 15.0f, -5.0f } );
 
@@ -109,7 +113,9 @@ void Editor::update( float dt )
 	if ( IsMouseButtonPressed( MOUSE_BUTTON_LEFT ) )
 	{
 		_can_drag_selected_point = 
-			!MUST_DOUBLE_CLICK_TO_DRAG_POINT || _hovered_point_id == _selected_point_id;
+			!MUST_DOUBLE_CLICK_TO_DRAG_POINT 
+		 || _hovered_point_id == _selected_point_id;
+
 		_selected_point_id = _hovered_point_id;
 	}
 	else if ( IsMouseButtonReleased( MOUSE_BUTTON_LEFT ) )
@@ -117,9 +123,9 @@ void Editor::update( float dt )
 		_can_drag_selected_point = true;
 	}
 	//  LMB-down: move selected point
-	else if ( _selected_point_id >= 0 
-		&& _can_drag_selected_point
-		&& IsMouseButtonDown( MOUSE_BUTTON_LEFT ) )
+	else if ( IsMouseButtonDown( MOUSE_BUTTON_LEFT )
+		&& _curve.is_valid_point_id( _selected_point_id ) 
+		&& _can_drag_selected_point )
 	{
 		/*Point point = _curve.get_point( _selected_point_id );
 		point.x += mouse_delta.x / _viewport.width * _zoom;
@@ -128,19 +134,42 @@ void Editor::update( float dt )
 		Point new_point = _transform_screen_to_curve( mouse_pos );
 
 		//  Tangents are in local space so we need to convert them
-		//  from global space
+		//  from global space. They also use a different function
+		//  to apply the tangent mode.
 		if ( !_curve.is_control_point( _selected_point_id ) )
 		{
 			int control_point_id = 
 				_curve.get_control_point_id( _selected_point_id );
 			new_point = 
 				new_point - _curve.get_point( control_point_id );
-		}
 
-		_curve.set_point(
-			_selected_point_id, 
-			new_point
-		);
+			_curve.set_tangent_point( 
+				_selected_point_id,
+				new_point 
+			);
+		}
+		else
+		{
+			_curve.set_point(
+				_selected_point_id, 
+				new_point
+			);
+		}
+	}
+	else if ( IsMouseButtonPressed( MOUSE_BUTTON_MIDDLE ) 
+		&& _curve.is_valid_point_id( _selected_point_id ) )
+	{
+		int tangent_id = 
+			_curve.get_point_tangent_id( _selected_point_id );
+		TangentMode tangent_mode = 
+			_curve.get_tangent_mode( tangent_id );
+
+		TangentMode next_tangent_mode = 
+			(int)tangent_mode + 1 == (int)TangentMode::MAX
+			? (TangentMode)0
+			: (TangentMode)( (int)tangent_mode + 1 );
+
+		_curve.set_tangent_mode( tangent_id, next_tangent_mode );
 	}
 }
 
@@ -341,18 +370,91 @@ void Editor::_invalidate_layout()
 	_frame_outline.height = _frame.height - offset_y;
 }
 
-void Editor::_render_point( int id, const Vector2& pos )
+void Editor::_render_point( int point_id, const Vector2& pos )
 {
-	Color color = _curve.is_control_point( id )
-		? POINT_COLOR
-		: TANGENT_COLOR;
+	bool is_tangent = !_curve.is_control_point( point_id );
+	bool is_hovered = point_id == _hovered_point_id || point_id == _selected_point_id;
+	bool is_selected = point_id == _selected_point_id;
 
-	bool is_hovered = id == _hovered_point_id || id == _selected_point_id;
+	//  choose color
+	Color color;
 	if ( is_hovered )
 	{
 		color = POINT_SELECTED_COLOR;
 	}
+	else
+	{
+		color = is_tangent
+			? TANGENT_COLOR
+			: POINT_COLOR;
+	}
 
+	if ( is_tangent )
+	{
+		int tangent_id = _curve.get_point_tangent_id( point_id );
+		TangentMode mode = _curve.get_tangent_mode( tangent_id );
+
+		//  render point depending on mode
+		const char* mode_name = "N/A";
+		switch ( mode )
+		{
+			case TangentMode::Mirrored:
+				_render_circle_point( pos, color, is_selected );
+				mode_name = "mirrored";
+				break;
+				
+			case TangentMode::Aligned:
+				_render_circle_point( pos, color, is_selected );
+				mode_name = "aligned";
+				break;
+
+			case TangentMode::Broken:
+				_render_square_point( pos, color, is_selected );
+				mode_name = "broken";
+				break;
+		}
+
+		//  draw mode name
+		if ( is_selected )
+		{
+			float font_size = 16.0f;
+			float spacing = 2.0f;
+			Font font = GetFontDefault();
+
+			//  measure text size
+			Vector2 size = MeasureTextEx( 
+				font, 
+				mode_name, 
+				(int)font_size,
+				spacing
+			);
+
+			//  draw text
+			DrawTextEx( 
+				GetFontDefault(),
+				mode_name,
+				Vector2 {
+					pos.x - size.x * 0.5f,
+					pos.y - size.y * 1.5f,
+				},
+				font_size,
+				spacing,
+				TANGENT_COLOR
+			);
+		}
+	}
+	else
+	{
+		_render_circle_point( pos, color, is_selected );
+	}
+}
+
+void Editor::_render_circle_point( 
+	const Vector2& pos, 
+	const Color& color,
+	bool is_selected
+)
+{
 	//  draw point
 	DrawCircleV( 
 		pos, 
@@ -361,12 +463,44 @@ void Editor::_render_point( int id, const Vector2& pos )
 	);
 
 	//  draw selected
-	if ( id == _selected_point_id )
+	if ( is_selected )
 	{
 		DrawCircleLinesV( 
 			pos, 
 			POINT_SIZE * 0.5f + POINT_SELECTED_OFFSET_SIZE, 
 			POINT_SELECTED_COLOR 
+		);
+	}
+}
+
+void Editor::_render_square_point( 
+	const Vector2& pos, 
+	const Color& color,
+	bool is_selected
+)
+{
+	int size = POINT_SIZE;
+
+	//  draw point
+	DrawRectangle( 
+		(int)pos.x - size / 2,
+		(int)pos.y - size / 2,
+		size,
+		size,
+		color
+	);
+
+	//  draw selected
+	if ( is_selected )
+	{
+		size += POINT_SELECTED_OFFSET_SIZE + 1.0f;
+
+		DrawRectangleLines(
+			(int)pos.x - size / 2,
+			(int)pos.y - size / 2,
+			size,
+			size,
+			POINT_SELECTED_COLOR
 		);
 	}
 }

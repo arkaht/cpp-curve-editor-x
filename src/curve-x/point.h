@@ -50,6 +50,14 @@ namespace curve_x
 			};
 		}
 
+		Point operator-() const
+		{
+			return {
+				-x,
+				-y
+			};
+		}
+
 		Point remap( 
 			float in_min_x, float in_max_x, 
 			float out_min_x, float out_max_x,
@@ -64,6 +72,20 @@ namespace curve_x
 				curve_x::remap( y, 
 					in_min_y, in_max_y, 
 					out_min_y, out_max_y ),
+			};
+		}
+
+		float length() const
+		{
+			return sqrtf( x * x + y * y );
+		}
+
+		Point normalized() const
+		{
+			float m = length();
+			return Point {
+				x / m,
+				y / m,
 			};
 		}
 	};
