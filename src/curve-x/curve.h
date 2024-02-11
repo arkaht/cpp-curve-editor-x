@@ -33,18 +33,35 @@ namespace curve_x
 		bool is_valid() const;
 		bool is_control_point( int id ) const;
 
+		/*
+		 * Fill given variables to the coordinates extrems of all
+		 * points.
+		 */
 		void get_extrems( 
 			float& min_x, float& max_x, 
 			float& min_y, float& max_y 
 		) const;
 		CurveExtrems get_extrems() const;
 
-		//  Get control point index of given tangent point index
+		/*
+		 * Get control point index of given tangent point index.
+		 */
 		int get_control_point_id( int id ) const;
 
+		/*
+		 * Returns point at given index in global space, whether
+		 * it's a control point or a tangent point. 
+		 */
 		Point get_global_point( int id ) const;
+		/*
+		 * Returns point at given index as it's stored in the 
+		 * curve, without any transformation.
+		 */
 		Point get_point( int id ) const;
 
+		/*
+		 * Returns count of points stored in the curve.
+		 */
 		int get_points_count() const;
 
 	private:
