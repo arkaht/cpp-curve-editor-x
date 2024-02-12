@@ -39,24 +39,39 @@ namespace curve_x
 	{
 	public:
 		Curve();
+		//  TODO: Add 'modes' vector
 		Curve( std::vector<Point> points );
 
+		/*
+		 * Evaluate the curve at specified time.
+		 */
 		Point evaluate( float t ) const;
 
-		void add_point( const Point& point );
 		/*
-		 * Change point for given point index.
+		 * Add a new point to the curve. 
+		 * 
+		 * You must know in advance whether the point will be 
+		 * considered as a control or a tangent point before using 
+		 * this function. See comments on '_points' member variable.
 		 */
-		void set_point( int point_id, const Point& point );
+		void add_point( const Point& point );
 
 		/*
-		 * Change point for given tangent point index. 
-		 * It applies the tangent mode constraint to its peer.
+		 * Change point for given point index, without any
+		 * transformations.
+		 */
+		void set_point( int point_id, const Point& point );
+		/*
+		 * Change point for given tangent point index, and applies 
+		 * the tangent mode constraint to its peer.
 		 */
 		void set_tangent_point( int point_id, const Point& point );
+		
 		/*
 		 * Change tangent mode for the given tangent index.
-		 * It applies the new mode constraint to both tangents.
+		 * 
+		 * By default, it applies the new mode constraint to both 
+		 * tangents.
 		 */
 		void set_tangent_mode( 
 			int tangent_id, 
@@ -69,17 +84,46 @@ namespace curve_x
 		TangentMode get_tangent_mode( int tangent_id ) const;
 
 		/*
+		 * Returns the peer tangent point index of given point index.
 		 * 
+		 * The given point index must correspond to a tangent point. 
+		 * Therefore, giving a control point index returns -1.
+		 * 
+		 * The returned index may not correspond to a valid point,
+		 * specially for the first and last tangents as they do not
+		 * have a peer. Consider using 'is_valid_point_id'.
 		 */
 		int get_tangent_peer_point_id( int point_id ) const;
+		/*
+		 * Returns the corresponding tangent index for the given
+		 * point index.
+		 */
 		int get_point_tangent_id( int point_id ) const;
+		/*
+		 * Returns the control point index of given tangent point 
+		 * index.
+		 */
+		int get_control_point_id( int point_id ) const;
 
 		/*
 		 * Returns whenever the curve contains a valid amount 
 		 * of points for further usage.
+		 * 
+		 * It's important to first check the curve validity before 
+		 * using other methods since they do not check about it. It 
+		 * prevent crashes to happen.
 		 */
 		bool is_valid() const;
+		/*
+		 * Returns whenever the given point index correspond to a
+		 * valid point. Essentially checking if the index is in the
+		 * '_points' vector range.
+		 */
 		bool is_valid_point_id( int point_id ) const;
+		/*
+		 * Returns whenever the given point index correspond to a 
+		 * control point. Otherwise, it represents a tangent point.
+		 */
 		bool is_control_point( int point_id ) const;
 
 		/*
@@ -90,12 +134,10 @@ namespace curve_x
 			float& min_x, float& max_x, 
 			float& min_y, float& max_y 
 		) const;
-		CurveExtrems get_extrems() const;
-
 		/*
-		 * Get control point index of given tangent point index.
+		 * Returns the coordinates extrems of all points.
 		 */
-		int get_control_point_id( int point_id ) const;
+		CurveExtrems get_extrems() const;
 
 		/*
 		 * Returns point at given index in global space, whether
@@ -115,7 +157,7 @@ namespace curve_x
 
 	private:
 		/*
-		 * Vector of control & tangent points.
+		 * Vector containing both control & tangent points.
 		 * 
 		 * Control points are set every 3 indexes (e.g. 0, 3, 6)
 		 * and are in global space.
@@ -125,9 +167,23 @@ namespace curve_x
 		 * close to their control point (e.g. point 1 is a tangent
 		 * of control point 0; points 2 and 4 are tangents of 
 		 * control point 3)
+		 * 
+		 * A 'point index' correspond to an index in this vector.
 		 */
 		std::vector<Point> _points;
 
+		//  TODO: Find a better name for 'tangent index' as it 
+		//		  will be confused with a 'tangent point index'. 
+		//		  It can't be 'control index' either.
+		/*
+		 * Vector of tangent modes.
+		 * 
+		 * Each element correspond to the mode for each control 
+		 * point. That also mean that this should always a size of 
+		 * '_points' divided by 3 and rounded up.
+		 * 
+		 * A 'tangent index' correspond to an index in this vector.
+		 */
 		std::vector<TangentMode> _modes;
 	};
 }

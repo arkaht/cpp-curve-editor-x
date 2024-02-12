@@ -20,7 +20,8 @@
  *  - [x] viewport user-movement (drag & scroll)
  *  - [x] points user-control (selection & drag)
  *  - [x] tangents user-control
- *  - [ ] tangents mode (broken, aligned, mirrored)
+ *  - [x] tangents modes (broken, aligned, mirrored)
+ *  - [ ] grid rendering
  *  - [ ] quick evaluate (ctrl + hover)
  *  - [ ] grid-snapping
  *  - [ ] export to file

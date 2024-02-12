@@ -52,7 +52,7 @@ void Curve::set_point( int id, const Point& point )
 
 void Curve::set_tangent_point( int point_id, const Point& point )
 {
-	//  TODO: decide to keep or not the assert
+	//  TODO: Decide to keep or not the assert
 	assert( !is_control_point( point_id ) );
 
 	int peer_point_id = get_tangent_peer_point_id( point_id );
@@ -98,6 +98,15 @@ int Curve::get_tangent_peer_point_id( int point_id ) const
 int Curve::get_point_tangent_id( int point_id ) const
 {
 	return (int)roundf( point_id / 3.0f );
+}
+
+int Curve::get_control_point_id( int point_id ) const
+{
+	int curve_id = point_id % 3;
+	if ( curve_id == 1 ) return point_id - 1;
+	if ( curve_id == 2 ) return point_id + 1;
+
+	return point_id;
 }
 
 void Curve::set_tangent_mode( 
@@ -186,20 +195,12 @@ CurveExtrems Curve::get_extrems() const
 	return extrems;
 }
 
-int Curve::get_control_point_id( int point_id ) const
-{
-	int curve_id = point_id % 3;
-	if ( curve_id == 1 ) return point_id - 1;
-	if ( curve_id == 2 ) return point_id + 1;
-
-	return point_id;
-}
-
 Point Curve::get_global_point( int point_id ) const
 {
 	Point point = get_point( point_id );
 
-	//  add control point for velocity point
+	//  Transform the local tangent point to global space by adding
+	//  its control point
 	if ( !is_control_point( point_id ) ) 
 	{
 		point = get_point( get_control_point_id( point_id ) ) + point;
