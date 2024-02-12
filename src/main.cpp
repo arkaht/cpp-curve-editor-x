@@ -8,8 +8,9 @@
  *  After creating a spline, you should be able to export it to 
  *  disk and import it in your own code using the library.
  * 
- *  Internally using Bézier splines, offering most control other 
- *  Hermite (mostly for tangent modes).
+ *  Internally using Bézier splines, offering most control over 
+ *  Hermite (where tangent modes are forced to be mirrored) and
+ *  other splines types.
  * 
  *  References:
  *  - "The Continuity of Splines": https://www.youtube.com/watch?v=jvPPXbo87ds
