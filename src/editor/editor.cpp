@@ -413,8 +413,7 @@ void Editor::_render_curve_screen()
 
 		DrawTextEx(
 			GetFontDefault(),
-			TextFormat( "t=%.3f;\nx=%.3f\ny=%.3f",
-				_quick_evaluation_time, 
+			TextFormat( "x=%.3f\ny=%.3f",
 				_quick_evaluation_pos.x, _quick_evaluation_pos.y ),
 			Vector2 {
 				pos.x + 10.0f,

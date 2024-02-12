@@ -106,7 +106,6 @@ namespace curve_editor_x
 		bool _is_grid_snapping = false;
 
 		bool _is_quick_evaluating = false;
-		float _quick_evaluation_time = 0.0f;
 		Vector2 _quick_evaluation_pos {};
 
 		int _hovered_point_id = -1;
