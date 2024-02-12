@@ -10,9 +10,9 @@ Curve::Curve()
 Curve::Curve( std::vector<Point> points )
 	: _points( points ) {}
 
-Point Curve::evaluate( float t ) const
+Point Curve::evaluate_by_percent( float t ) const
 {
-	int curve_id = get_curve_id_by_time( t );
+	int curve_id = get_curve_id_by_percent( t );
 	t = fmaxf( fminf( t, 1.0f ), 0.0f );
 
 	const Point p0 = get_point( curve_id );
@@ -20,19 +20,47 @@ Point Curve::evaluate( float t ) const
 	const Point p3 = get_point( curve_id + 3 );
 	const Point p2 = p3 + get_point( curve_id + 2 );
 
-	const float it = 1.0f - t;
-	const float it2 = it * it;
-	const float it3 = it * it;
+	return bezier_interp( p0, p1, p2, p3, t );
+}
 
-	const float t2 = t * t;
-	const float t3 = t2 * t;
+Point Curve::evaluate_by_distance( float d ) const
+{
+	//  TODO: After deciding if 'get_length' should be const or not,
+	//		  potentially change the '_length' by 'get_length'.
+	return evaluate_by_percent( d / _length );
+}
 
-	//  https://en.wikipedia.org/wiki/B%C3%A9zier_curve
-	return 
-		p0 * it3
-	  + p1 * ( 3.0f * it2 * t )
-	  + p2 * ( 3.0f * it * t2 )
-	  + p3 * t3;
+float Curve::evaluate_by_time( float time ) const
+{
+	int points_count = get_points_count();
+	
+	//  Bound evaluation to first & last points
+	const Point first_point = get_point( 0 );
+	const Point last_point = get_point( points_count - 1 );
+	if ( time <= first_point.x ) return first_point.y;
+	if ( time >= last_point.x ) return last_point.y;
+
+	//  Find evaluation points by time
+	int first_point_id, last_point_id;
+	find_evaluation_point_id_by_time( 
+		first_point_id, last_point_id, time );
+
+	//  Get control points
+	const Point p0 = get_point( first_point_id );
+	const Point p3 = get_point( last_point_id );
+
+	//  Compute time difference
+	const float time_diff = p3.x - p0.x;
+	if ( time_diff <= 0.0f ) return p0.y;
+
+	//  Compute time ratio from p0 & p3 (from 0.0f to 1.0f)
+	const float t = ( time - p0.x ) / time_diff;
+
+	//  Compute tangents Y-positions
+	const float y1 = p0.y + get_point( first_point_id + 1 ).y;
+	const float y2 = p3.y + get_point( last_point_id - 1 ).y;
+
+	return bezier_interp( p0.y, y1, y2, p3.y, t );
 }
 
 void Curve::add_point( const Point& point )
@@ -115,7 +143,7 @@ int Curve::get_control_point_id( int point_id ) const
 	return point_id;
 }
 
-int Curve::get_curve_id_by_time( float& t ) const
+int Curve::get_curve_id_by_percent( float& t ) const
 {
 	if ( t >= 1.0f )
 	{
@@ -217,6 +245,43 @@ CurveExtrems Curve::get_extrems() const
 	return extrems;
 }
 
+void Curve::find_evaluation_point_id_by_time( 
+	int& first_point_id,
+	int& last_point_id,
+	float time 
+) const
+{
+	/*
+	 * Perform a lower bound to find out the two control points
+	 * to evaluate from.
+	 * 
+	 * Code highly inspired on Unreal Engine's code
+	 */
+
+	int first_id = 1;
+	int last_id = ( get_points_count() - 1 ) / 3;
+
+	int count = last_id - first_id;
+	while ( count > 0 )
+	{
+		int step = count / 2;
+		int middle_id = first_id + step;
+
+		if ( time >= get_point( middle_id * 3 ).x )
+		{
+			first_id = middle_id + 1;
+			count -= step + 1;
+		}
+		else
+		{
+			count = step;
+		}
+	}
+
+	first_point_id = ( first_id - 1 ) * 3;
+	last_point_id = first_id * 3;
+}
+
 Point Curve::get_global_point( int point_id ) const
 {
 	Point point = get_point( point_id );
@@ -266,7 +331,7 @@ void Curve::_compute_length()
 	Point last_point = get_point( 0 );
 	for ( float t = steps; t < 1.0f; t += steps )
 	{
-		const Point point = evaluate( t );
+		const Point point = evaluate_by_percent( t );
 		_length += ( point - last_point ).length();
 		last_point = point;
 	}

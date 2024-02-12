@@ -43,9 +43,22 @@ namespace curve_x
 		Curve( std::vector<Point> points );
 
 		/*
-		 * Evaluate the curve at specified time.
+		 * Evaluate a curve point at specified percent, in range 
+		 * from 0.0f to 1.0f.
 		 */
-		Point evaluate( float t ) const;
+		Point evaluate_by_percent( float t ) const;
+		/*
+		 * Evaluate a curve point at specified distance.
+		 * 
+		 * Internally using 'evaluate_by_percent' by dividing the
+		 * distance by the curve length.
+		 */
+		Point evaluate_by_distance( float d ) const;
+		/*
+		 * Evaluate the Y-axis value corresponding to the specified 
+		 * time on the X-axis.
+		 */
+		float evaluate_by_time( float time ) const;
 
 		/*
 		 * Add a new point to the curve. 
@@ -104,7 +117,7 @@ namespace curve_x
 		 * index.
 		 */
 		int get_control_point_id( int point_id ) const;
-		int get_curve_id_by_time( float& t ) const;
+		int get_curve_id_by_percent( float& t ) const;
 
 		/*
 		 * Returns whenever the curve contains a valid amount 
@@ -139,6 +152,16 @@ namespace curve_x
 		 * Returns the coordinates extrems of all points.
 		 */
 		CurveExtrems get_extrems() const;
+
+		/*
+		 * Fill given variables with the first & last control 
+		 * points indexes to use for evaluation by time.
+		 */
+		void find_evaluation_point_id_by_time( 
+			int& first_point_id,
+			int& last_point_id,
+			float time 
+		) const;
 
 		/*
 		 * Returns point at given index in global-space, whether

@@ -16,6 +16,8 @@
  *  - "The Continuity of Splines": https://www.youtube.com/watch?v=jvPPXbo87ds
  *  - "Cubic Hermite spline": https://en.wikipedia.org/wiki/Cubic_Hermite_spline
  *  - "Bézier spline": https://en.wikipedia.org/wiki/B%C3%A9zier_curve
+ *  - "Curves and Splines": https://catlikecoding.com/unity/tutorials/curves-and-splines/
+ *  - Unreal Engine's FRichCurve code for value evaluation by time
  * 
  *  TODO LIST (by priority order):
  *  - [x] viewport user-movement (drag & scroll)
@@ -25,7 +27,7 @@
  *  - [x] grid rendering
  *  - [x] grid-snapping
  *  - [x] quick curve evaluation (ctrl + hover)
- *  - [ ] better curve evaluation (w/ x-axis as time)
+ *  - [x] time curve evaluation (x-axis as time)
  *  - [ ] export to file
  *  - [ ] import from file
  */

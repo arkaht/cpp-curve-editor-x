@@ -186,17 +186,9 @@ void Editor::update( float dt )
 			new_point = _transform_grid_snap( new_point );
 		}
 		
-		const float steps = 0.01f;
-		const float length = _curve.get_length();
-
-		float dist = 0.0f;
-		for ( dist; dist < length; dist += steps )
-		{
-			_quick_evaluation_time = dist / length;
-			_quick_evaluation_pos = _curve.evaluate( _quick_evaluation_time );
-			
-			if ( _quick_evaluation_pos.x >= new_point.x ) break;
-		}
+		//  Evaluate at mouse position
+		_quick_evaluation_pos.x = new_point.x;
+		_quick_evaluation_pos.y = _curve.evaluate_by_time( new_point.x );
 	}
 }
 
@@ -339,22 +331,24 @@ void Editor::_render_curve_screen()
 		);
 	}
 
-	float steps = 0.1f;
-	Vector2 last_point = _transform_curve_to_screen( 
-		_curve.evaluate( 0.0f ) );
+	//  Draw curve's length
 	float length = _curve.get_length();
 	DrawText( 
-		TextFormat( "length: %f", length ),
-		_frame_outline.x + 16.0f, 
-		_frame_outline.y + 16.0f,
+		TextFormat( "length: %.3f", length ),
+		_frame_outline.x + CURVE_FRAME_PADDING * 0.5f, 
+		_frame_outline.y + CURVE_FRAME_PADDING * 0.5f,
 		20.0f,
 		TEXT_COLOR
 	);
 
+	//  Draw curve using distance-evaluation
+	float steps = 0.1f;
+	Vector2 previous_point = _transform_curve_to_screen( 
+		_curve.evaluate_by_distance( 0.0f ) );
 	for ( float dist = steps; dist < length; dist += steps )
 	{
 		Vector2 point = _transform_curve_to_screen( 
-			_curve.evaluate( dist / length ) );
+			_curve.evaluate_by_distance( dist ) );
 
 		DrawCircleV(
 			point,
@@ -362,9 +356,34 @@ void Editor::_render_curve_screen()
 			PURPLE
 		);
 
-		DrawLineEx( last_point, point, CURVE_THICKNESS, PURPLE );
+		DrawLineEx( previous_point, point, CURVE_THICKNESS, PURPLE );
 
-		last_point = point;
+		previous_point = point;
+	}
+
+	//  Draw curve using time-evaluation
+	float min_x = _curve.get_point( 0 ).x;
+	float max_x = _curve.get_point( _curve.get_points_count() - 1 ).x + steps;
+	previous_point = _transform_curve_to_screen( 
+		_curve.evaluate_by_percent( 0.0f ) );
+	for ( float x = min_x; x < max_x; x += steps )
+	{
+		Vector2 point = _transform_curve_to_screen( 
+			Point {
+				x,
+				_curve.evaluate_by_time( x ),
+			}
+		);
+
+		DrawCircleV(
+			point,
+			CURVE_THICKNESS,
+			GREEN
+		);
+
+		DrawLineEx( previous_point, point, CURVE_THICKNESS, GREEN );
+
+		previous_point = point;
 	}
 
 	//  Draw quick evaluation
