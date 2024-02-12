@@ -140,7 +140,7 @@ namespace curve_x
 		CurveExtrems get_extrems() const;
 
 		/*
-		 * Returns point at given index in global space, whether
+		 * Returns point at given index in global-space, whether
 		 * it's a control point or a tangent point. 
 		 */
 		Point get_global_point( int point_id ) const;
@@ -160,9 +160,9 @@ namespace curve_x
 		 * Vector containing both control & tangent points.
 		 * 
 		 * Control points are set every 3 indexes (e.g. 0, 3, 6)
-		 * and are in global space.
+		 * and are in global-space.
 		 * 
-		 * Tangent points are in local space, forming a scaled 
+		 * Tangent points are in local-space, forming a scaled 
 		 * direction from its control point. Their indexes are
 		 * close to their control point (e.g. point 1 is a tangent
 		 * of control point 0; points 2 and 4 are tangents of 

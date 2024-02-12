@@ -40,27 +40,21 @@ void Editor::update( float dt )
 {
 	if ( !_curve.is_valid() ) return;
 
-	//printf( "dt:%f\n", dt );
-
 	Vector2 mouse_pos = GetMousePosition();
 	Vector2 mouse_delta = GetMouseDelta();
 
-	/*Vector2 viewport_mouse_pos = _transform_screen_to_viewport( mouse_pos );
-	printf( "x:%f | y:%f\n", 
-		viewport_mouse_pos.x, viewport_mouse_pos.y );*/
-
-	//  RMB: move viewport around
+	//  RMB: Move viewport around
 	if ( IsMouseButtonDown( MOUSE_BUTTON_RIGHT ) )
 	{
 		_viewport.x += mouse_delta.x;
 		_viewport.y += mouse_delta.y;
 	}
-	//  WHEEL: zoom to mouse
+	//  WHEEL: Zoom to mouse
 	if ( float mouse_wheel_delta = GetMouseWheelMove() )
 	{
 		float old_zoom = _zoom;
 
-		//  change zoom scale
+		//  Change zoom scale
 		_zoom = fminf( 
 			ZOOM_MAX, 
 			fmaxf( 
@@ -69,7 +63,7 @@ void Editor::update( float dt )
 			) 
 		);
 
-		//  offset viewport simulating zoom to mouse position
+		//  Offset viewport to simulate zooming to mouse position
 		if ( _zoom != old_zoom )
 		{
 			Vector2 offset {
@@ -85,13 +79,13 @@ void Editor::update( float dt )
 			_viewport.y += offset.y - offset.y * zoom_ratio;
 		}
 	}
-	//  F: fit viewport to curve
+	//  F: Fit viewport to curve
 	if ( IsKeyPressed( KEY_F ) )
 	{
 		fit_viewport_to_curve();
 	}
 
-	//  find the mouse hovered point
+	//  Find the mouse hovered point
 	_hovered_point_id = -1;
 	for ( int i = 0; i < _curve.get_points_count(); i++ )
 	{
@@ -109,7 +103,7 @@ void Editor::update( float dt )
 		}
 	}
 
-	//  LMB-pressed: select hovered point
+	//  LMB-pressed: Select hovered point
 	if ( IsMouseButtonPressed( MOUSE_BUTTON_LEFT ) )
 	{
 		_can_drag_selected_point = 
@@ -122,7 +116,7 @@ void Editor::update( float dt )
 	{
 		_can_drag_selected_point = true;
 	}
-	//  LMB-down: move selected point
+	//  LMB-down: Move selected point
 	else if ( IsMouseButtonDown( MOUSE_BUTTON_LEFT )
 		&& _curve.is_valid_point_id( _selected_point_id ) 
 		&& _can_drag_selected_point )
@@ -137,8 +131,8 @@ void Editor::update( float dt )
 			new_point.y = roundf( new_point.y / GRID_SMALL_GAP ) * GRID_SMALL_GAP;
 		}
 
-		//  Tangents are in local space so we need to convert them
-		//  from global space. They also use a different function
+		//  Tangents are in local-space so we need to convert them
+		//  from global-space. They also use a different function
 		//  to apply the tangent mode constraint.
 		if ( !_curve.is_control_point( _selected_point_id ) )
 		{
@@ -160,6 +154,7 @@ void Editor::update( float dt )
 			);
 		}
 	}
+	//  MMB-press: Switch tangent mode
 	else if ( IsMouseButtonPressed( MOUSE_BUTTON_MIDDLE ) 
 		&& _curve.is_valid_point_id( _selected_point_id ) )
 	{
@@ -201,13 +196,13 @@ void Editor::_invalidate_layout()
 	const float offset_y = 
 		TITLE_FONT_SIZE + TITLE_DOCK_MARGIN_BOTTOM;
 
-	//  update viewport
+	//  Update viewport
 	_viewport.x = _frame.x + CURVE_FRAME_PADDING;
 	_viewport.y = _frame.y + CURVE_FRAME_PADDING + offset_y;
 	_viewport.width = _frame.width - CURVE_FRAME_PADDING * 2.0f;
 	_viewport.height = _frame.height - CURVE_FRAME_PADDING * 2.0f - offset_y;
 
-	//  update frame outline
+	//  Update frame outline
 	_frame_outline.x = _frame.x;
 	_frame_outline.y = _frame.y + offset_y;
 	_frame_outline.width = _frame.width;
@@ -240,7 +235,7 @@ void Editor::_render_title_text()
 
 void Editor::_render_frame()
 {
-	//  draw frame outline
+	//  Draw frame outline
 	DrawRectangleLinesEx( 
 		_frame_outline, 
 		2.0f, 
@@ -252,7 +247,7 @@ void Editor::_render_frame()
 		(int)_frame_outline.width, (int)_frame_outline.height 
 	);
 
-	//  draw in-frame
+	//  Draw in-frame
 	if ( _curve.is_valid() ) 
 	{
 		_render_curve_screen();
@@ -271,28 +266,29 @@ void Editor::_render_curve_screen()
 
 	_render_grid();
 
-	//  draw mouse position
+	//  Draw mouse position
 	if ( DRAW_MOUSE_POSITION )
 	{
 		Vector2 mouse_pos = GetMousePosition();
 		DrawCircleV( mouse_pos, SELECTION_RADIUS, TEXT_COLOR );
 	}
 
-	//  draw curves
+	//  Draw curves
 	for ( int i = 0; i < points_count - 1; i += 3 )
 	{
-		//  get points
+		//  Get points
 		Point p0 = _curve.get_point( i );
 		Point t0 = _curve.get_point( i + 1 );
 		Point t1 = _curve.get_point( i + 2 );
 		Point p1 = _curve.get_point( i + 3 );
 
+		//  Translate them from curve-space to screen-space
 		Vector2 pos0 = _transform_curve_to_screen( p0 );
 		Vector2 pos1 = _transform_curve_to_screen( p0 + t0 );
 		Vector2 pos2 = _transform_curve_to_screen( p1 + t1 );
 		Vector2 pos3 = _transform_curve_to_screen( p1 );
 
-		//  draw spline
+		//  Draw curve
 		DrawSplineSegmentBezierCubic(
 			pos0,
 			pos1,
@@ -302,7 +298,7 @@ void Editor::_render_curve_screen()
 			CURVE_COLOR
 		);
 
-		//  draw tangents
+		//  Draw tangents
 		DrawLineV(
 			pos0,
 			pos1,
@@ -327,7 +323,7 @@ void Editor::_render_curve_screen()
 		);
 	}*/
 
-	//  draw points
+	//  Draw points
 	for ( int i = 0; i < points_count; i++ )
 	{
 		const Point& point = _curve.get_global_point( i );
@@ -339,7 +335,7 @@ void Editor::_render_invalid_curve_screen()
 {
 	int points_count = _curve.get_points_count();
 
-	//  setup text strings
+	//  Setup text strings
 	const int TEXT_SIZE = 2;
 	const char* texts[TEXT_SIZE] {
 		"INVALID POINTS COUNT!",
@@ -351,7 +347,7 @@ void Editor::_render_invalid_curve_screen()
 		),
 	};
 
-	//  setup text rendering
+	//  Setup text rendering
 	Font font = GetFontDefault();
 	float font_size = 20.0f;
 	float spacing = 2.0f;
@@ -360,12 +356,12 @@ void Editor::_render_invalid_curve_screen()
 		_frame.y + _frame.height * 0.5f
 	};
 
-	//  draw all lines
+	//  Draw all lines
 	for ( int i = 0; i < TEXT_SIZE; i++ )
 	{
 		const char* text = texts[i];
 
-		//  measure line size
+		//  Measure line size
 		Vector2 text_size = MeasureTextEx( 
 			font, 
 			text, 
@@ -373,7 +369,7 @@ void Editor::_render_invalid_curve_screen()
 			spacing 
 		);
 
-		//  draw centered line
+		//  Draw centered line
 		DrawTextPro( 
 			font,
 			text, 
@@ -388,7 +384,7 @@ void Editor::_render_invalid_curve_screen()
 			TEXT_ERROR_COLOR
 		);
 
-		//  offset next line
+		//  Offset next line
 		pos.y += text_size.y + 2.0f;
 	}
 }
@@ -472,7 +468,7 @@ void Editor::_render_point( int point_id, const Vector2& pos )
 	bool is_hovered = point_id == _hovered_point_id || point_id == _selected_point_id;
 	bool is_selected = point_id == _selected_point_id;
 
-	//  choose color
+	//  Choose color
 	Color color;
 	if ( is_hovered )
 	{
@@ -490,7 +486,7 @@ void Editor::_render_point( int point_id, const Vector2& pos )
 		int tangent_id = _curve.get_point_tangent_id( point_id );
 		TangentMode mode = _curve.get_tangent_mode( tangent_id );
 
-		//  render point depending on mode
+		//  Draw point depending on mode
 		const char* mode_name = "N/A";
 		switch ( mode )
 		{
@@ -510,7 +506,7 @@ void Editor::_render_point( int point_id, const Vector2& pos )
 				break;
 		}
 
-		//  draw mode name
+		//  Draw mode name
 		if ( is_selected )
 		{
 			float font_size = 16.0f;
@@ -551,14 +547,14 @@ void Editor::_render_circle_point(
 	bool is_selected
 )
 {
-	//  draw point
+	//  Draw point
 	DrawCircleV( 
 		pos, 
 		POINT_SIZE * 0.5f, 
 		color
 	);
 
-	//  draw selected
+	//  Draw selected
 	if ( is_selected )
 	{
 		DrawCircleLinesV( 
@@ -577,7 +573,7 @@ void Editor::_render_square_point(
 {
 	int size = (int)POINT_SIZE;
 
-	//  draw point
+	//  Draw point
 	DrawRectangle( 
 		(int)pos.x - size / 2,
 		(int)pos.y - size / 2,
@@ -586,7 +582,7 @@ void Editor::_render_square_point(
 		color
 	);
 
-	//  draw selected
+	//  Draw selected
 	if ( is_selected )
 	{
 		size += (int)( POINT_SELECTED_OFFSET_SIZE + 1.0f );
@@ -622,9 +618,7 @@ float Editor::_transform_curve_to_screen_y( float y ) const
 Vector2 Editor::_transform_curve_to_screen( const Point& point ) const
 {	
 	return Vector2 {
-		//  x-mapping
 		_transform_curve_to_screen_x( point.x ),
-		//  y-mapping
 		_transform_curve_to_screen_y( point.y ),
 	};
 }

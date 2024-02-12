@@ -12,7 +12,7 @@ Curve::Curve( std::vector<Point> points )
 
 Point Curve::evaluate( float t ) const
 {
-	//  TODO: find points with 1D mapping
+	//  TODO: Find points with 1D mapping
 	const Point p0 = get_point( 0 );
 	const Point p1 = get_global_point( 1 );
 	const Point p2 = get_global_point( 2 );
@@ -37,7 +37,7 @@ void Curve::add_point( const Point& point )
 {
 	_points.push_back( point );
 
-	//  create a default tangent mode
+	//  Creates a default tangent mode if none
 	int max_tangent_id = get_point_tangent_id( get_points_count() );
 	if ( max_tangent_id > (int)_modes.size() - 1 )
 	{
@@ -119,10 +119,11 @@ void Curve::set_tangent_mode(
 
 	if ( should_apply_constraint )
 	{
-		//  ignore first & last modes
-		if ( tangent_id == 0 || tangent_id == (int)_modes.size() - 1 ) return;
+		//  Ignore first & last modes
+		if ( tangent_id == 0 || tangent_id == (int)_modes.size() - 1 ) 
+			return;
 
-		//  apply tangent mode constraint
+		//  Apply new tangent mode constraint
 		int point_id = tangent_id * 3 + 1;
 		set_tangent_point( point_id, get_point( point_id ) );
 	}
