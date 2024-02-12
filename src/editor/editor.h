@@ -47,6 +47,8 @@ namespace curve_editor_x
 			bool is_selected
 		);
 
+		float _transform_curve_to_screen_x( float x ) const;
+		float _transform_curve_to_screen_y( float y ) const;
 		Vector2 _transform_curve_to_screen( const Point& point ) const;
 		Vector2 _transform_screen_to_curve( const Vector2& pos ) const;
 

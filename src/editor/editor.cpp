@@ -414,18 +414,18 @@ void Editor::_render_grid()
 			    x < ceilf( curve_bottom_right.x ); 
 			    x += GRID_SMALL_GAP )
 	{
-		Vector2 screen_pos = _transform_curve_to_screen( { x, 0.0f } );
+		float screen_x = _transform_curve_to_screen_x( x );
 
 		bool is_large_line = fmodf( 
 			x, GRID_LARGE_COUNT * GRID_SMALL_GAP ) == 0.0f;
 
 		DrawLineEx( 
 			Vector2 {
-				screen_pos.x,
+				screen_x,
 				_frame_outline.y,
 			},
 			Vector2 {
-				screen_pos.x,
+				screen_x,
 				_frame_outline.y + _frame_outline.height,
 			},
 			is_large_line 
@@ -440,7 +440,7 @@ void Editor::_render_grid()
 			    y < ceilf( curve_top_left.y ); 
 			    y += GRID_SMALL_GAP )
 	{
-		Vector2 screen_pos = _transform_curve_to_screen( { 0.0f, y } );
+		float screen_y = _transform_curve_to_screen_y( y );
 
 		bool is_large_line = fmodf( 
 			y, GRID_LARGE_COUNT * GRID_SMALL_GAP ) == 0.0f;
@@ -448,11 +448,11 @@ void Editor::_render_grid()
 		DrawLineEx( 
 			Vector2 {
 				_frame_outline.x,
-				screen_pos.y,
+				screen_y,
 			},
 			Vector2 {
 				( _frame_outline.x + _frame_outline.width ),
-				screen_pos.y,
+				screen_y,
 			},
 			is_large_line 
 				? GRID_LARGE_LINE_THICKNESS 
@@ -597,16 +597,32 @@ void Editor::_render_square_point(
 	}
 }
 
-Vector2 Editor::_transform_curve_to_screen( const Point& point ) const
-{	
-	return point.remap(
-		//  x-mapping
+float Editor::_transform_curve_to_screen_x( float x ) const
+{
+	return remap( 
+		x, 
 		_curve_extrems.min_x, _curve_extrems.max_x, 
-		_viewport.x, _viewport.x + _viewport.width * _zoom,
-		//  y-mapping
+		_viewport.x, _viewport.x + _viewport.width * _zoom
+	);
+}
+
+float Editor::_transform_curve_to_screen_y( float y ) const
+{
+	return remap( 
+		y, 
 		_curve_extrems.min_y, _curve_extrems.max_y, 
 		_viewport.y + _viewport.height * _zoom, _viewport.y
 	);
+}
+
+Vector2 Editor::_transform_curve_to_screen( const Point& point ) const
+{	
+	return Vector2 {
+		//  x-mapping
+		_transform_curve_to_screen_x( point.x ),
+		//  y-mapping
+		_transform_curve_to_screen_y( point.y ),
+	};
 }
 
 Vector2 Editor::_transform_screen_to_curve( const Vector2& pos ) const
