@@ -195,7 +195,7 @@ void Editor::render()
 			MeasureText( points_c_str, TITLE_FONT_SIZE );
 		DrawText(
 			points_c_str,
-			(int)_frame.x + _frame.width - points_width,
+			(int)_frame.x + (int)_frame.width - points_width,
 			(int)_frame.y,
 			TITLE_FONT_SIZE,
 			TEXT_COLOR
@@ -424,8 +424,8 @@ void Editor::_render_point( int point_id, const Vector2& pos )
 			//  measure text size
 			Vector2 size = MeasureTextEx( 
 				font, 
-				mode_name, 
-				(int)font_size,
+				mode_name,
+				font_size,
 				spacing
 			);
 
@@ -479,7 +479,7 @@ void Editor::_render_square_point(
 	bool is_selected
 )
 {
-	int size = POINT_SIZE;
+	int size = (int)POINT_SIZE;
 
 	//  draw point
 	DrawRectangle( 
@@ -493,7 +493,7 @@ void Editor::_render_square_point(
 	//  draw selected
 	if ( is_selected )
 	{
-		size += POINT_SELECTED_OFFSET_SIZE + 1.0f;
+		size += (int)( POINT_SELECTED_OFFSET_SIZE + 1.0f );
 
 		DrawRectangleLines(
 			(int)pos.x - size / 2,
