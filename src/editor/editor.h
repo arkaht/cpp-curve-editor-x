@@ -27,6 +27,12 @@ namespace curve_editor_x
 	private:
 		void _invalidate_layout();
 
+		void _render_title_text();
+		void _render_frame();
+
+		void _render_curve_screen();
+		void _render_invalid_curve_screen();
+
 		void _render_point( int point_id, const Vector2& pos );
 		void _render_circle_point( 
 			const Vector2& pos, 

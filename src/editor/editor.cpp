@@ -177,168 +177,8 @@ void Editor::render()
 {
 	ClearBackground( BACKGROUND_COLOR );
 
-	int points_count = _curve.get_points_count();
-
-	//  draw title
-	{
-		const char* title_c_str = _title.c_str();
-		DrawText( 
-			title_c_str, 
-			(int)_frame.x, (int)_frame.y, 
-			TITLE_FONT_SIZE, 
-			TEXT_COLOR 
-		);
-
-		const char* points_c_str = 
-			TextFormat( "%d points", points_count );
-		int points_width = 
-			MeasureText( points_c_str, TITLE_FONT_SIZE );
-		DrawText(
-			points_c_str,
-			(int)_frame.x + (int)_frame.width - points_width,
-			(int)_frame.y,
-			TITLE_FONT_SIZE,
-			TEXT_COLOR
-		);
-	}
-	//  draw frame
-	DrawRectangleLinesEx( 
-		_frame_outline, 
-		2.0f, 
-		CURVE_FRAME_COLOR 
-	);
-
-	if ( _curve.is_valid() ) 
-	{
-		BeginScissorMode( 
-			(int)_frame_outline.x, (int)_frame_outline.y, 
-			(int)_frame_outline.width, (int)_frame_outline.height 
-		);
-
-		//  draw mouse position
-		if ( DRAW_MOUSE_POSITION )
-		{
-			Vector2 mouse_pos = GetMousePosition();
-			DrawCircleV( mouse_pos, SELECTION_RADIUS, TEXT_COLOR );
-		}
-
-		/*printf( "x(%f -> %f) | y(%f -> %f)\n", 
-			extrems.min_x, extrems.max_x, 
-			extrems.min_y, extrems.max_y );*/
-
-		//  draw curves
-		for ( int i = 0; i < points_count - 1; i += 3 )
-		{
-			//  get points
-			Point p0 = _curve.get_point( i );
-			Point t0 = _curve.get_point( i + 1 );
-			Point t1 = _curve.get_point( i + 2 );
-			Point p1 = _curve.get_point( i + 3 );
-
-			Vector2 pos0 = _transform_curve_to_screen( p0 );
-			Vector2 pos1 = _transform_curve_to_screen( p0 + t0 );
-			Vector2 pos2 = _transform_curve_to_screen( p1 + t1 );
-			Vector2 pos3 = _transform_curve_to_screen( p1 );
-
-			//  draw spline
-			DrawSplineSegmentBezierCubic(
-				pos0,
-				pos1,
-				pos2,
-				pos3,
-				CURVE_THICKNESS,
-				CURVE_COLOR
-			);
-
-			//  draw tangents
-			DrawLineV( 
-				pos0, 
-				pos1, 
-				TANGENT_COLOR 
-			);
-			DrawLineV(
-				pos3, 
-				pos2, 
-				TANGENT_COLOR 
-			);
-		}
-
-		/*int steps = 100;
-		for ( int i = 0; i < steps; i++ )
-		{
-			DrawCircleV( 
-				_transform_curve_to_screen( 
-					_curve.evaluate( (float)i / steps ) 
-				), 
-				CURVE_THICKNESS, 
-				PURPLE 
-			);
-		}*/
-
-		//  draw points
-		for ( int i = 0; i < points_count; i++ )
-		{
-			const Point& point = _curve.get_global_point( i );
-			_render_point( i, _transform_curve_to_screen( point ) );
-		}
-
-		EndScissorMode();
-	}
-	else
-	{
-		//  setup text strings
-		const int TEXT_SIZE = 2;
-		const char* texts[TEXT_SIZE] {
-			"INVALID POINTS COUNT!",
-			TextFormat( 
-				"%d points instead of %d or %d", 
-				points_count,
-				(int)floorf( ( points_count + 1 ) / 3.0f ) * 3 + 1,
-				(int)ceilf( ( points_count + 1 ) / 3.0f ) * 3 + 1
-			),
-		};
-
-		//  setup text rendering
-		Font font = GetFontDefault();
-		float font_size = 20.0f;
-		float spacing = 2.0f;
-		Vector2 pos {
-			_frame.x + _frame.width * 0.5f,
-			_frame.y + _frame.height * 0.5f
-		};
-
-		//  draw all lines
-		for ( int i = 0; i < TEXT_SIZE; i++ )
-		{
-			const char* text = texts[i];
-
-			//  measure line size
-			Vector2 text_size = MeasureTextEx( 
-				font, 
-				text, 
-				font_size, 
-				spacing 
-			);
-
-			//  draw centered line
-			DrawTextPro( 
-				font,
-				text, 
-				Vector2 {
-					pos.x - text_size.x * 0.5f,
-					pos.y - text_size.y * 0.5f,
-				},
-				Vector2 {},
-				0.0f,
-				font_size,
-				spacing,
-				TEXT_ERROR_COLOR
-			);
-
-			//  offset next line
-			pos.y += text_size.y + 2.0f;
-		}
-	}
+	_render_title_text();
+	_render_frame();
 }
 
 void Editor::fit_viewport_to_curve()
@@ -368,6 +208,183 @@ void Editor::_invalidate_layout()
 	_frame_outline.y = _frame.y + offset_y;
 	_frame_outline.width = _frame.width;
 	_frame_outline.height = _frame.height - offset_y;
+}
+
+void Editor::_render_title_text()
+{
+	int points_count = _curve.get_points_count();
+
+	const char* title_c_str = _title.c_str();
+	DrawText(
+		title_c_str,
+		(int) _frame.x, (int) _frame.y,
+		TITLE_FONT_SIZE,
+		TEXT_COLOR
+	);
+
+	const char* points_c_str = TextFormat( "%d points", points_count );
+	int points_width = MeasureText( points_c_str, TITLE_FONT_SIZE );
+
+	DrawText(
+		points_c_str,
+		(int) _frame.x + (int) _frame.width - points_width,
+		(int) _frame.y,
+		TITLE_FONT_SIZE,
+		TEXT_COLOR
+	);
+}
+
+void Editor::_render_frame()
+{
+	//  draw frame outline
+	DrawRectangleLinesEx( 
+		_frame_outline, 
+		2.0f, 
+		CURVE_FRAME_COLOR 
+	);
+
+	BeginScissorMode( 
+		(int)_frame_outline.x, (int)_frame_outline.y, 
+		(int)_frame_outline.width, (int)_frame_outline.height 
+	);
+
+	//  draw in-frame
+	if ( _curve.is_valid() ) 
+	{
+		_render_curve_screen();
+	}
+	else
+	{
+		_render_invalid_curve_screen();
+	}
+
+	EndScissorMode();
+}
+
+void Editor::_render_curve_screen()
+{
+	int points_count = _curve.get_points_count();
+
+	//  draw mouse position
+	if ( DRAW_MOUSE_POSITION )
+	{
+		Vector2 mouse_pos = GetMousePosition();
+		DrawCircleV( mouse_pos, SELECTION_RADIUS, TEXT_COLOR );
+	}
+
+	//  draw curves
+	for ( int i = 0; i < points_count - 1; i += 3 )
+	{
+		//  get points
+		Point p0 = _curve.get_point( i );
+		Point t0 = _curve.get_point( i + 1 );
+		Point t1 = _curve.get_point( i + 2 );
+		Point p1 = _curve.get_point( i + 3 );
+
+		Vector2 pos0 = _transform_curve_to_screen( p0 );
+		Vector2 pos1 = _transform_curve_to_screen( p0 + t0 );
+		Vector2 pos2 = _transform_curve_to_screen( p1 + t1 );
+		Vector2 pos3 = _transform_curve_to_screen( p1 );
+
+		//  draw spline
+		DrawSplineSegmentBezierCubic(
+			pos0,
+			pos1,
+			pos2,
+			pos3,
+			CURVE_THICKNESS,
+			CURVE_COLOR
+		);
+
+		//  draw tangents
+		DrawLineV(
+			pos0,
+			pos1,
+			TANGENT_COLOR
+		);
+		DrawLineV(
+			pos3,
+			pos2,
+			TANGENT_COLOR
+		);
+	}
+
+	/*int steps = 100;
+	for ( int i = 0; i < steps; i++ )
+	{
+		DrawCircleV(
+			_transform_curve_to_screen(
+			_curve.evaluate( (float)i / steps )
+			),
+			CURVE_THICKNESS,
+			PURPLE
+		);
+	}*/
+
+	//  draw points
+	for ( int i = 0; i < points_count; i++ )
+	{
+		const Point& point = _curve.get_global_point( i );
+		_render_point( i, _transform_curve_to_screen( point ) );
+	}
+}
+
+void Editor::_render_invalid_curve_screen()
+{
+	int points_count = _curve.get_points_count();
+
+	//  setup text strings
+	const int TEXT_SIZE = 2;
+	const char* texts[TEXT_SIZE] {
+		"INVALID POINTS COUNT!",
+		TextFormat( 
+			"%d points instead of %d or %d", 
+			points_count,
+			(int)floorf( ( points_count + 1 ) / 3.0f ) * 3 + 1,
+			(int)ceilf( ( points_count + 1 ) / 3.0f ) * 3 + 1
+		),
+	};
+
+	//  setup text rendering
+	Font font = GetFontDefault();
+	float font_size = 20.0f;
+	float spacing = 2.0f;
+	Vector2 pos {
+		_frame.x + _frame.width * 0.5f,
+		_frame.y + _frame.height * 0.5f
+	};
+
+	//  draw all lines
+	for ( int i = 0; i < TEXT_SIZE; i++ )
+	{
+		const char* text = texts[i];
+
+		//  measure line size
+		Vector2 text_size = MeasureTextEx( 
+			font, 
+			text, 
+			font_size, 
+			spacing 
+		);
+
+		//  draw centered line
+		DrawTextPro( 
+			font,
+			text, 
+			Vector2 {
+				pos.x - text_size.x * 0.5f,
+				pos.y - text_size.y * 0.5f,
+			},
+			Vector2 {},
+			0.0f,
+			font_size,
+			spacing,
+			TEXT_ERROR_COLOR
+		);
+
+		//  offset next line
+		pos.y += text_size.y + 2.0f;
+	}
 }
 
 void Editor::_render_point( int point_id, const Vector2& pos )
