@@ -12,11 +12,13 @@ Curve::Curve( std::vector<Point> points )
 
 Point Curve::evaluate( float t ) const
 {
-	//  TODO: Find points with 1D mapping
-	const Point p0 = get_point( 0 );
-	const Point p1 = get_global_point( 1 );
-	const Point p2 = get_global_point( 2 );
-	const Point p3 = get_point( 3 );
+	int curve_id = get_curve_id_by_time( t );
+	t = fmaxf( fminf( t, 1.0f ), 0.0f );
+
+	const Point p0 = get_point( curve_id );
+	const Point p1 = p0 + get_point( curve_id + 1 );
+	const Point p3 = get_point( curve_id + 3 );
+	const Point p2 = p3 + get_point( curve_id + 2 );
 
 	const float it = 1.0f - t;
 	const float it2 = it * it;
@@ -43,11 +45,15 @@ void Curve::add_point( const Point& point )
 	{
 		_modes.push_back( TangentMode::Mirrored );
 	}
+
+	_is_length_dirty = true;
 }
 
 void Curve::set_point( int id, const Point& point )
 {
 	_points[id] = point;
+
+	_is_length_dirty = true;
 }
 
 void Curve::set_tangent_point( int point_id, const Point& point )
@@ -107,6 +113,21 @@ int Curve::get_control_point_id( int point_id ) const
 	if ( curve_id == 2 ) return point_id + 1;
 
 	return point_id;
+}
+
+int Curve::get_curve_id_by_time( float& t ) const
+{
+	if ( t >= 1.0f )
+	{
+		t = 1.0f;
+		return get_points_count() - 4;
+	}
+
+	t = fmaxf( t, 0.0f ) * get_curves_count();
+	int curve_id = (int)floorf( t );
+	t -= (float)curve_id;
+	
+	return curve_id * 3;
 }
 
 void Curve::set_tangent_mode( 
@@ -218,4 +239,35 @@ Point Curve::get_point( int point_id ) const
 int Curve::get_points_count() const 
 { 
 	return (int)_points.size(); 
+}
+
+int Curve::get_curves_count() const
+{
+	return ( get_points_count() - 1 ) / 3.0f;
+}
+
+float Curve::get_length()
+{
+	if ( _is_length_dirty )
+	{
+		_compute_length();
+		_is_length_dirty = false;
+	}
+
+	return _length;
+}
+
+void Curve::_compute_length()
+{
+	_length = 0.0f;
+
+	const float steps = 1.0f / 100.0f;
+
+	Point last_point = get_point( 0 );
+	for ( float t = steps; t < 1.0f; t += steps )
+	{
+		const Point point = evaluate( t );
+		_length += ( point - last_point ).length();
+		last_point = point;
+	}
 }

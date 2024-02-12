@@ -43,6 +43,11 @@ void Editor::update( float dt )
 	Vector2 mouse_pos = GetMousePosition();
 	Vector2 mouse_delta = GetMouseDelta();
 
+	//  LCTRL-down: Grid snapping
+	_is_grid_snapping = IsKeyDown( KEY_LEFT_CONTROL );
+	//  LSHIFT-down: Quick curve evaluation
+	_is_quick_evaluating = IsKeyDown( KEY_LEFT_SHIFT );
+
 	//  RMB: Move viewport around
 	if ( IsMouseButtonDown( MOUSE_BUTTON_RIGHT ) )
 	{
@@ -125,10 +130,9 @@ void Editor::update( float dt )
 		Point new_point = _transform_screen_to_curve( mouse_pos );
 
 		//  Grid snapping
-		if ( IsKeyDown( KEY_LEFT_CONTROL ) )
+		if ( _is_grid_snapping )
 		{
-			new_point.x = roundf( new_point.x / GRID_SMALL_GAP ) * GRID_SMALL_GAP;
-			new_point.y = roundf( new_point.y / GRID_SMALL_GAP ) * GRID_SMALL_GAP;
+			new_point = _transform_grid_snap( new_point );
 		}
 
 		//  Tangents are in local-space so we need to convert them
@@ -169,6 +173,30 @@ void Editor::update( float dt )
 			: (TangentMode)( (int)tangent_mode + 1 );
 
 		_curve.set_tangent_mode( tangent_id, next_tangent_mode );
+	}
+
+	//  Quick curve evaluation
+	if ( _is_quick_evaluating )
+	{
+		Point new_point = _transform_screen_to_curve( mouse_pos );
+
+		//  Grid snapping
+		if ( _is_grid_snapping )
+		{
+			new_point = _transform_grid_snap( new_point );
+		}
+		
+		const float steps = 0.01f;
+		const float length = _curve.get_length();
+
+		float dist = 0.0f;
+		for ( dist; dist < length; dist += steps )
+		{
+			_quick_evaluation_time = dist / length;
+			_quick_evaluation_pos = _curve.evaluate( _quick_evaluation_time );
+			
+			if ( _quick_evaluation_pos.x >= new_point.x ) break;
+		}
 	}
 }
 
@@ -311,17 +339,73 @@ void Editor::_render_curve_screen()
 		);
 	}
 
-	/*int steps = 100;
-	for ( int i = 0; i < steps; i++ )
+	float steps = 0.1f;
+	Vector2 last_point = _transform_curve_to_screen( 
+		_curve.evaluate( 0.0f ) );
+	float length = _curve.get_length();
+	DrawText( 
+		TextFormat( "length: %f", length ),
+		_frame_outline.x + 16.0f, 
+		_frame_outline.y + 16.0f,
+		20.0f,
+		TEXT_COLOR
+	);
+
+	for ( float dist = steps; dist < length; dist += steps )
 	{
+		Vector2 point = _transform_curve_to_screen( 
+			_curve.evaluate( dist / length ) );
+
 		DrawCircleV(
-			_transform_curve_to_screen(
-			_curve.evaluate( (float)i / steps )
-			),
+			point,
 			CURVE_THICKNESS,
 			PURPLE
 		);
-	}*/
+
+		DrawLineEx( last_point, point, CURVE_THICKNESS, PURPLE );
+
+		last_point = point;
+	}
+
+	//  Draw quick evaluation
+	if ( _is_quick_evaluating )
+	{
+		const float font_size = 20.0f;
+		Vector2 pos = _transform_curve_to_screen( _quick_evaluation_pos );
+		
+		DrawLineEx(
+			Vector2 {
+				pos.x,
+				_frame_outline.y,
+			},
+			Vector2 {
+				pos.x,
+				_frame_outline.y + _frame_outline.height,
+			},
+			QUICK_EVALUATION_THICKNESS,
+			QUICK_EVALUATION_COLOR
+		);
+		
+		DrawCircleV( 
+			pos, 
+			QUICK_EVALUATION_THICKNESS * 2.0f, 
+			QUICK_EVALUATION_COLOR 
+		);
+
+		DrawTextEx(
+			GetFontDefault(),
+			TextFormat( "t=%.3f;\nx=%.3f\ny=%.3f",
+				_quick_evaluation_time, 
+				_quick_evaluation_pos.x, _quick_evaluation_pos.y ),
+			Vector2 {
+				pos.x + 10.0f,
+				pos.y,
+			},
+			font_size,
+			2.0f,
+			QUICK_EVALUATION_COLOR
+		);
+	}
 
 	//  Draw points
 	for ( int i = 0; i < points_count; i++ )
@@ -634,4 +718,12 @@ Vector2 Editor::_transform_screen_to_curve( const Vector2& pos ) const
 		_viewport.y + _viewport.height * _zoom, _viewport.y,
 		_curve_extrems.min_y, _curve_extrems.max_y
 	);
+}
+
+Vector2 Editor::_transform_grid_snap( const Vector2& pos ) const
+{
+	return Vector2 {
+		roundf( pos.x / GRID_SMALL_GAP ) * GRID_SMALL_GAP,
+		roundf( pos.y / GRID_SMALL_GAP ) * GRID_SMALL_GAP,
+	};
 }

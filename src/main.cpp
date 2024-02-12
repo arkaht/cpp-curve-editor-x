@@ -24,7 +24,8 @@
  *  - [x] tangents modes (broken, aligned, mirrored)
  *  - [x] grid rendering
  *  - [x] grid-snapping
- *  - [ ] quick evaluate (ctrl + hover)
+ *  - [x] quick curve evaluation (ctrl + hover)
+ *  - [ ] better curve evaluation (w/ x-axis as time)
  *  - [ ] export to file
  *  - [ ] import from file
  */

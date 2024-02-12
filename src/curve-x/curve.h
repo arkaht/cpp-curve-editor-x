@@ -104,6 +104,7 @@ namespace curve_x
 		 * index.
 		 */
 		int get_control_point_id( int point_id ) const;
+		int get_curve_id_by_time( float& t ) const;
 
 		/*
 		 * Returns whenever the curve contains a valid amount 
@@ -154,8 +155,18 @@ namespace curve_x
 		 * Returns count of points stored in the curve.
 		 */
 		int get_points_count() const;
+		int get_curves_count() const;
+
+		//  TODO: Decide if this function should be non-const 
+		float get_length();
 
 	private:
+		void _compute_length();
+
+	private:
+		bool _is_length_dirty = true;
+		float _length = 0.0f;
+
 		/*
 		 * Vector containing both control & tangent points.
 		 * 

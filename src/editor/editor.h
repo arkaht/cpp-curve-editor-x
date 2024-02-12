@@ -51,6 +51,7 @@ namespace curve_editor_x
 		float _transform_curve_to_screen_y( float y ) const;
 		Vector2 _transform_curve_to_screen( const Point& point ) const;
 		Vector2 _transform_screen_to_curve( const Vector2& pos ) const;
+		Vector2 _transform_grid_snap( const Vector2& pos ) const;
 
 	//  Application settings
 	private:
@@ -63,7 +64,9 @@ namespace curve_editor_x
 		const Color POINT_COLOR { 255, 0, 0, 255 };
 		const Color POINT_SELECTED_COLOR { 255, 255, 255, 255 };
 		const Color GRID_LINE_COLOR { 120, 120, 120, 255 };
+		const Color QUICK_EVALUATION_COLOR { 90, 90, 90, 255 };
 
+		const float QUICK_EVALUATION_THICKNESS = 2.0f;
 		const float CURVE_THICKNESS = 2.0f;
 		const float POINT_SIZE = CURVE_THICKNESS * 3.0f;
 		const float POINT_SELECTED_OFFSET_SIZE = 3.0f;
@@ -99,6 +102,12 @@ namespace curve_editor_x
 		float _zoom = 1.0f;
 		Rectangle _viewport {};
 		Rectangle _frame_outline {};
+
+		bool _is_grid_snapping = false;
+
+		bool _is_quick_evaluating = false;
+		float _quick_evaluation_time = 0.0f;
+		Vector2 _quick_evaluation_pos {};
 
 		int _hovered_point_id = -1;
 		int _selected_point_id = -1;
