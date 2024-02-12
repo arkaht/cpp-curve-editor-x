@@ -265,6 +265,8 @@ void Editor::_render_curve_screen()
 {
 	int points_count = _curve.get_points_count();
 
+	_render_grid();
+
 	//  draw mouse position
 	if ( DRAW_MOUSE_POSITION )
 	{
@@ -384,6 +386,79 @@ void Editor::_render_invalid_curve_screen()
 
 		//  offset next line
 		pos.y += text_size.y + 2.0f;
+	}
+}
+
+void Editor::_render_grid()
+{
+	//  Find in-frame curve coordinates extrems, these positions
+	//  will be used to draw our grid in a performant way where
+	//  only visible grid lines will be rendered
+
+	Vector2 curve_top_left = _transform_screen_to_curve( { 
+		_frame_outline.x, 
+		_frame_outline.y 
+	} );
+	Vector2 curve_bottom_right = _transform_screen_to_curve( { 
+		_frame_outline.x + _frame_outline.width, 
+		_frame_outline.y + _frame_outline.height 
+	} );
+
+	/*printf( "Grid x-axis: %f -> %f\n", 
+		curve_top_left.x, curve_bottom_right.x );
+	printf( "Grid y-axis: %f -> %f\n", 
+		curve_top_left.y, curve_bottom_right.y );*/
+
+	//  Draw vertical lines
+	for ( float x = floorf( curve_top_left.x ); 
+			    x < ceilf( curve_bottom_right.x ); 
+			    x += GRID_SMALL_GAP )
+	{
+		Vector2 screen_pos = _transform_curve_to_screen( { x, 0.0f } );
+
+		bool is_large_line = fmodf( 
+			x, GRID_LARGE_COUNT * GRID_SMALL_GAP ) == 0.0f;
+
+		DrawLineEx( 
+			Vector2 {
+				screen_pos.x,
+				_frame_outline.y,
+			},
+			Vector2 {
+				screen_pos.x,
+				_frame_outline.y + _frame_outline.height,
+			},
+			is_large_line 
+				? GRID_LARGE_LINE_THICKNESS 
+				: GRID_SMALL_LINE_THICKNESS,
+			GRID_LINE_COLOR
+		);
+	}
+
+	//  Draw horizontal lines
+	for ( float y = floorf( curve_bottom_right.y ); 
+			    y < ceilf( curve_top_left.y ); 
+			    y += GRID_SMALL_GAP )
+	{
+		Vector2 screen_pos = _transform_curve_to_screen( { 0.0f, y } );
+
+		bool is_large_line = fmodf( 
+			y, GRID_LARGE_COUNT * GRID_SMALL_GAP ) == 0.0f;
+
+		DrawLineEx( 
+			Vector2 {
+				_frame_outline.x,
+				screen_pos.y,
+			},
+			Vector2 {
+				( _frame_outline.x + _frame_outline.width ),
+				screen_pos.y,
+			},
+			is_large_line 
+				? GRID_LARGE_LINE_THICKNESS 
+				: GRID_SMALL_LINE_THICKNESS,
+			GRID_LINE_COLOR
+		);
 	}
 }
 

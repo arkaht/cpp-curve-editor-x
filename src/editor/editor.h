@@ -33,6 +33,8 @@ namespace curve_editor_x
 		void _render_curve_screen();
 		void _render_invalid_curve_screen();
 
+		void _render_grid();
+
 		void _render_point( int point_id, const Vector2& pos );
 		void _render_circle_point( 
 			const Vector2& pos, 
@@ -58,11 +60,19 @@ namespace curve_editor_x
 		const Color TANGENT_COLOR { 120, 120, 120, 255 };
 		const Color POINT_COLOR { 255, 0, 0, 255 };
 		const Color POINT_SELECTED_COLOR { 255, 255, 255, 255 };
+		const Color GRID_LINE_COLOR { 120, 120, 120, 255 };
 
 		const float CURVE_THICKNESS = 2.0f;
 		const float POINT_SIZE = CURVE_THICKNESS * 3.0f;
 		const float POINT_SELECTED_OFFSET_SIZE = 3.0f;
 		const float CURVE_FRAME_PADDING = 32.0f;
+
+		//  In curve units, the gap for each grid line
+		const float GRID_SMALL_GAP = 1.0f;
+		//  Number of small grid lines to form a larger line
+		const float GRID_LARGE_COUNT = 10.0f;
+		const float GRID_SMALL_LINE_THICKNESS = 1.0f;
+		const float GRID_LARGE_LINE_THICKNESS = 2.0f;
 
 		const float SELECTION_RADIUS = 8.0f;
 

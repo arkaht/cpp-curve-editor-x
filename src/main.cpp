@@ -21,9 +21,9 @@
  *  - [x] points user-control (selection & drag)
  *  - [x] tangents user-control
  *  - [x] tangents modes (broken, aligned, mirrored)
- *  - [ ] grid rendering
+ *  - [x] grid rendering
+ *  - [/] grid-snapping
  *  - [ ] quick evaluate (ctrl + hover)
- *  - [ ] grid-snapping
  *  - [ ] export to file
  *  - [ ] import from file
  */
