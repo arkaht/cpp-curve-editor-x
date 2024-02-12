@@ -22,7 +22,7 @@
  *  - [x] tangents user-control
  *  - [x] tangents modes (broken, aligned, mirrored)
  *  - [x] grid rendering
- *  - [/] grid-snapping
+ *  - [x] grid-snapping
  *  - [ ] quick evaluate (ctrl + hover)
  *  - [ ] export to file
  *  - [ ] import from file

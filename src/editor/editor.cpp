@@ -127,15 +127,19 @@ void Editor::update( float dt )
 		&& _curve.is_valid_point_id( _selected_point_id ) 
 		&& _can_drag_selected_point )
 	{
-		/*Point point = _curve.get_point( _selected_point_id );
-		point.x += mouse_delta.x / _viewport.width * _zoom;
-		point.y += mouse_delta.y / _viewport.height * _zoom;*/
-
+		//  Translate mouse screen-position to curve-position
 		Point new_point = _transform_screen_to_curve( mouse_pos );
+
+		//  Grid snapping
+		if ( IsKeyDown( KEY_LEFT_CONTROL ) )
+		{
+			new_point.x = roundf( new_point.x / GRID_SMALL_GAP ) * GRID_SMALL_GAP;
+			new_point.y = roundf( new_point.y / GRID_SMALL_GAP ) * GRID_SMALL_GAP;
+		}
 
 		//  Tangents are in local space so we need to convert them
 		//  from global space. They also use a different function
-		//  to apply the tangent mode.
+		//  to apply the tangent mode constraint.
 		if ( !_curve.is_control_point( _selected_point_id ) )
 		{
 			int control_point_id = 
