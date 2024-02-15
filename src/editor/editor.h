@@ -26,6 +26,7 @@ namespace curve_editor_x
 
 	private:
 		void _invalidate_layout();
+		void _invalidate_grid();
 
 		void _render_title_text();
 		void _render_frame();
@@ -51,7 +52,8 @@ namespace curve_editor_x
 		float _transform_curve_to_screen_y( float y ) const;
 		Vector2 _transform_curve_to_screen( const Point& point ) const;
 		Vector2 _transform_screen_to_curve( const Vector2& pos ) const;
-		Vector2 _transform_grid_snap( const Vector2& pos ) const;
+		Vector2 _transform_rounded_grid_snap( const Vector2& pos ) const;
+		Vector2 _transform_ceiled_grid_snap( const Vector2& pos ) const;
 
 	//  Application settings
 	private:
@@ -85,9 +87,11 @@ namespace curve_editor_x
 		const float TITLE_DOCK_MARGIN_BOTTOM = 4.0f;
 
 		const float ZOOM_SENSITIVITY = 0.1f;
-		const float ZOOM_MIN = 0.3f;
-		const float ZOOM_MAX = 1.5f;
+		const float ZOOM_MIN = 0.1f;
+		const float ZOOM_MAX = 5.0f;
 
+		//  Does the frame rendering clips its content?
+		const bool  ENABLE_CLIPPING = true;
 		const bool  DRAW_MOUSE_POSITION = true;
 		const bool  MUST_DOUBLE_CLICK_TO_DRAG_POINT = false;
 
@@ -104,6 +108,7 @@ namespace curve_editor_x
 		Rectangle _frame_outline {};
 
 		bool _is_grid_snapping = false;
+		float _grid_gap = 1.0f;
 
 		bool _is_quick_evaluating = false;
 		Vector2 _quick_evaluation_pos {};

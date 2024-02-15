@@ -17,6 +17,7 @@
  *  - "Cubic Hermite spline": https://en.wikipedia.org/wiki/Cubic_Hermite_spline
  *  - "Bézier spline": https://en.wikipedia.org/wiki/B%C3%A9zier_curve
  *  - "Curves and Splines": https://catlikecoding.com/unity/tutorials/curves-and-splines/
+ *  - "A Primer on Bézier Curve": https://pomax.github.io/BezierInfo-2/
  *  - Unreal Engine's FRichCurve code for value evaluation by time
  * 
  *  TODO LIST (by priority order):
@@ -28,6 +29,8 @@
  *  - [x] grid-snapping
  *  - [x] quick curve evaluation (ctrl + hover)
  *  - [x] time curve evaluation (x-axis as time)
+ *  - [/] grid scaling w/ zoom
+ *  - [ ] add & remove points
  *  - [ ] export to file
  *  - [ ] import from file
  */

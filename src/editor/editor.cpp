@@ -67,6 +67,7 @@ void Editor::update( float dt )
 				_zoom + mouse_wheel_delta * ZOOM_SENSITIVITY 
 			) 
 		);
+		_invalidate_grid();
 
 		//  Offset viewport to simulate zooming to mouse position
 		if ( _zoom != old_zoom )
@@ -95,7 +96,8 @@ void Editor::update( float dt )
 	for ( int i = 0; i < _curve.get_points_count(); i++ )
 	{
 		const Point& point = _curve.get_global_point( i );
-		const Vector2 screen_point = _transform_curve_to_screen( point );
+		const Vector2 screen_point = _transform_curve_to_screen( 
+			point );
 
 		if ( CheckCollisionPointCircle( 
 			mouse_pos,
@@ -132,7 +134,7 @@ void Editor::update( float dt )
 		//  Grid snapping
 		if ( _is_grid_snapping )
 		{
-			new_point = _transform_grid_snap( new_point );
+			new_point = _transform_rounded_grid_snap( new_point );
 		}
 
 		//  Tangents are in local-space so we need to convert them
@@ -183,12 +185,13 @@ void Editor::update( float dt )
 		//  Grid snapping
 		if ( _is_grid_snapping )
 		{
-			new_point = _transform_grid_snap( new_point );
+			new_point = _transform_rounded_grid_snap( new_point );
 		}
 		
 		//  Evaluate at mouse position
 		_quick_evaluation_pos.x = new_point.x;
-		_quick_evaluation_pos.y = _curve.evaluate_by_time( new_point.x );
+		_quick_evaluation_pos.y = _curve.evaluate_by_time( 
+			new_point.x );
 	}
 }
 
@@ -227,6 +230,12 @@ void Editor::_invalidate_layout()
 	_frame_outline.y = _frame.y + offset_y;
 	_frame_outline.width = _frame.width;
 	_frame_outline.height = _frame.height - offset_y;
+
+	_invalidate_grid();
+}
+
+void Editor::_invalidate_grid()
+{
 }
 
 void Editor::_render_title_text()
@@ -262,10 +271,14 @@ void Editor::_render_frame()
 		CURVE_FRAME_COLOR 
 	);
 
-	BeginScissorMode( 
-		(int)_frame_outline.x, (int)_frame_outline.y, 
-		(int)_frame_outline.width, (int)_frame_outline.height 
-	);
+	//  Enable clipping
+	if ( ENABLE_CLIPPING )
+	{
+		BeginScissorMode( 
+			(int)_frame_outline.x, (int)_frame_outline.y, 
+			(int)_frame_outline.width, (int)_frame_outline.height 
+		);
+	}
 
 	//  Draw in-frame
 	if ( _curve.is_valid() ) 
@@ -277,7 +290,11 @@ void Editor::_render_frame()
 		_render_invalid_curve_screen();
 	}
 
-	EndScissorMode();
+	//  Disable clipping
+	if ( ENABLE_CLIPPING )
+	{
+		EndScissorMode();
+	}
 }
 
 void Editor::_render_curve_screen()
@@ -496,7 +513,6 @@ void Editor::_render_grid()
 	//  Find in-frame curve coordinates extrems, these positions
 	//  will be used to draw our grid in a performant way where
 	//  only visible grid lines will be rendered
-
 	Vector2 curve_top_left = _transform_screen_to_curve( { 
 		_frame_outline.x, 
 		_frame_outline.y 
@@ -506,20 +522,22 @@ void Editor::_render_grid()
 		_frame_outline.y + _frame_outline.height 
 	} );
 
-	/*printf( "Grid x-axis: %f -> %f\n", 
-		curve_top_left.x, curve_bottom_right.x );
-	printf( "Grid y-axis: %f -> %f\n", 
-		curve_top_left.y, curve_bottom_right.y );*/
+	//  Grid-snap positions 
+	//  (ceiling instead of rounding fixes sudden lines appearing)
+	curve_top_left = _transform_ceiled_grid_snap( curve_top_left );
+	curve_bottom_right = _transform_ceiled_grid_snap( curve_bottom_right );
 
 	//  Draw vertical lines
-	for ( float x = floorf( curve_top_left.x ); 
-			    x < ceilf( curve_bottom_right.x ); 
-			    x += GRID_SMALL_GAP )
+	for ( 
+		float x = curve_top_left.x; 
+		      x < curve_bottom_right.x; 
+		      x += _grid_gap 
+	)
 	{
 		float screen_x = _transform_curve_to_screen_x( x );
 
 		bool is_large_line = fmodf( 
-			x, GRID_LARGE_COUNT * GRID_SMALL_GAP ) == 0.0f;
+			x, GRID_LARGE_COUNT * _grid_gap ) == 0.0f;
 
 		DrawLineEx( 
 			Vector2 {
@@ -538,14 +556,16 @@ void Editor::_render_grid()
 	}
 
 	//  Draw horizontal lines
-	for ( float y = floorf( curve_bottom_right.y ); 
-			    y < ceilf( curve_top_left.y ); 
-			    y += GRID_SMALL_GAP )
+	for ( 
+		float y = curve_bottom_right.y; 
+		      y < curve_top_left.y; 
+		      y += _grid_gap 
+	)
 	{
 		float screen_y = _transform_curve_to_screen_y( y );
 
 		bool is_large_line = fmodf( 
-			y, GRID_LARGE_COUNT * GRID_SMALL_GAP ) == 0.0f;
+			y, GRID_LARGE_COUNT * _grid_gap ) == 0.0f;
 
 		DrawLineEx( 
 			Vector2 {
@@ -738,10 +758,18 @@ Vector2 Editor::_transform_screen_to_curve( const Vector2& pos ) const
 	);
 }
 
-Vector2 Editor::_transform_grid_snap( const Vector2& pos ) const
+Vector2 Editor::_transform_rounded_grid_snap( const Vector2& pos ) const
 {
 	return Vector2 {
-		roundf( pos.x / GRID_SMALL_GAP ) * GRID_SMALL_GAP,
-		roundf( pos.y / GRID_SMALL_GAP ) * GRID_SMALL_GAP,
+		roundf( pos.x / _grid_gap ) * _grid_gap,
+		roundf( pos.y / _grid_gap ) * _grid_gap,
+	};
+}
+
+Vector2 Editor::_transform_ceiled_grid_snap( const Vector2& pos ) const
+{
+	return Vector2 {
+		ceilf( pos.x / _grid_gap ) * _grid_gap,
+		ceilf( pos.y / _grid_gap ) * _grid_gap,
 	};
 }
