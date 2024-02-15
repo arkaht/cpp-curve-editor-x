@@ -510,6 +510,8 @@ void Editor::_render_invalid_curve_screen()
 
 void Editor::_render_grid()
 {
+	Font font = GetFontDefault();
+
 	//  Find in-frame curve coordinates extrems, these positions
 	//  will be used to draw our grid in a performant way where
 	//  only visible grid lines will be rendered
@@ -539,10 +541,20 @@ void Editor::_render_grid()
 		bool is_large_line = fmodf( 
 			x, GRID_LARGE_COUNT * _grid_gap ) == 0.0f;
 
+		float font_size = is_large_line 
+			? GRID_LARGE_GRID_FONT_SIZE 
+			: GRID_SMALL_GRID_FONT_SIZE;
+
+		const char* text = TextFormat( "%.0f", x );
+		Vector2 text_size = MeasureTextEx( 
+			font, text, font_size, GRID_FONT_SPACING );
+
+		//  Draw grid line
 		DrawLineEx( 
 			Vector2 {
 				screen_x,
-				_frame_outline.y,
+				_frame_outline.y
+					+ GRID_TEXT_PADDING + text_size.y,
 			},
 			Vector2 {
 				screen_x,
@@ -551,6 +563,19 @@ void Editor::_render_grid()
 			is_large_line 
 				? GRID_LARGE_LINE_THICKNESS 
 				: GRID_SMALL_LINE_THICKNESS,
+			GRID_LINE_COLOR
+		);
+
+		//  Draw text for X-axis
+		DrawTextEx( 
+			font,
+			text, 
+			Vector2 {
+				screen_x - text_size.x * 0.5f,
+				_frame_outline.y + GRID_TEXT_PADDING,
+			},
+			font_size,
+			GRID_FONT_SPACING,
 			GRID_LINE_COLOR
 		);
 	}
@@ -567,9 +592,19 @@ void Editor::_render_grid()
 		bool is_large_line = fmodf( 
 			y, GRID_LARGE_COUNT * _grid_gap ) == 0.0f;
 
+		float font_size = is_large_line 
+			? GRID_LARGE_GRID_FONT_SIZE 
+			: GRID_SMALL_GRID_FONT_SIZE;
+
+		const char* text = TextFormat( "%.0f", y );
+		Vector2 text_size = MeasureTextEx( 
+			font, text, font_size, GRID_FONT_SPACING );
+
+		//  Draw grid line
 		DrawLineEx( 
 			Vector2 {
-				_frame_outline.x,
+				_frame_outline.x
+					+ GRID_TEXT_PADDING * 4.0f + text_size.x,
 				screen_y,
 			},
 			Vector2 {
@@ -579,6 +614,19 @@ void Editor::_render_grid()
 			is_large_line 
 				? GRID_LARGE_LINE_THICKNESS 
 				: GRID_SMALL_LINE_THICKNESS,
+			GRID_LINE_COLOR
+		);
+
+		//  Draw text for Y-axis
+		DrawTextEx( 
+			font,
+			text, 
+			Vector2 {
+				_frame_outline.x + GRID_TEXT_PADDING * 2.0f,
+				screen_y - text_size.y * 0.5f,
+			},
+			font_size,
+			GRID_FONT_SPACING,
 			GRID_LINE_COLOR
 		);
 	}

@@ -80,6 +80,10 @@ namespace curve_editor_x
 		const float GRID_LARGE_COUNT = 10.0f;
 		const float GRID_SMALL_LINE_THICKNESS = 1.0f;
 		const float GRID_LARGE_LINE_THICKNESS = 2.0f;
+		const float GRID_SMALL_GRID_FONT_SIZE = 16.0f;
+		const float GRID_LARGE_GRID_FONT_SIZE = 20.0f;
+		const float GRID_FONT_SPACING = 1.0f;
+		const float GRID_TEXT_PADDING = 2.0f;
 
 		const float SELECTION_RADIUS = 8.0f;
 
