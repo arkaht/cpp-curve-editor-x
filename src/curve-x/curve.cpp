@@ -308,7 +308,7 @@ int Curve::get_points_count() const
 
 int Curve::get_curves_count() const
 {
-	return ( get_points_count() - 1 ) / 3.0f;
+	return ( get_points_count() - 1 ) / 3;
 }
 
 float Curve::get_length()

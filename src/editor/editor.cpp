@@ -352,9 +352,9 @@ void Editor::_render_curve_screen()
 	float length = _curve.get_length();
 	DrawText( 
 		TextFormat( "length: %.3f", length ),
-		_frame_outline.x + CURVE_FRAME_PADDING * 0.5f, 
-		_frame_outline.y + CURVE_FRAME_PADDING * 0.5f,
-		20.0f,
+		(int)( _frame_outline.x + CURVE_FRAME_PADDING * 0.5f ), 
+		(int)( _frame_outline.y + CURVE_FRAME_PADDING * 0.5f ),
+		20,
 		TEXT_COLOR
 	);
 
