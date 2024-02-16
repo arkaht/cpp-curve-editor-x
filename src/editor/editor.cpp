@@ -352,7 +352,7 @@ void Editor::_render_curve_screen()
 	float length = _curve.get_length();
 	DrawText( 
 		TextFormat( "length: %.3f", length ),
-		(int)( _frame_outline.x + CURVE_FRAME_PADDING * 0.5f ), 
+		(int)( _frame_outline.x + 25 + CURVE_FRAME_PADDING * 0.5f ), 
 		(int)( _frame_outline.y + CURVE_FRAME_PADDING * 0.5f ),
 		20,
 		TEXT_COLOR
@@ -638,6 +638,8 @@ void Editor::_render_point( int point_id, const Vector2& pos )
 	bool is_hovered = point_id == _hovered_point_id || point_id == _selected_point_id;
 	bool is_selected = point_id == _selected_point_id;
 
+	Font font = GetFontDefault();
+
 	//  Choose color
 	Color color;
 	if ( is_hovered )
@@ -651,6 +653,7 @@ void Editor::_render_point( int point_id, const Vector2& pos )
 			: POINT_COLOR;
 	}
 
+	//  Draw point
 	if ( is_tangent )
 	{
 		int tangent_id = _curve.get_point_tangent_id( point_id );
@@ -679,9 +682,8 @@ void Editor::_render_point( int point_id, const Vector2& pos )
 		//  Draw mode name
 		if ( is_selected )
 		{
-			float font_size = 16.0f;
+			float font_size = 20.0f;
 			float spacing = 2.0f;
-			Font font = GetFontDefault();
 
 			//  measure text size
 			Vector2 size = MeasureTextEx( 
@@ -693,7 +695,7 @@ void Editor::_render_point( int point_id, const Vector2& pos )
 
 			//  draw text
 			DrawTextEx( 
-				GetFontDefault(),
+				font,
 				mode_name,
 				Vector2 {
 					pos.x - size.x * 0.5f,
@@ -708,6 +710,24 @@ void Editor::_render_point( int point_id, const Vector2& pos )
 	else
 	{
 		_render_circle_point( pos, color, is_selected );
+	}
+
+	if ( is_selected )
+	{
+		const Point& point = _curve.get_point( point_id );
+
+		//  Draw coordinates
+		DrawTextEx( 
+			font,
+			TextFormat( "x=%.3f\ny=%.3f", point.x, point.y ),
+			Vector2 {
+				pos.x + POINT_SIZE * 2.0f,
+				pos.y - POINT_SIZE,
+			},
+			20.0f,
+			1.0f,
+			TANGENT_COLOR
+		);
 	}
 }
 
