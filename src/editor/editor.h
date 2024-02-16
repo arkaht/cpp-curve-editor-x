@@ -62,7 +62,7 @@ namespace curve_editor_x
 		const Color TEXT_ERROR_COLOR = RED;
 		const Color CURVE_FRAME_COLOR = DARKGRAY;
 		const Color CURVE_COLOR { 255, 90, 90, 255 };
-		const Color TANGENT_COLOR { 120, 120, 120, 255 };
+		const Color TANGENT_COLOR { 90, 90, 90, 255 };
 		const Color POINT_COLOR { 255, 0, 0, 255 };
 		const Color POINT_SELECTED_COLOR { 255, 255, 255, 255 };
 		const Color GRID_LINE_COLOR { 120, 120, 120, 255 };
