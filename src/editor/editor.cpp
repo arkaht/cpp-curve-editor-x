@@ -341,6 +341,7 @@ void Editor::_render_curve_screen()
 {
 	int points_count = _curve.get_points_count();
 
+	//  Draw grid
 	_render_grid();
 
 	//  Draw mouse position
@@ -350,169 +351,22 @@ void Editor::_render_curve_screen()
 		DrawCircleV( mouse_pos, SELECTION_RADIUS, TEXT_COLOR );
 	}
 
-	//  Draw curves
+	//  Draw curve
 	switch ( _curve_interpolate_mode )
 	{
 		case CurveInterpolateMode::Bezier:
-		{
-			for ( int i = 0; i < points_count - 1; i += 3 )
-			{
-				//  Get points
-				Point p0 = _curve.get_point( i );
-				Point t0 = _curve.get_point( i + 1 );
-				Point t1 = _curve.get_point( i + 2 );
-				Point p1 = _curve.get_point( i + 3 );
-
-				//  Translate them from curve-space to screen-space
-				Vector2 pos0 = _transform_curve_to_screen( p0 );
-				Vector2 pos1 = _transform_curve_to_screen( p0 + t0 );
-				Vector2 pos2 = _transform_curve_to_screen( p1 + t1 );
-				Vector2 pos3 = _transform_curve_to_screen( p1 );
-
-				//  Draw curve
-				DrawSplineSegmentBezierCubic(
-					pos0,
-					pos1,
-					pos2,
-					pos3,
-					CURVE_THICKNESS,
-					CURVE_COLOR
-				);
-
-				//  Draw tangents
-				DrawLineEx(
-					pos0,
-					pos1,
-					TANGENT_THICKNESS,
-					TANGENT_COLOR
-				);
-				DrawLineEx(
-					pos3,
-					pos2,
-					TANGENT_THICKNESS,
-					TANGENT_COLOR
-				);
-			}
+			_render_curve_by_bezier();
 			break;
-		}
 		case CurveInterpolateMode::TimeEvaluation:
-		{
-			const float STEPS = 0.1f;
-
-			//  Draw curve using time-evaluation
-			float min_x = _curve.get_point( 0 ).x;
-			float max_x = _curve.get_point( 
-				points_count - 1 ).x + STEPS;
-			
-			Vector2 previous_pos = _transform_curve_to_screen( 
-				_curve.evaluate_by_percent( 0.0f ) );
-			for ( float x = min_x; x < max_x; x += STEPS )
-			{
-				const Vector2 pos = _transform_curve_to_screen( 
-					Point {
-						x,
-						_curve.evaluate_by_time( x ),
-					}
-				);
-
-				DrawCircleV(
-					pos,
-					CURVE_THICKNESS,
-					GREEN
-				);
-
-				DrawLineEx( 
-					previous_pos, 
-					pos, 
-					CURVE_THICKNESS, 
-					GREEN 
-				);
-
-				previous_pos = pos;
-			}
-
-			for ( 
-				int control_id = 0; 
-				    control_id < ( points_count - 1 ) / 3; 
-				    control_id++
-			)
-			{
-				const Point control_point = _curve.get_point( control_id * 3 );
-				const Vector2& control_pos = 
-					_transform_curve_to_screen( control_point );
-
-				int left_tangent_id = control_id * 3 - 1;
-				if ( _curve.is_valid_point_id( left_tangent_id ) )
-				{
-					const Vector2& tangent_pos = _transform_curve_to_screen(
-						control_point + _curve.get_point( left_tangent_id ) 
-					);
-
-					DrawLineEx(
-						control_pos,
-						tangent_pos,
-						TANGENT_THICKNESS,
-						TANGENT_COLOR
-					);
-				}
-
-				int right_tangent_id = control_id * 3 + 1;
-				if ( _curve.is_valid_point_id( right_tangent_id ) )
-				{
-					const Vector2& tangent_pos = _transform_curve_to_screen(
-						control_point + _curve.get_point( right_tangent_id ) 
-					);
-
-					DrawLineEx(
-						control_pos,
-						tangent_pos,
-						TANGENT_THICKNESS,
-						TANGENT_COLOR
-					);
-				}
-			}
+			_render_curve_by_time();
 			break;
-		}
 		case CurveInterpolateMode::DistanceEvaluation:
-		{
-			const float STEPS = 0.1f;
-
-			//  Draw curve's length
-			float length = _curve.get_length();
-			DrawText( 
-				TextFormat( "length: %.3f", length ),
-				(int)( _frame_outline.x + 25 + CURVE_FRAME_PADDING * 0.5f ), 
-				(int)( _frame_outline.y + CURVE_FRAME_PADDING * 0.5f ),
-				20,
-				TEXT_COLOR
-			);
-
-			//  Draw curve using distance-evaluation
-			Vector2 previous_pos = _transform_curve_to_screen( 
-				_curve.evaluate_by_distance( 0.0f ) );
-			for ( float dist = STEPS; dist < length; dist += STEPS )
-			{
-				const Vector2 pos = _transform_curve_to_screen( 
-					_curve.evaluate_by_distance( dist ) );
-
-				DrawCircleV(
-					pos,
-					CURVE_THICKNESS,
-					PURPLE
-				);
-
-				DrawLineEx( 
-					previous_pos, 
-					pos, 
-					CURVE_THICKNESS, 
-					PURPLE 
-				);
-
-				previous_pos = pos;
-			}
+			_render_curve_by_distance();
 			break;
-		}
 	}
+
+	//  Draw points
+	_render_curve_points();
 
 	//  Draw quick evaluation
 	if ( _is_quick_evaluating )
@@ -552,12 +406,189 @@ void Editor::_render_curve_screen()
 			QUICK_EVALUATION_COLOR
 		);
 	}
+}
 
-	//  Draw points
-	for ( int i = 0; i < points_count; i++ )
+void Editor::_render_curve_by_distance()
+{
+	//  Draw curve's length
+	float length = _curve.get_length();
+	DrawText(
+		TextFormat( "length: %.3f", length ),
+		(int) ( _frame_outline.x + 25 + CURVE_FRAME_PADDING * 0.5f ),
+		(int) ( _frame_outline.y + CURVE_FRAME_PADDING * 0.5f ),
+		20,
+		TEXT_COLOR
+	);
+
+	Vector2 previous_pos = _transform_curve_to_screen(
+		_curve.evaluate_by_distance( 0.0f ) );
+
+	//  Draw curve using distance-evaluation
+	for ( 
+		float dist = CURVE_RENDER_STEPS; 
+		      dist < length; 
+		      dist += CURVE_RENDER_STEPS 
+	)
 	{
-		const Point& point = _curve.get_global_point( i );
-		_render_point( i, _transform_curve_to_screen( point ) );
+		const Vector2 pos = _transform_curve_to_screen(
+			_curve.evaluate_by_distance( dist ) );
+
+		//  Draw point
+		DrawCircleV(
+			pos,
+			CURVE_THICKNESS,
+			PURPLE
+		);
+
+		//  Draw line
+		DrawLineEx(
+			previous_pos,
+			pos,
+			CURVE_THICKNESS,
+			PURPLE
+		);
+
+		previous_pos = pos;
+	}
+}
+
+void Editor::_render_curve_by_time()
+{
+	int points_count = _curve.get_points_count();
+
+	float min_x = _curve.get_point( 0 ).x;
+	float max_x = _curve.get_point( points_count - 1 ).x 
+		+ CURVE_RENDER_STEPS;
+
+	Vector2 previous_pos = _transform_curve_to_screen(
+		_curve.evaluate_by_percent( 0.0f ) );
+
+	//  Draw curve using time-evaluation
+	for ( float x = min_x; x < max_x; x += CURVE_RENDER_STEPS )
+	{
+		const Vector2 pos = _transform_curve_to_screen(
+			Point {
+				x,
+				_curve.evaluate_by_time( x ),
+			}
+		);
+
+		//  Draw point
+		DrawCircleV(
+			pos,
+			CURVE_THICKNESS,
+			GREEN
+		);
+
+		//  Draw line
+		DrawLineEx(
+			previous_pos,
+			pos,
+			CURVE_THICKNESS,
+			GREEN
+		);
+
+		previous_pos = pos;
+	}
+}
+
+void Editor::_render_curve_by_bezier()
+{
+	int points_count = _curve.get_points_count();
+
+	for ( int i = 0; i < points_count - 1; i += 3 )
+	{
+		//  Get points
+		Point p0 = _curve.get_point( i );
+		Point t0 = _curve.get_point( i + 1 );
+		Point t1 = _curve.get_point( i + 2 );
+		Point p1 = _curve.get_point( i + 3 );
+
+		//  Translate them from curve-space to screen-space
+		Vector2 pos0 = _transform_curve_to_screen( p0 );
+		Vector2 pos1 = _transform_curve_to_screen( p0 + t0 );
+		Vector2 pos2 = _transform_curve_to_screen( p1 + t1 );
+		Vector2 pos3 = _transform_curve_to_screen( p1 );
+
+		//  Draw curve
+		DrawSplineSegmentBezierCubic(
+			pos0,
+			pos1,
+			pos2,
+			pos3,
+			CURVE_THICKNESS,
+			CURVE_COLOR
+		);
+
+		//  Draw tangents
+		DrawLineEx(
+			pos0,
+			pos1,
+			TANGENT_THICKNESS,
+			TANGENT_COLOR
+		);
+		DrawLineEx(
+			pos3,
+			pos2,
+			TANGENT_THICKNESS,
+			TANGENT_COLOR
+		);
+	}
+}
+
+void Editor::_render_curve_points()
+{
+	const int points_count = _curve.get_points_count();
+
+	for (
+		int control_id = 0;
+		    control_id < ( points_count - 1 ) / 3;
+		    control_id++
+	)
+	{
+		//  Get control point
+		const int point_id = control_id * 3;
+		const Point control_point = _curve.get_point( point_id );
+		const Vector2& control_pos =
+			_transform_curve_to_screen( control_point );
+
+		//  Draw left tangent
+		int left_tangent_id = point_id - 1;
+		if ( _curve.is_valid_point_id( left_tangent_id ) )
+		{
+			const Vector2& tangent_pos = _transform_curve_to_screen(
+				control_point + _curve.get_point( left_tangent_id )
+			);
+
+			DrawLineEx(
+				control_pos,
+				tangent_pos,
+				TANGENT_THICKNESS,
+				TANGENT_COLOR
+			);
+
+			_render_point( left_tangent_id, tangent_pos );
+		}
+
+		//  Draw right tangent
+		int right_tangent_id = point_id + 1;
+		if ( _curve.is_valid_point_id( right_tangent_id ) )
+		{
+			const Vector2& tangent_pos = _transform_curve_to_screen(
+				control_point + _curve.get_point( right_tangent_id )
+			);
+
+			DrawLineEx(
+				control_pos,
+				tangent_pos,
+				TANGENT_THICKNESS,
+				TANGENT_COLOR
+			);
+
+			_render_point( right_tangent_id, tangent_pos );
+		}
+
+		_render_point( point_id, control_pos );
 	}
 }
 

@@ -45,6 +45,11 @@ namespace curve_editor_x
 		void _render_frame();
 
 		void _render_curve_screen();
+		void _render_curve_by_distance();
+		void _render_curve_by_time();
+		void _render_curve_by_bezier();
+		void _render_curve_points();
+
 		void _render_invalid_curve_screen();
 
 		void _render_grid();
@@ -83,6 +88,7 @@ namespace curve_editor_x
 
 		const float QUICK_EVALUATION_THICKNESS = 2.0f;
 		const float CURVE_THICKNESS = 2.0f;
+		const float CURVE_RENDER_STEPS = 0.1f;
 		const float TANGENT_THICKNESS = 2.0f;
 		const float POINT_SIZE = CURVE_THICKNESS * 3.0f;
 		const float POINT_SELECTED_OFFSET_SIZE = 3.0f;
