@@ -6,6 +6,7 @@
 #include <string>
 
 #include <curve-x/curve.h>
+#include <editor/utils.h>
 
 namespace curve_editor_x
 {

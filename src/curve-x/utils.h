@@ -21,11 +21,6 @@ namespace curve_x
 			 + p3 * t3;
 	}
 
-	inline float lerp( float a, float b, float t )
-	{
-		return a + t * ( b - a );
-	}
-
 	inline float remap(
 		float value,
 		float min_a, float max_a,
