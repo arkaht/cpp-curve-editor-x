@@ -81,20 +81,20 @@ namespace curve_x
 		void set_tangent_point( int point_id, const Point& point );
 		
 		/*
-		 * Change tangent mode for the given tangent index.
+		 * Change tangent mode for the given key index.
 		 * 
 		 * By default, it applies the new mode constraint to both 
 		 * tangents.
 		 */
 		void set_tangent_mode( 
-			int tangent_id, 
+			int key_id, 
 			TangentMode mode, 
 			bool should_apply_constraint = true
 		);
 		/*
 		 * Returns the tangent mode of given tangent index.
 		 */
-		TangentMode get_tangent_mode( int tangent_id ) const;
+		TangentMode get_tangent_mode( int key_id ) const;
 
 		/*
 		 * Returns the peer tangent point index of given point index.
@@ -108,10 +108,10 @@ namespace curve_x
 		 */
 		int get_tangent_peer_point_id( int point_id ) const;
 		/*
-		 * Returns the corresponding tangent index for the given
+		 * Returns the corresponding key index from the given
 		 * point index.
 		 */
-		int get_point_tangent_id( int point_id ) const;
+		int get_key_id( int point_id ) const;
 		/*
 		 * Returns the control point index of given tangent point 
 		 * index.
@@ -202,13 +202,10 @@ namespace curve_x
 		 * of control point 0; points 2 and 4 are tangents of 
 		 * control point 3)
 		 * 
-		 * A 'point index' correspond to an index in this vector.
+		 * A 'point index' is needed to index this vector.
 		 */
 		std::vector<Point> _points;
 
-		//  TODO: Find a better name for 'tangent index' as it 
-		//		  will be confused with a 'tangent point index'. 
-		//		  It can't be 'control index' either.
 		/*
 		 * Vector of tangent modes.
 		 * 
@@ -216,7 +213,7 @@ namespace curve_x
 		 * point. That also mean that this should always a size of 
 		 * '_points' divided by 3 and rounded up.
 		 * 
-		 * A 'tangent index' correspond to an index in this vector.
+		 * A 'key index' is needed to index this vector.
 		 */
 		std::vector<TangentMode> _modes;
 	};

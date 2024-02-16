@@ -181,7 +181,7 @@ void Editor::update( float dt )
 		&& _curve.is_valid_point_id( _selected_point_id ) )
 	{
 		int tangent_id = 
-			_curve.get_point_tangent_id( _selected_point_id );
+			_curve.get_key_id( _selected_point_id );
 		TangentMode tangent_mode = 
 			_curve.get_tangent_mode( tangent_id );
 
@@ -767,7 +767,7 @@ void Editor::_render_point( int point_id, const Vector2& pos )
 	//  Draw point
 	if ( is_tangent )
 	{
-		int tangent_id = _curve.get_point_tangent_id( point_id );
+		int tangent_id = _curve.get_key_id( point_id );
 		TangentMode mode = _curve.get_tangent_mode( tangent_id );
 
 		//  Draw point depending on mode

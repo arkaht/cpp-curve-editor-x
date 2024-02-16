@@ -68,8 +68,8 @@ void Curve::add_point( const Point& point )
 	_points.push_back( point );
 
 	//  Creates a default tangent mode if none
-	int max_tangent_id = get_point_tangent_id( get_points_count() );
-	if ( max_tangent_id > (int)_modes.size() - 1 )
+	int max_key_id = get_key_id( get_points_count() );
+	if ( max_key_id > (int)_modes.size() - 1 )
 	{
 		_modes.push_back( TangentMode::Mirrored );
 	}
@@ -86,14 +86,11 @@ void Curve::set_point( int id, const Point& point )
 
 void Curve::set_tangent_point( int point_id, const Point& point )
 {
-	//  TODO: Decide to keep or not the assert
-	assert( !is_control_point( point_id ) );
-
 	int peer_point_id = get_tangent_peer_point_id( point_id );
 	if ( is_valid_point_id( peer_point_id ) )
 	{
-		int tangent_id = get_point_tangent_id( point_id );
-		TangentMode tangent_mode = get_tangent_mode( tangent_id );
+		int key_id = get_key_id( point_id );
+		TangentMode tangent_mode = get_tangent_mode( key_id );
 
 		switch ( tangent_mode )
 		{
@@ -129,7 +126,7 @@ int Curve::get_tangent_peer_point_id( int point_id ) const
 	return -1;
 }
 
-int Curve::get_point_tangent_id( int point_id ) const
+int Curve::get_key_id( int point_id ) const
 {
 	return (int)roundf( point_id / 3.0f );
 }
@@ -159,28 +156,28 @@ int Curve::get_curve_id_by_percent( float& t ) const
 }
 
 void Curve::set_tangent_mode( 
-	int tangent_id, 
+	int key_id, 
 	TangentMode mode,
 	bool should_apply_constraint 
 )
 {
-	_modes[tangent_id] = mode;
+	_modes[key_id] = mode;
 
 	if ( should_apply_constraint )
 	{
 		//  Ignore first & last modes
-		if ( tangent_id == 0 || tangent_id == (int)_modes.size() - 1 ) 
+		if ( key_id == 0 || key_id == (int)_modes.size() - 1 ) 
 			return;
 
 		//  Apply new tangent mode constraint
-		int point_id = tangent_id * 3 + 1;
+		int point_id = key_id * 3 + 1;
 		set_tangent_point( point_id, get_point( point_id ) );
 	}
 }
 
-TangentMode Curve::get_tangent_mode( int tangent_id ) const
+TangentMode Curve::get_tangent_mode( int key_id ) const
 {
-	return _modes[tangent_id];
+	return _modes[key_id];
 }
 
 bool Curve::is_valid() const

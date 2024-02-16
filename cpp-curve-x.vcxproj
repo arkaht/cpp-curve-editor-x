@@ -137,6 +137,7 @@
     <ClInclude Include="src\curve-x\point.h" />
     <ClInclude Include="src\curve-x\utils.h" />
     <ClInclude Include="src\editor\editor.h" />
+    <ClInclude Include="src\editor\utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
