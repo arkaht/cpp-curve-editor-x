@@ -145,8 +145,8 @@ namespace curve_x
 		 * points.
 		 */
 		void get_extrems( 
-			float& min_x, float& max_x, 
-			float& min_y, float& max_y 
+			float* min_x, float* max_x, 
+			float* min_y, float* max_y 
 		) const;
 		/*
 		 * Returns the coordinates extrems of all points.
@@ -158,8 +158,8 @@ namespace curve_x
 		 * points indexes to use for evaluation by time.
 		 */
 		void find_evaluation_point_id_by_time( 
-			int& first_point_id,
-			int& last_point_id,
+			int* first_point_id,
+			int* last_point_id,
 			float time 
 		) const;
 

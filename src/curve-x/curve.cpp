@@ -43,7 +43,10 @@ float Curve::evaluate_by_time( float time ) const
 	//  Find evaluation points by time
 	int first_point_id, last_point_id;
 	find_evaluation_point_id_by_time( 
-		first_point_id, last_point_id, time );
+		&first_point_id, 
+		&last_point_id, 
+		time 
+	);
 
 	//  Get control points
 	const Point p0 = get_point( first_point_id );
@@ -205,33 +208,33 @@ bool Curve::is_control_point( int id ) const
 }
 
 void Curve::get_extrems( 
-	float& min_x, float& max_x, 
-	float& min_y, float& max_y 
+	float* min_x, float* max_x, 
+	float* min_y, float* max_y 
 ) const
 {
-	min_x = min_y = INFINITY;
-	max_x = max_y = -INFINITY;
+	*min_x = *min_y = INFINITY;
+	*max_x = *max_y = -INFINITY;
 
 	for ( int i = 0; i < _points.size(); i++ )
 	{
 		const Point& point = get_global_point( i );
 
-		if ( point.x > max_x )
+		if ( point.x > *max_x )
 		{
-			max_x = point.x;
+			*max_x = point.x;
 		}
-		if ( point.x < min_x )
+		if ( point.x < *min_x )
 		{
-			min_x = point.x;
+			*min_x = point.x;
 		}
 
-		if ( point.y > max_y )
+		if ( point.y > *max_y )
 		{
-			max_y = point.y;
+			*max_y = point.y;
 		}
-		if ( point.y < min_y )
+		if ( point.y < *min_y )
 		{
-			min_y = point.y;
+			*min_y = point.y;
 		}
 	}
 }
@@ -241,18 +244,18 @@ CurveExtrems Curve::get_extrems() const
 	CurveExtrems extrems {};
 
 	get_extrems( 
-		extrems.min_x, 
-		extrems.max_x, 
-		extrems.min_y, 
-		extrems.max_y 
+		&extrems.min_x, 
+		&extrems.max_x, 
+		&extrems.min_y, 
+		&extrems.max_y 
 	);
 
 	return extrems;
 }
 
 void Curve::find_evaluation_point_id_by_time( 
-	int& first_point_id,
-	int& last_point_id,
+	int* first_point_id,
+	int* last_point_id,
 	float time 
 ) const
 {
@@ -283,8 +286,8 @@ void Curve::find_evaluation_point_id_by_time(
 		}
 	}
 
-	first_point_id = ( first_id - 1 ) * 3;
-	last_point_id = first_id * 3;
+	*first_point_id = ( first_id - 1 ) * 3;
+	*last_point_id = first_id * 3;
 }
 
 Point Curve::get_global_point( int point_id ) const
