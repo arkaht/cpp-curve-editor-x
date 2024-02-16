@@ -85,8 +85,24 @@ void Editor::update( float dt )
 			_viewport.y += offset.y - offset.y * zoom_ratio;
 		}
 	}
+
+	//  F1-press: interpolate curve in Bezier
+	if ( IsKeyPressed( KEY_F1 ) )
+	{
+		_curve_interpolate_mode = CurveInterpolateMode::Bezier;
+	}
+	//  F2-press: interpolate curve in Time
+	else if ( IsKeyPressed( KEY_F2 ) )
+	{
+		_curve_interpolate_mode = CurveInterpolateMode::TimeEvaluation;
+	}
+	//  F3-press: interpolate curve in Distance
+	else if ( IsKeyPressed( KEY_F3 ) )
+	{
+		_curve_interpolate_mode = CurveInterpolateMode::DistanceEvaluation;
+	}
 	//  F: Fit viewport to curve
-	if ( IsKeyPressed( KEY_F ) )
+	else if ( IsKeyPressed( KEY_F ) )
 	{
 		fit_viewport_to_curve();
 	}
@@ -335,96 +351,167 @@ void Editor::_render_curve_screen()
 	}
 
 	//  Draw curves
-	for ( int i = 0; i < points_count - 1; i += 3 )
+	switch ( _curve_interpolate_mode )
 	{
-		//  Get points
-		Point p0 = _curve.get_point( i );
-		Point t0 = _curve.get_point( i + 1 );
-		Point t1 = _curve.get_point( i + 2 );
-		Point p1 = _curve.get_point( i + 3 );
+		case CurveInterpolateMode::Bezier:
+		{
+			for ( int i = 0; i < points_count - 1; i += 3 )
+			{
+				//  Get points
+				Point p0 = _curve.get_point( i );
+				Point t0 = _curve.get_point( i + 1 );
+				Point t1 = _curve.get_point( i + 2 );
+				Point p1 = _curve.get_point( i + 3 );
 
-		//  Translate them from curve-space to screen-space
-		Vector2 pos0 = _transform_curve_to_screen( p0 );
-		Vector2 pos1 = _transform_curve_to_screen( p0 + t0 );
-		Vector2 pos2 = _transform_curve_to_screen( p1 + t1 );
-		Vector2 pos3 = _transform_curve_to_screen( p1 );
+				//  Translate them from curve-space to screen-space
+				Vector2 pos0 = _transform_curve_to_screen( p0 );
+				Vector2 pos1 = _transform_curve_to_screen( p0 + t0 );
+				Vector2 pos2 = _transform_curve_to_screen( p1 + t1 );
+				Vector2 pos3 = _transform_curve_to_screen( p1 );
 
-		//  Draw curve
-		DrawSplineSegmentBezierCubic(
-			pos0,
-			pos1,
-			pos2,
-			pos3,
-			CURVE_THICKNESS,
-			CURVE_COLOR
-		);
+				//  Draw curve
+				DrawSplineSegmentBezierCubic(
+					pos0,
+					pos1,
+					pos2,
+					pos3,
+					CURVE_THICKNESS,
+					CURVE_COLOR
+				);
 
-		//  Draw tangents
-		DrawLineV(
-			pos0,
-			pos1,
-			TANGENT_COLOR
-		);
-		DrawLineV(
-			pos3,
-			pos2,
-			TANGENT_COLOR
-		);
-	}
-
-	//  Draw curve's length
-	float length = _curve.get_length();
-	DrawText( 
-		TextFormat( "length: %.3f", length ),
-		(int)( _frame_outline.x + 25 + CURVE_FRAME_PADDING * 0.5f ), 
-		(int)( _frame_outline.y + CURVE_FRAME_PADDING * 0.5f ),
-		20,
-		TEXT_COLOR
-	);
-
-	//  Draw curve using distance-evaluation
-	float steps = 0.1f;
-	Vector2 previous_point = _transform_curve_to_screen( 
-		_curve.evaluate_by_distance( 0.0f ) );
-	for ( float dist = steps; dist < length; dist += steps )
-	{
-		Vector2 point = _transform_curve_to_screen( 
-			_curve.evaluate_by_distance( dist ) );
-
-		DrawCircleV(
-			point,
-			CURVE_THICKNESS,
-			PURPLE
-		);
-
-		DrawLineEx( previous_point, point, CURVE_THICKNESS, PURPLE );
-
-		previous_point = point;
-	}
-
-	//  Draw curve using time-evaluation
-	float min_x = _curve.get_point( 0 ).x;
-	float max_x = _curve.get_point( _curve.get_points_count() - 1 ).x + steps;
-	previous_point = _transform_curve_to_screen( 
-		_curve.evaluate_by_percent( 0.0f ) );
-	for ( float x = min_x; x < max_x; x += steps )
-	{
-		Vector2 point = _transform_curve_to_screen( 
-			Point {
-				x,
-				_curve.evaluate_by_time( x ),
+				//  Draw tangents
+				DrawLineEx(
+					pos0,
+					pos1,
+					TANGENT_THICKNESS,
+					TANGENT_COLOR
+				);
+				DrawLineEx(
+					pos3,
+					pos2,
+					TANGENT_THICKNESS,
+					TANGENT_COLOR
+				);
 			}
-		);
+			break;
+		}
+		case CurveInterpolateMode::TimeEvaluation:
+		{
+			const float STEPS = 0.1f;
 
-		DrawCircleV(
-			point,
-			CURVE_THICKNESS,
-			GREEN
-		);
+			//  Draw curve using time-evaluation
+			float min_x = _curve.get_point( 0 ).x;
+			float max_x = _curve.get_point( 
+				points_count - 1 ).x + STEPS;
+			
+			Vector2 previous_pos = _transform_curve_to_screen( 
+				_curve.evaluate_by_percent( 0.0f ) );
+			for ( float x = min_x; x < max_x; x += STEPS )
+			{
+				const Vector2 pos = _transform_curve_to_screen( 
+					Point {
+						x,
+						_curve.evaluate_by_time( x ),
+					}
+				);
 
-		DrawLineEx( previous_point, point, CURVE_THICKNESS, GREEN );
+				DrawCircleV(
+					pos,
+					CURVE_THICKNESS,
+					GREEN
+				);
 
-		previous_point = point;
+				DrawLineEx( 
+					previous_pos, 
+					pos, 
+					CURVE_THICKNESS, 
+					GREEN 
+				);
+
+				previous_pos = pos;
+			}
+
+			for ( 
+				int control_id = 0; 
+				    control_id < ( points_count - 1 ) / 3; 
+				    control_id++
+			)
+			{
+				const Point control_point = _curve.get_point( control_id * 3 );
+				const Vector2& control_pos = 
+					_transform_curve_to_screen( control_point );
+
+				int left_tangent_id = control_id * 3 - 1;
+				if ( _curve.is_valid_point_id( left_tangent_id ) )
+				{
+					const Vector2& tangent_pos = _transform_curve_to_screen(
+						control_point + _curve.get_point( left_tangent_id ) 
+					);
+
+					DrawLineEx(
+						control_pos,
+						tangent_pos,
+						TANGENT_THICKNESS,
+						TANGENT_COLOR
+					);
+				}
+
+				int right_tangent_id = control_id * 3 + 1;
+				if ( _curve.is_valid_point_id( right_tangent_id ) )
+				{
+					const Vector2& tangent_pos = _transform_curve_to_screen(
+						control_point + _curve.get_point( right_tangent_id ) 
+					);
+
+					DrawLineEx(
+						control_pos,
+						tangent_pos,
+						TANGENT_THICKNESS,
+						TANGENT_COLOR
+					);
+				}
+			}
+			break;
+		}
+		case CurveInterpolateMode::DistanceEvaluation:
+		{
+			const float STEPS = 0.1f;
+
+			//  Draw curve's length
+			float length = _curve.get_length();
+			DrawText( 
+				TextFormat( "length: %.3f", length ),
+				(int)( _frame_outline.x + 25 + CURVE_FRAME_PADDING * 0.5f ), 
+				(int)( _frame_outline.y + CURVE_FRAME_PADDING * 0.5f ),
+				20,
+				TEXT_COLOR
+			);
+
+			//  Draw curve using distance-evaluation
+			Vector2 previous_pos = _transform_curve_to_screen( 
+				_curve.evaluate_by_distance( 0.0f ) );
+			for ( float dist = STEPS; dist < length; dist += STEPS )
+			{
+				const Vector2 pos = _transform_curve_to_screen( 
+					_curve.evaluate_by_distance( dist ) );
+
+				DrawCircleV(
+					pos,
+					CURVE_THICKNESS,
+					PURPLE
+				);
+
+				DrawLineEx( 
+					previous_pos, 
+					pos, 
+					CURVE_THICKNESS, 
+					PURPLE 
+				);
+
+				previous_pos = pos;
+			}
+			break;
+		}
 	}
 
 	//  Draw quick evaluation

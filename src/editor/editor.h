@@ -11,6 +11,18 @@ namespace curve_editor_x
 {
 	using namespace curve_x;
 
+	enum class CurveInterpolateMode
+	{
+		//  Use of raylib functions
+		Bezier,
+		//  Use of time-evaluation
+		TimeEvaluation,
+		//  Use of distance-evaluation
+		DistanceEvaluation,
+
+		MAX,
+	};
+
 	class Editor
 	{
 	public:
@@ -70,6 +82,7 @@ namespace curve_editor_x
 
 		const float QUICK_EVALUATION_THICKNESS = 2.0f;
 		const float CURVE_THICKNESS = 2.0f;
+		const float TANGENT_THICKNESS = 2.0f;
 		const float POINT_SIZE = CURVE_THICKNESS * 3.0f;
 		const float POINT_SELECTED_OFFSET_SIZE = 3.0f;
 		const float CURVE_FRAME_PADDING = 32.0f;
@@ -104,6 +117,8 @@ namespace curve_editor_x
 
 		Curve _curve {};
 		CurveExtrems _curve_extrems {};
+		CurveInterpolateMode _curve_interpolate_mode 
+			= CurveInterpolateMode::Bezier;
 
 		Rectangle _frame {};
 
