@@ -236,6 +236,30 @@ void Editor::_invalidate_layout()
 
 void Editor::_invalidate_grid()
 {
+	const Vector2& left_pos = _transform_screen_to_curve( 
+		{ _frame_outline.x, 0.0f } );
+	const Vector2& right_pos = _transform_screen_to_curve(
+		{ _frame_outline.x + _frame_outline.width, 0.0f } );
+	const float visible_range = right_pos.x - left_pos.x;
+
+	float zoomed_width = visible_range;
+
+	const int LEVELS_COUNT = 3;
+	const float levels[LEVELS_COUNT] { 1.0f, 2.0f, 5.0f };
+	const float max_width_level = 100.0f;
+	const float max_width_exponent = 500.0f;
+
+	int level_id = floorf( 
+		fmodf( zoomed_width, max_width_level ) / max_width_level 
+	  * LEVELS_COUNT
+	);
+	float exponent = floorf( zoomed_width / max_width_level );
+	printf( "level=%f; exponent=%f\n", 
+		levels[level_id], exponent );
+
+	_grid_gap = levels[level_id] * powf( 10.0f, exponent );
+	printf( "%f => %f grid-gap\n", 
+		zoomed_width, _grid_gap );
 }
 
 void Editor::_render_title_text()
