@@ -33,6 +33,7 @@
  *  - [ ] add & remove points
  *  - [ ] export to file
  *  - [ ] import from file
+ *  - [ ] fix evaluation by time not accounting tangents X-axis
  */
 
 //  Includes

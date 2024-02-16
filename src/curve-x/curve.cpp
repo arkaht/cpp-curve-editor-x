@@ -49,16 +49,24 @@ float Curve::evaluate_by_time( float time ) const
 	const Point p0 = get_point( first_point_id );
 	const Point p3 = get_point( last_point_id );
 
+	//  Get tangent points
+	const Point t1 = get_point( first_point_id + 1 );
+	const Point t2 = get_point( last_point_id - 1 );
+	/*const float m1 = t1.length();
+	const float m2 = t2.length();*/
+
 	//  Compute time difference
 	const float time_diff = p3.x - p0.x;
-	if ( time_diff <= 0.0f ) return p0.y;
+	//if ( time_diff <= 0.0f ) return p0.y;
 
 	//  Compute time ratio from p0 & p3 (from 0.0f to 1.0f)
 	const float t = ( time - p0.x ) / time_diff;
 
 	//  Compute tangents Y-positions
-	const float y1 = p0.y + get_point( first_point_id + 1 ).y;
-	const float y2 = p3.y + get_point( last_point_id - 1 ).y;
+	/*const float y1 = p0.y + atan2f( t1.y / m1, t1.x / m1 ) * time_diff * m1 / 3.0f;
+	const float y2 = p3.y + atan2f( t2.y / m2, t2.x / m2 ) * time_diff * m2 / 3.0f;*/
+	const float y1 = p0.y + t1.y;
+	const float y2 = p3.y + t2.y;
 
 	return bezier_interp( p0.y, y1, y2, p3.y, t );
 }
