@@ -30,7 +30,7 @@
  *  - [x] quick curve evaluation (ctrl + hover)
  *  - [x] time curve evaluation (x-axis as time)
  *  - [/] grid scaling w/ zoom
- *  - [ ] add & remove points
+ *  - [/] add & remove points
  *  - [ ] export to file
  *  - [ ] import from file
  *  - [ ] fix evaluation by time not accounting tangents X-axis

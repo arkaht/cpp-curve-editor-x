@@ -130,7 +130,7 @@ const CurveKey& Curve::get_key( int key_id ) const
 
 void Curve::set_point( int point_id, const Point& point )
 {
-	int key_id = get_point_key_id( point_id );
+	int key_id = point_to_key_id( point_id );
 	CurveKey& key = get_key( key_id );
 
 	switch ( point_id % 3 )
@@ -153,7 +153,7 @@ void Curve::set_tangent_point(
 	PointSpace point_space 
 )
 {
-	int key_id = get_point_key_id( point_id );
+	int key_id = point_to_key_id( point_id );
 	CurveKey& key = get_key( key_id );
 
 	//  In global space, convert the given point into local space
@@ -181,7 +181,7 @@ void Curve::set_tangent_point(
 
 Point Curve::get_point( int point_id, PointSpace point_space ) const
 {
-	int key_id = get_point_key_id( point_id );
+	int key_id = point_to_key_id( point_id );
 	const CurveKey& key = get_key( key_id );
 
 	switch ( point_id % 3 )
@@ -202,9 +202,14 @@ Point Curve::get_point( int point_id, PointSpace point_space ) const
 	assert( false );
 }
 
-int Curve::get_point_key_id( int point_id ) const
+int Curve::point_to_key_id( int point_id ) const
 {
 	return (int)roundf( point_id / 3.0f );
+}
+
+int Curve::key_to_point_id( int key_id ) const
+{
+	return key_id * 3;
 }
 
 void Curve::find_evaluation_keys_id_by_percent(

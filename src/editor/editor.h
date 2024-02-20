@@ -66,6 +66,8 @@ namespace curve_editor_x
 			bool is_selected
 		);
 
+		bool _is_double_clicking( bool should_consume );
+
 		float _transform_curve_to_screen_x( float x ) const;
 		float _transform_curve_to_screen_y( float y ) const;
 		Vector2 _transform_curve_to_screen( const Point& point ) const;
@@ -95,6 +97,7 @@ namespace curve_editor_x
 		const float POINT_SIZE = CURVE_THICKNESS * 3.0f;
 		const float POINT_SELECTED_OFFSET_SIZE = 3.0f;
 		const float CURVE_FRAME_PADDING = 32.0f;
+		const double DOUBLE_CLICK_TIME = 0.2;
 
 		//  In curve units, the gap for each grid line
 		const float GRID_SMALL_GAP = 1.0f;
@@ -147,5 +150,6 @@ namespace curve_editor_x
 
 		bool _is_showing_points = true;
 		float _curve_thickness = CURVE_THICKNESS;
+		double _last_click_time = 0.0;
 	};
 }

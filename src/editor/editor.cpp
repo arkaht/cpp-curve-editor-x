@@ -63,6 +63,8 @@ void Editor::update( float dt )
 	Vector2 mouse_pos = GetMousePosition();
 	Vector2 mouse_delta = GetMouseDelta();
 
+	bool is_alt_down = IsKeyDown( KEY_LEFT_ALT );
+
 	//  LCTRL-down: Grid snapping
 	_is_grid_snapping = IsKeyDown( KEY_LEFT_CONTROL );
 	//  LSHIFT-down: Quick curve evaluation
@@ -78,7 +80,7 @@ void Editor::update( float dt )
 	if ( float mouse_wheel_delta = GetMouseWheelMove() )
 	{
 		//  WHEEL + ALT-down: control curve thickness
-		if ( IsKeyDown( KEY_LEFT_ALT ) )
+		if ( is_alt_down )
 		{
 			_curve_thickness = fmaxf( 
 				CURVE_THICKNESS, 
@@ -163,14 +165,38 @@ void Editor::update( float dt )
 		}
 	}
 
-	//  LMB-pressed: Select hovered point
 	if ( IsMouseButtonPressed( MOUSE_BUTTON_LEFT ) )
 	{
-		_can_drag_selected_point = 
-			!MUST_DOUBLE_CLICK_TO_DRAG_POINT 
-		 || _hovered_point_id == _selected_point_id;
+		//  Double LMB-pressed: add a key at position
+		if ( _is_double_clicking( true ) )
+		{
+			CurveKey key( 
+				_transform_screen_to_curve( mouse_pos )
+			);
 
-		_selected_point_id = _hovered_point_id;
+			//  ALT-down: insert key
+			if ( is_alt_down )
+			{
+				int key_id = 1;
+				_curve.insert_key( key_id, key );
+				_selected_point_id = _curve.key_to_point_id( key_id );
+			}
+			//  NO ALT-down: add key
+			else
+			{
+				_curve.add_key( key );
+				_selected_point_id = _curve.get_points_count() - 1;
+			}
+		}
+		//  LMB-pressed: Select hovered point
+		else
+		{
+			_can_drag_selected_point = 
+				!MUST_DOUBLE_CLICK_TO_DRAG_POINT 
+			 || _hovered_point_id == _selected_point_id;
+
+			_selected_point_id = _hovered_point_id;
+		}
 	}
 	else if ( IsMouseButtonReleased( MOUSE_BUTTON_LEFT ) )
 	{
@@ -213,7 +239,7 @@ void Editor::update( float dt )
 		&& _curve.is_valid_point_id( _selected_point_id ) )
 	{
 		int key_id = 
-			_curve.get_point_key_id( _selected_point_id );
+			_curve.point_to_key_id( _selected_point_id );
 		TangentMode tangent_mode = 
 			_curve.get_tangent_mode( key_id );
 
@@ -564,7 +590,7 @@ void Editor::_render_curve_points()
 
 	for ( int key_id = 0; key_id < keys_count; key_id++ )
 	{
-		int control_point_id = key_id * 3;
+		int control_point_id = _curve.key_to_point_id( key_id );
 
 		//  Get control point
 		const CurveKey& key = _curve.get_key( key_id );
@@ -815,7 +841,7 @@ void Editor::_render_point( int point_id, const Vector2& pos )
 	//  Draw point
 	if ( is_tangent )
 	{
-		int key_id = _curve.get_point_key_id( point_id );
+		int key_id = _curve.point_to_key_id( point_id );
 		TangentMode mode = _curve.get_tangent_mode( key_id );
 
 		//  Draw point depending on mode
@@ -944,6 +970,21 @@ void Editor::_render_square_point(
 			POINT_SELECTED_COLOR
 		);
 	}
+}
+
+bool Editor::_is_double_clicking( bool should_consume )
+{
+	double time = GetTime();
+	bool is_double_clicking = time - _last_click_time <= DOUBLE_CLICK_TIME;
+
+	if ( should_consume )
+	{
+		_last_click_time = is_double_clicking
+			? 0.0
+			: time;
+	}
+
+	return is_double_clicking;
 }
 
 float Editor::_transform_curve_to_screen_x( float x ) const

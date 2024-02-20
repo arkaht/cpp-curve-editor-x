@@ -60,7 +60,8 @@ namespace curve_x
 			PointSpace point_space = PointSpace::Local
 		) const;
 
-		int get_point_key_id( int point_id ) const;
+		int point_to_key_id( int point_id ) const;
+		int key_to_point_id( int key_id ) const;
 		
 		/*
 		 * Change tangent mode for the given key index.
