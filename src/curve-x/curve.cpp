@@ -202,6 +202,30 @@ Point Curve::get_point( int point_id, PointSpace point_space ) const
 	assert( false );
 }
 
+Point Curve::get_nearest_point_to( 
+	const Point& target_point,
+	const float steps
+) const
+{
+	float nearest_distance = INFINITY;
+	Point nearest_point {};
+
+	//  Find iteratively the nearest point on the curve
+	for ( float d = 0.0f; d < _length + steps; d += steps )
+	{
+		Point point = evaluate_by_distance( d );
+
+		float distance = ( target_point - point ).length_sqr();
+		if ( distance < nearest_distance )
+		{
+			nearest_point = point;
+			nearest_distance = distance;
+		}
+	}
+
+	return nearest_point;
+}
+
 int Curve::point_to_key_id( int point_id ) const
 {
 	return (int)roundf( point_id / 3.0f );

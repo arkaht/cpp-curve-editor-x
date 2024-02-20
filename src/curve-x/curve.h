@@ -59,6 +59,10 @@ namespace curve_x
 			int point_id, 
 			PointSpace point_space = PointSpace::Local
 		) const;
+		Point get_nearest_point_to(
+			const Point& point,
+			const float steps = 1.0f / 30.0f
+		) const;
 
 		int point_to_key_id( int point_id ) const;
 		int key_to_point_id( int key_id ) const;
