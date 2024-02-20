@@ -64,6 +64,8 @@ void Editor::update( float dt )
 	Vector2 mouse_delta = GetMouseDelta();
 
 	bool is_alt_down = IsKeyDown( KEY_LEFT_ALT );
+	bool is_valid_selected_point = 
+		_curve.is_valid_point_id( _selected_point_id );
 
 	//  LCTRL-down: Grid snapping
 	_is_grid_snapping = IsKeyDown( KEY_LEFT_CONTROL );
@@ -145,6 +147,13 @@ void Editor::update( float dt )
 	{
 		_is_showing_points = !_is_showing_points;
 	}
+	else if ( IsKeyPressed( KEY_DELETE ) 
+		&& is_valid_selected_point 
+		&& _curve.get_keys_count() > 2 )
+	{
+		int key_id = _curve.point_to_key_id( _selected_point_id );
+		_curve.remove_key( key_id );
+	}
 
 	//  Find the mouse hovered point
 	_hovered_point_id = -1;
@@ -204,7 +213,7 @@ void Editor::update( float dt )
 	}
 	//  LMB-down: Move selected point
 	else if ( IsMouseButtonDown( MOUSE_BUTTON_LEFT )
-		&& _curve.is_valid_point_id( _selected_point_id ) 
+		&& is_valid_selected_point 
 		&& _can_drag_selected_point )
 	{
 		//  Translate mouse screen-position to curve-position
@@ -236,7 +245,7 @@ void Editor::update( float dt )
 	}
 	//  MMB-press: Switch tangent mode
 	else if ( IsMouseButtonPressed( MOUSE_BUTTON_MIDDLE ) 
-		&& _curve.is_valid_point_id( _selected_point_id ) )
+		&& is_valid_selected_point )
 	{
 		int key_id = 
 			_curve.point_to_key_id( _selected_point_id );
@@ -637,17 +646,15 @@ void Editor::_render_curve_points()
 
 void Editor::_render_invalid_curve_screen()
 {
-	int points_count = _curve.get_points_count();
+	int keys_count = _curve.get_keys_count();
 
 	//  Setup text strings
 	const int TEXT_SIZE = 2;
 	const char* texts[TEXT_SIZE] {
-		"INVALID POINTS COUNT!",
+		"INVALID KEYS COUNT!",
 		TextFormat( 
-			"%d points instead of %d or %d", 
-			points_count,
-			(int)floorf( ( points_count + 1 ) / 3.0f ) * 3 + 1,
-			(int)ceilf( ( points_count + 1 ) / 3.0f ) * 3 + 1
+			"%d keys instead of 2 at minimum", 
+			keys_count
 		),
 	};
 
