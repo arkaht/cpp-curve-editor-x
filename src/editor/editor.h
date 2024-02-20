@@ -88,6 +88,8 @@ namespace curve_editor_x
 
 		const float QUICK_EVALUATION_THICKNESS = 2.0f;
 		const float CURVE_THICKNESS = 2.0f;
+		//  How much to offset the thickness per wheel scroll?
+		const float CURVE_THICKNESS_SENSITIVITY = 0.5f;
 		const float CURVE_RENDER_STEPS = 0.1f;
 		const float TANGENT_THICKNESS = 2.0f;
 		const float POINT_SIZE = CURVE_THICKNESS * 3.0f;
@@ -142,5 +144,8 @@ namespace curve_editor_x
 		int _hovered_point_id = -1;
 		int _selected_point_id = -1;
 		bool _can_drag_selected_point = false;
+
+		bool _is_showing_points = true;
+		float _curve_thickness = CURVE_THICKNESS;
 	};
 }

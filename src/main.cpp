@@ -1,17 +1,17 @@
 
 /*
  *  Curve X ─ a simple and open-source 2D spline editor
- *  
- *  This application aims to serve as a 3rd party tool to create 
+ *
+ *  This application aims to serve as a 3rd party tool to create
  *  splines for your indie games, softwares or anything you want.
- *  
- *  After creating a spline, you should be able to export it to 
+ *
+ *  After creating a spline, you should be able to export it to
  *  disk and import it in your own code using the library.
- * 
- *  Internally using Bézier splines, offering most control over 
+ *
+ *  Internally using Bézier splines, offering most control over
  *  Hermite (where tangent modes are forced to be mirrored) and
  *  other splines types.
- * 
+ *
  *  References:
  *  - "The Continuity of Splines": https://www.youtube.com/watch?v=jvPPXbo87ds
  *  - "Cubic Hermite spline": https://en.wikipedia.org/wiki/Cubic_Hermite_spline
@@ -19,7 +19,7 @@
  *  - "Curves and Splines": https://catlikecoding.com/unity/tutorials/curves-and-splines/
  *  - "A Primer on Bézier Curve": https://pomax.github.io/BezierInfo-2/
  *  - Unreal Engine's FRichCurve code for value evaluation by time
- * 
+ *
  *  TODO LIST (by priority order):
  *  - [x] viewport user-movement (drag & scroll)
  *  - [x] points user-control (selection & drag)
@@ -36,7 +36,7 @@
  *  - [ ] fix evaluation by time not accounting tangents X-axis
  */
 
-//  Includes
+ //  Includes
 
 #include <iostream>
 
@@ -62,11 +62,11 @@ const float	WINDOW_PADDING = 16.0f;
 
 int main( void )
 {
-	Editor editor( 
+	Editor editor(
 		Rectangle {
 			WINDOW_PADDING,
 			WINDOW_PADDING,
-			WINDOW_WIDTH  - WINDOW_PADDING * 2.0f,
+			WINDOW_WIDTH - WINDOW_PADDING * 2.0f,
 			WINDOW_HEIGHT - WINDOW_PADDING * 2.0f,
 		}
 	);

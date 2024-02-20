@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "point.h"
+#include "key.h"
 
 namespace curve_x
 {
@@ -10,26 +11,6 @@ namespace curve_x
 	{
 		float min_x, max_x;
 		float min_y, max_y;
-	};
-
-	enum class TangentMode
-	{
-		/*
-		 * Mirroring both tangents directions and lengths.
-		 */
-		Mirrored	= 0,
-
-		/*
-		 * Mirroring both tangents directions with custom lengths.
-		 */
-		Aligned		= 1,
-
-		/*
-		 * Both tangents have its own direction and length.
-		 */
-		Broken		= 2,
-
-		MAX,
 	};
 
 	/*
@@ -40,7 +21,7 @@ namespace curve_x
 	public:
 		Curve();
 		//  TODO: Add 'modes' vector
-		Curve( std::vector<Point> points );
+		//Curve( std::vector<Point> points );
 
 		/*
 		 * Evaluate a curve point at specified percent, in range 
@@ -60,25 +41,26 @@ namespace curve_x
 		 */
 		float evaluate_by_time( float time ) const;
 
-		/*
-		 * Add a new point to the curve. 
-		 * 
-		 * You must know in advance whether the point will be 
-		 * considered as a control or a tangent point before using 
-		 * this function. See comments on '_points' member variable.
-		 */
-		void add_point( const Point& point );
+		void add_key( const CurveKey& key );
+		void insert_key( int key_id, const CurveKey& key );
+		void remove_key( int key_id );
 
-		/*
-		 * Change point for given point index, without any
-		 * transformations.
-		 */
+		CurveKey& get_key( int key_id );
+		const CurveKey& get_key( int key_id ) const;
+
 		void set_point( int point_id, const Point& point );
-		/*
-		 * Change point for given tangent point index, and applies 
-		 * the tangent mode constraint to its peer.
-		 */
-		void set_tangent_point( int point_id, const Point& point );
+		void set_tangent_point( 
+			int point_id, 
+			const Point& point,
+			PointSpace point_space = PointSpace::Local
+		);
+
+		Point get_point( 
+			int point_id, 
+			PointSpace point_space = PointSpace::Local
+		) const;
+
+		int get_point_key_id( int point_id ) const;
 		
 		/*
 		 * Change tangent mode for the given key index.
@@ -97,29 +79,6 @@ namespace curve_x
 		TangentMode get_tangent_mode( int key_id ) const;
 
 		/*
-		 * Returns the peer tangent point index of given point index.
-		 * 
-		 * The given point index must correspond to a tangent point. 
-		 * Therefore, giving a control point index returns -1.
-		 * 
-		 * The returned index may not correspond to a valid point,
-		 * specially for the first and last tangents as they do not
-		 * have a peer. Consider using 'is_valid_point_id'.
-		 */
-		int get_tangent_peer_point_id( int point_id ) const;
-		/*
-		 * Returns the corresponding key index from the given
-		 * point index.
-		 */
-		int get_key_id( int point_id ) const;
-		/*
-		 * Returns the control point index of given tangent point 
-		 * index.
-		 */
-		int get_control_point_id( int point_id ) const;
-		int get_curve_id_by_percent( float& t ) const;
-
-		/*
 		 * Returns whenever the curve contains a valid amount 
 		 * of points for further usage.
 		 * 
@@ -133,12 +92,9 @@ namespace curve_x
 		 * valid point. Essentially checking if the index is in the
 		 * '_points' vector range.
 		 */
+		bool is_valid_key_id( int key_id ) const;
 		bool is_valid_point_id( int point_id ) const;
-		/*
-		 * Returns whenever the given point index correspond to a 
-		 * control point. Otherwise, it represents a tangent point.
-		 */
-		bool is_control_point( int point_id ) const;
+		bool is_control_point_id( int point_id ) const;
 
 		/*
 		 * Fill given variables to the coordinates extrems of all
@@ -157,28 +113,20 @@ namespace curve_x
 		 * Fill given variables with the first & last control 
 		 * points indexes to use for evaluation by time.
 		 */
-		void find_evaluation_point_id_by_time( 
+		void find_evaluation_keys_id_by_time( 
 			int* first_point_id,
 			int* last_point_id,
 			float time 
 		) const;
+		void find_evaluation_keys_id_by_percent(
+			int* first_key_id,
+			int* last_key_id,
+			float& t
+		) const;
 
-		/*
-		 * Returns point at given index in global-space, whether
-		 * it's a control point or a tangent point. 
-		 */
-		Point get_global_point( int point_id ) const;
-		/*
-		 * Returns point at given index as it's stored in the 
-		 * curve, without any transformation.
-		 */
-		Point get_point( int point_id ) const;
-
-		/*
-		 * Returns count of points stored in the curve.
-		 */
-		int get_points_count() const;
+		int get_keys_count() const;
 		int get_curves_count() const;
+		int get_points_count() const;
 
 		//  TODO: Decide if this function should be non-const 
 		float get_length();
@@ -189,6 +137,8 @@ namespace curve_x
 	private:
 		bool _is_length_dirty = true;
 		float _length = 0.0f;
+
+		std::vector<CurveKey> _keys;
 
 		/*
 		 * Vector containing both control & tangent points.
@@ -204,7 +154,7 @@ namespace curve_x
 		 * 
 		 * A 'point index' is needed to index this vector.
 		 */
-		std::vector<Point> _points;
+		//std::vector<Point> _points;
 
 		/*
 		 * Vector of tangent modes.
@@ -215,6 +165,6 @@ namespace curve_x
 		 * 
 		 * A 'key index' is needed to index this vector.
 		 */
-		std::vector<TangentMode> _modes;
+		//std::vector<TangentMode> _modes;
 	};
 }

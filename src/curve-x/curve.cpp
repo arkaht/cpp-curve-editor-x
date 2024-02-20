@@ -7,18 +7,23 @@ using namespace curve_x;
 Curve::Curve()
 {}
 
-Curve::Curve( std::vector<Point> points )
-	: _points( points ) {}
+//Curve::Curve( std::vector<Point> points )
+//	: _points( points ) {}
 
 Point Curve::evaluate_by_percent( float t ) const
 {
-	int curve_id = get_curve_id_by_percent( t );
+	int first_key_id, last_key_id;
+	find_evaluation_keys_id_by_percent( 
+		&first_key_id, &last_key_id, t );
 	t = fmaxf( fminf( t, 1.0f ), 0.0f );
 
-	const Point p0 = get_point( curve_id );
-	const Point p1 = p0 + get_point( curve_id + 1 );
-	const Point p3 = get_point( curve_id + 3 );
-	const Point p2 = p3 + get_point( curve_id + 2 );
+	const CurveKey& k0 = get_key( first_key_id );
+	const CurveKey& k1 = get_key( last_key_id );
+
+	const Point p0 = k0.control;
+	const Point p1 = p0 + k0.right_tangent;
+	const Point p3 = k1.control;
+	const Point p2 = p3 + k1.left_tangent;
 
 	return bezier_interp( p0, p1, p2, p3, t );
 }
@@ -32,29 +37,31 @@ Point Curve::evaluate_by_distance( float d ) const
 
 float Curve::evaluate_by_time( float time ) const
 {
-	int points_count = get_points_count();
-	
 	//  Bound evaluation to first & last points
-	const Point first_point = get_point( 0 );
-	const Point last_point = get_point( points_count - 1 );
+	const Point first_point = get_key( 0 ).control;
+	const Point last_point = get_key( get_keys_count() - 1 ).control;
 	if ( time <= first_point.x ) return first_point.y;
 	if ( time >= last_point.x ) return last_point.y;
 
 	//  Find evaluation points by time
-	int first_point_id, last_point_id;
-	find_evaluation_point_id_by_time( 
-		&first_point_id, 
-		&last_point_id, 
+	int first_key_id, last_key_id;
+	find_evaluation_keys_id_by_time( 
+		&first_key_id, 
+		&last_key_id, 
 		time 
 	);
 
+	//  Get keys in range
+	const CurveKey& k0 = get_key( first_key_id );
+	const CurveKey& k1 = get_key( last_key_id );
+
 	//  Get control points
-	const Point p0 = get_point( first_point_id );
-	const Point p3 = get_point( last_point_id );
+	const Point p0 = k0.control;
+	const Point p3 = k1.control;
 
 	//  Get tangent points
-	const Point t1 = get_point( first_point_id + 1 );
-	const Point t2 = get_point( last_point_id - 1 );
+	const Point t1 = k0.right_tangent;
+	const Point t2 = k1.left_tangent;
 	/*const float m1 = t1.length();
 	const float m2 = t2.length();*/
 
@@ -74,96 +81,155 @@ float Curve::evaluate_by_time( float time ) const
 	return bezier_interp( p0.y, y1, y2, p3.y, t );
 }
 
-void Curve::add_point( const Point& point )
+void Curve::add_key( const CurveKey& key )
 {
-	_points.push_back( point );
-
-	//  Creates a default tangent mode if none
-	int max_key_id = get_key_id( get_points_count() );
-	if ( max_key_id > (int)_modes.size() - 1 )
-	{
-		_modes.push_back( TangentMode::Mirrored );
-	}
+	_keys.push_back( key );
 
 	_is_length_dirty = true;
 }
 
-void Curve::set_point( int id, const Point& point )
+void Curve::insert_key( int key_id, const CurveKey& key )
 {
-	_points[id] = point;
+	auto itr = _keys.begin() + key_id;
+	_keys.insert( itr, key );
+
+	_is_length_dirty = true;
+
+	//  First key doesn't have a left tangent
+	/*if ( key_id > 0 )
+	{
+		_keys.insert( itr, left_tangent_point );
+	}
+
+	_points.insert( itr + 1, control_point );*/
+
+	//  Last key doesn't have a right tangent
+	/*if ( key_id <= get_key_id( get_points_count() - 1 ) )
+	{
+		_points.insert( itr + 2, right_tangent_point );
+	}*/
+}
+
+void Curve::remove_key( int key_id )
+{
+	auto itr = _keys.begin() + key_id;
+	_keys.erase( itr );
 
 	_is_length_dirty = true;
 }
 
-void Curve::set_tangent_point( int point_id, const Point& point )
+CurveKey& Curve::get_key( int key_id )
 {
-	int peer_point_id = get_tangent_peer_point_id( point_id );
-	if ( is_valid_point_id( peer_point_id ) )
+	return _keys[key_id];
+}
+
+const CurveKey& Curve::get_key( int key_id ) const
+{
+	return _keys[key_id];
+}
+
+void Curve::set_point( int point_id, const Point& point )
+{
+	int key_id = get_point_key_id( point_id );
+	CurveKey& key = get_key( key_id );
+
+	switch ( point_id % 3 )
 	{
-		int key_id = get_key_id( point_id );
-		TangentMode tangent_mode = get_tangent_mode( key_id );
+		case 0:
+			key.control = point;
+			break;
+		case 1:
+			key.right_tangent = point;
+			break;
+		case 2:
+			key.left_tangent = point;
+			break;
+	}
+}
 
-		switch ( tangent_mode )
-		{
-			case TangentMode::Mirrored:
-			{
-				set_point( peer_point_id, -point );
-				break;
-			}
-			case TangentMode::Aligned:
-			{
-				const Point peer_point = get_point( peer_point_id );
-				float length = peer_point.length();
-				const Point aligned_point = 
-					-point.normalized() * length;
+void Curve::set_tangent_point( 
+	int point_id, 
+	const Point& point,
+	PointSpace point_space 
+)
+{
+	int key_id = get_point_key_id( point_id );
+	CurveKey& key = get_key( key_id );
 
-				set_point( peer_point_id, aligned_point );
-				break;	
-			}
-			case TangentMode::Broken:
-				break;
-		}
+	//  In global space, convert the given point into local space
+	//  by substracting the control point
+	Point tangent = point;
+	if ( point_space == PointSpace::Global )
+	{
+		tangent = point - key.control;
 	}
 
-	set_point( point_id, point );
+	//  Apply the tangent point
+	switch ( point_id % 3 )
+	{
+		case 0:
+			key.control = point;
+			break;
+		case 1:
+			key.set_right_tangent( tangent );
+			break;
+		case 2:
+			key.set_left_tangent( tangent );
+			break;
+	}
 }
 
-int Curve::get_tangent_peer_point_id( int point_id ) const
+Point Curve::get_point( int point_id, PointSpace point_space ) const
 {
-	int curve_id = point_id % 3;
-	if ( curve_id == 1 ) return point_id - 2;
-	if ( curve_id == 2 ) return point_id + 2;
+	int key_id = get_point_key_id( point_id );
+	const CurveKey& key = get_key( key_id );
 
-	return -1;
+	switch ( point_id % 3 )
+	{
+		case 0:
+			return key.control;
+		case 1:
+			return point_space == PointSpace::Global
+				?  key.control + key.right_tangent
+				:  key.right_tangent;
+		case 2:
+			return point_space == PointSpace::Global
+				?  key.control + key.left_tangent
+				:  key.left_tangent;
+	}
+
+	//  Unreachable code
+	assert( false );
 }
 
-int Curve::get_key_id( int point_id ) const
+int Curve::get_point_key_id( int point_id ) const
 {
 	return (int)roundf( point_id / 3.0f );
 }
 
-int Curve::get_control_point_id( int point_id ) const
+void Curve::find_evaluation_keys_id_by_percent(
+	int* first_key_id,
+	int* last_key_id,
+	float& t
+) const
 {
-	int curve_id = point_id % 3;
-	if ( curve_id == 1 ) return point_id - 1;
-	if ( curve_id == 2 ) return point_id + 1;
+	int key_id = -1;
 
-	return point_id;
-}
-
-int Curve::get_curve_id_by_percent( float& t ) const
-{
 	if ( t >= 1.0f )
 	{
 		t = 1.0f;
-		return get_points_count() - 4;
+		
+		key_id = get_keys_count() - 1;
+	}
+	else
+	{
+		t = fmaxf( t, 0.0f ) * get_curves_count();
+		key_id = (int)floorf( t );
+		t -= (float)key_id;
 	}
 
-	t = fmaxf( t, 0.0f ) * get_curves_count();
-	int curve_id = (int)floorf( t );
-	t -= (float)curve_id;
-	
-	return curve_id * 3;
+	*first_key_id = key_id;
+	*last_key_id = key_id + 1;
 }
 
 void Curve::set_tangent_mode( 
@@ -172,29 +238,29 @@ void Curve::set_tangent_mode(
 	bool should_apply_constraint 
 )
 {
-	_modes[key_id] = mode;
+	CurveKey& key = get_key( key_id );
+	key.tangent_mode = mode;
 
 	if ( should_apply_constraint )
 	{
-		//  Ignore first & last modes
-		if ( key_id == 0 || key_id == (int)_modes.size() - 1 ) 
-			return;
-
-		//  Apply new tangent mode constraint
-		int point_id = key_id * 3 + 1;
-		set_tangent_point( point_id, get_point( point_id ) );
+		key.set_left_tangent( key.left_tangent );
 	}
 }
 
 TangentMode Curve::get_tangent_mode( int key_id ) const
 {
-	return _modes[key_id];
+	return get_key( key_id ).tangent_mode;
 }
 
 bool Curve::is_valid() const
 {
-	int count = get_points_count();
-	return count > 0 && ( count - 1 ) % 3 == 0;
+	int count = get_keys_count();
+	return count > 1;
+}
+
+bool Curve::is_valid_key_id( int key_id ) const
+{
+	return key_id >= 0 && key_id < get_keys_count();
 }
 
 bool Curve::is_valid_point_id( int point_id ) const
@@ -202,9 +268,9 @@ bool Curve::is_valid_point_id( int point_id ) const
 	return point_id >= 0 && point_id < get_points_count();
 }
 
-bool Curve::is_control_point( int id ) const
+bool Curve::is_control_point_id( int point_id ) const
 {
-	return id % 3 == 0;
+	return point_id % 3 == 0;
 }
 
 void Curve::get_extrems( 
@@ -215,9 +281,9 @@ void Curve::get_extrems(
 	*min_x = *min_y = INFINITY;
 	*max_x = *max_y = -INFINITY;
 
-	for ( int i = 0; i < _points.size(); i++ )
+	for ( int i = 0; i < get_points_count(); i++ )
 	{
-		const Point& point = get_global_point( i );
+		const Point& point = get_point( i, PointSpace::Global );
 
 		if ( point.x > *max_x )
 		{
@@ -253,9 +319,9 @@ CurveExtrems Curve::get_extrems() const
 	return extrems;
 }
 
-void Curve::find_evaluation_point_id_by_time( 
-	int* first_point_id,
-	int* last_point_id,
+void Curve::find_evaluation_keys_id_by_time( 
+	int* first_key_id,
+	int* last_key_id,
 	float time 
 ) const
 {
@@ -267,7 +333,7 @@ void Curve::find_evaluation_point_id_by_time(
 	 */
 
 	int first_id = 1;
-	int last_id = ( get_points_count() - 1 ) / 3;
+	int last_id = get_keys_count() - 1;
 
 	int count = last_id - first_id;
 	while ( count > 0 )
@@ -275,7 +341,7 @@ void Curve::find_evaluation_point_id_by_time(
 		int step = count / 2;
 		int middle_id = first_id + step;
 
-		if ( time >= get_point( middle_id * 3 ).x )
+		if ( time >= get_key( middle_id ).control.x )
 		{
 			first_id = middle_id + 1;
 			count -= step + 1;
@@ -286,37 +352,23 @@ void Curve::find_evaluation_point_id_by_time(
 		}
 	}
 
-	*first_point_id = ( first_id - 1 ) * 3;
-	*last_point_id = first_id * 3;
+	*first_key_id = first_id - 1;
+	*last_key_id = first_id;
 }
 
-Point Curve::get_global_point( int point_id ) const
+int Curve::get_keys_count() const
 {
-	Point point = get_point( point_id );
-
-	//  Transform the local tangent point to global space by adding
-	//  its control point
-	if ( !is_control_point( point_id ) ) 
-	{
-		point = get_point( get_control_point_id( point_id ) ) + point;
-	}
-
-	return point;
-}
-
-Point Curve::get_point( int point_id ) const
-{ 
-	return _points[point_id]; 
-}
-
-int Curve::get_points_count() const 
-{ 
-	return (int)_points.size(); 
+	return (int)_keys.size();
 }
 
 int Curve::get_curves_count() const
 {
-	return ( get_points_count() - 1 ) / 3;
+	return get_keys_count() - 1;
+}
+
+int Curve::get_points_count() const
+{
+	return ( get_keys_count() - 2 ) * 3 + 4;
 }
 
 float Curve::get_length()
@@ -336,7 +388,7 @@ void Curve::_compute_length()
 
 	const float steps = 1.0f / 100.0f;
 
-	Point last_point = get_point( 0 );
+	Point last_point = get_key( 0 ).control;
 	for ( float t = steps; t < 1.0f; t += steps )
 	{
 		const Point point = evaluate_by_percent( t );

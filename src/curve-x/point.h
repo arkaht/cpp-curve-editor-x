@@ -4,6 +4,19 @@
 
 namespace curve_x
 {
+	enum class PointSpace
+	{
+		/*
+		 * Relative to another point, used for tangent points
+		 */
+		Local,
+
+		/*
+		 * Global point, used for control points
+		 */
+		Global,
+	};
+
 	struct Point
 	{
 	public:

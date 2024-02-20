@@ -10,29 +10,49 @@ void Editor::init()
 {
 	_title = "curve-editor-test.cvx";
 
-	_curve.add_point( { 0.0f, 1.0f } );
-	_curve.add_point( { 0.75f, 5.0f } );
+	_curve.add_key( CurveKey( 
+		{ 0.0f, 1.0f },
+		{},
+		{ 0.75f, 5.0f }
+	) );
+	_curve.add_key( CurveKey( 
+		{ 4.0f, 2.0f },
+		{ -2.0f, -2.0f },
+		{ 1.0f, -1.0f },
+		TangentMode::Broken
+	) );
+	_curve.add_key( CurveKey( 
+		{ 6.0f, 2.0f },
+		{ -1.0f, -0.5f },
+		{ 10.0f, 0.0f },
+		TangentMode::Broken
+	) );
+	_curve.add_key( CurveKey( 
+		{ 10.0f, -3.5f },
+		{ -1.0f, -0.5f },
+		{ 1.0f, 0.5f },
+		TangentMode::Mirrored
+	) );
+	_curve.add_key( CurveKey( 
+		{ 15.0f, -5.0f },
+		{ -5.0f, 0.0f },
+		{},
+		TangentMode::Mirrored
+	) );
 
-	_curve.add_point( { -2.0f, -2.0f } );
-	_curve.add_point( { 4.0f, 2.0f } );
-	_curve.add_point( { 1.0f, -1.0f } );
-
-	_curve.add_point( { -1.0f, -0.5f } );
-	_curve.add_point( { 6.0f, 2.0f } );
-	_curve.add_point( { 10.0f, 0.0f } );
-
-	_curve.add_point( { -1.0f, -0.5f } );
-	_curve.add_point( { 10.0f, -3.0f } );
-	_curve.add_point( { 1.0f, 0.5f } );
-
-	_curve.add_point( { -5.0f, 0.0f } );
-	_curve.add_point( { 15.0f, -5.0f } );
-
-	/*curve.add_point( { 0.0f, 0.0f } );
-	curve.add_point( { 100.0f, 50.0f } );
-	curve.add_point( { 350.0f, 300.0f } );
-	curve.add_point( { 500.0f, 0.0f } );*/
-
+	/*_curve.add_key( CurveKey( 
+		{ 20.0f, 250.0f },
+		{},
+		{ 10.0f, -230.0f },
+		TangentMode::Mirrored
+	) );
+	_curve.add_key( CurveKey( 
+		{ 220.0f, 20.0f },
+		{ -20.0f, 230.0f },
+		{},
+		TangentMode::Mirrored
+	) );*/
+	
 	fit_viewport_to_curve();
 }
 
@@ -54,35 +74,47 @@ void Editor::update( float dt )
 		_viewport.x += mouse_delta.x;
 		_viewport.y += mouse_delta.y;
 	}
-	//  WHEEL: Zoom to mouse
+	//  WHEEL
 	if ( float mouse_wheel_delta = GetMouseWheelMove() )
 	{
-		float old_zoom = _zoom;
-
-		//  Change zoom scale
-		_zoom = fminf( 
-			ZOOM_MAX, 
-			fmaxf( 
-				ZOOM_MIN, 
-				_zoom + mouse_wheel_delta * ZOOM_SENSITIVITY 
-			) 
-		);
-		_invalidate_grid();
-
-		//  Offset viewport to simulate zooming to mouse position
-		if ( _zoom != old_zoom )
+		//  WHEEL + ALT-down: control curve thickness
+		if ( IsKeyDown( KEY_LEFT_ALT ) )
 		{
-			Vector2 offset {
-				mouse_pos.x - _viewport.x,
-				mouse_pos.y - _viewport.y
-			};
+			_curve_thickness = fmaxf( 
+				CURVE_THICKNESS, 
+				_curve_thickness + mouse_wheel_delta * CURVE_THICKNESS_SENSITIVITY 
+			);
+		}
+		//  WHEEL: Zoom to mouse
+		else
+		{
+			float old_zoom = _zoom;
 
-			float zoom_ratio = mouse_wheel_delta > 0.0f
-				? 1.0f / ( old_zoom / _zoom )
-				: _zoom / old_zoom;
+			//  Change zoom scale
+			_zoom = fminf( 
+				ZOOM_MAX, 
+				fmaxf( 
+					ZOOM_MIN, 
+					_zoom + mouse_wheel_delta * ZOOM_SENSITIVITY 
+				) 
+			);
+			_invalidate_grid();
 
-			_viewport.x += offset.x - offset.x * zoom_ratio;
-			_viewport.y += offset.y - offset.y * zoom_ratio;
+			//  Offset viewport to simulate zooming to mouse position
+			if ( _zoom != old_zoom )
+			{
+				Vector2 offset {
+					mouse_pos.x - _viewport.x,
+					mouse_pos.y - _viewport.y
+				};
+
+				float zoom_ratio = mouse_wheel_delta > 0.0f
+					? 1.0f / ( old_zoom / _zoom )
+					: _zoom / old_zoom;
+
+				_viewport.x += offset.x - offset.x * zoom_ratio;
+				_viewport.y += offset.y - offset.y * zoom_ratio;
+			}
 		}
 	}
 
@@ -106,12 +138,17 @@ void Editor::update( float dt )
 	{
 		fit_viewport_to_curve();
 	}
+	//  TAB: Toggle editor points visibility
+	else if ( IsKeyPressed( KEY_TAB ) )
+	{
+		_is_showing_points = !_is_showing_points;
+	}
 
 	//  Find the mouse hovered point
 	_hovered_point_id = -1;
 	for ( int i = 0; i < _curve.get_points_count(); i++ )
 	{
-		const Point& point = _curve.get_global_point( i );
+		const Point& point = _curve.get_point( i, PointSpace::Global );
 		const Vector2 screen_point = _transform_curve_to_screen( 
 			point );
 
@@ -153,19 +190,14 @@ void Editor::update( float dt )
 			new_point = _transform_rounded_grid_snap( new_point );
 		}
 
-		//  Tangents are in local-space so we need to convert them
-		//  from global-space. They also use a different function
-		//  to apply the tangent mode constraint.
-		if ( !_curve.is_control_point( _selected_point_id ) )
+		//  Tangents use a different function to apply the tangent 
+		//  mode constraint.
+		if ( !_curve.is_control_point_id( _selected_point_id ) )
 		{
-			int control_point_id = 
-				_curve.get_control_point_id( _selected_point_id );
-			new_point = 
-				new_point - _curve.get_point( control_point_id );
-
 			_curve.set_tangent_point( 
 				_selected_point_id,
-				new_point 
+				new_point,
+				PointSpace::Global
 			);
 		}
 		else
@@ -180,17 +212,19 @@ void Editor::update( float dt )
 	else if ( IsMouseButtonPressed( MOUSE_BUTTON_MIDDLE ) 
 		&& _curve.is_valid_point_id( _selected_point_id ) )
 	{
-		int tangent_id = 
-			_curve.get_key_id( _selected_point_id );
+		int key_id = 
+			_curve.get_point_key_id( _selected_point_id );
 		TangentMode tangent_mode = 
-			_curve.get_tangent_mode( tangent_id );
+			_curve.get_tangent_mode( key_id );
 
+		//  Cycle through tangent modes
 		TangentMode next_tangent_mode = 
 			(int)tangent_mode + 1 == (int)TangentMode::MAX
 			? (TangentMode)0
 			: (TangentMode)( (int)tangent_mode + 1 );
 
-		_curve.set_tangent_mode( tangent_id, next_tangent_mode );
+		//  Apply the new tangent constraint
+		_curve.set_tangent_mode( key_id, next_tangent_mode );
 	}
 
 	//  Quick curve evaluation
@@ -265,7 +299,7 @@ void Editor::_invalidate_grid()
 	const float max_width_level = 100.0f;
 	const float max_width_exponent = 500.0f;
 
-	int level_id = floorf( 
+	int level_id = (int)floorf( 
 		fmodf( zoomed_width, max_width_level ) / max_width_level 
 	  * LEVELS_COUNT
 	);
@@ -280,8 +314,6 @@ void Editor::_invalidate_grid()
 
 void Editor::_render_title_text()
 {
-	int points_count = _curve.get_points_count();
-
 	const char* title_c_str = _title.c_str();
 	DrawText(
 		title_c_str,
@@ -290,11 +322,12 @@ void Editor::_render_title_text()
 		TEXT_COLOR
 	);
 
-	const char* points_c_str = TextFormat( "%d points", points_count );
-	int points_width = MeasureText( points_c_str, TITLE_FONT_SIZE );
+	const char* keys_text = TextFormat( 
+		"%d keys", _curve.get_keys_count() );
+	int points_width = MeasureText( keys_text, TITLE_FONT_SIZE );
 
 	DrawText(
-		points_c_str,
+		keys_text,
 		(int) _frame.x + (int) _frame.width - points_width,
 		(int) _frame.y,
 		TITLE_FONT_SIZE,
@@ -366,7 +399,10 @@ void Editor::_render_curve_screen()
 	}
 
 	//  Draw points
-	_render_curve_points();
+	if ( _is_showing_points )
+	{
+		_render_curve_points();
+	}
 
 	//  Draw quick evaluation
 	if ( _is_quick_evaluating )
@@ -434,17 +470,17 @@ void Editor::_render_curve_by_distance()
 			_curve.evaluate_by_distance( dist ) );
 
 		//  Draw point
-		DrawCircleV(
+		/*DrawCircleV(
 			pos,
-			CURVE_THICKNESS,
+			_curve_thickness,
 			PURPLE
-		);
+		);*/
 
 		//  Draw line
 		DrawLineEx(
 			previous_pos,
 			pos,
-			CURVE_THICKNESS,
+			_curve_thickness,
 			PURPLE
 		);
 
@@ -474,17 +510,17 @@ void Editor::_render_curve_by_time()
 		);
 
 		//  Draw point
-		DrawCircleV(
+		/*DrawCircleV(
 			pos,
-			CURVE_THICKNESS,
+			_curve_thickness,
 			GREEN
-		);
+		);*/
 
 		//  Draw line
 		DrawLineEx(
 			previous_pos,
 			pos,
-			CURVE_THICKNESS,
+			_curve_thickness,
 			GREEN
 		);
 
@@ -516,48 +552,30 @@ void Editor::_render_curve_by_bezier()
 			pos1,
 			pos2,
 			pos3,
-			CURVE_THICKNESS,
+			_curve_thickness,
 			CURVE_COLOR
-		);
-
-		//  Draw tangents
-		DrawLineEx(
-			pos0,
-			pos1,
-			TANGENT_THICKNESS,
-			TANGENT_COLOR
-		);
-		DrawLineEx(
-			pos3,
-			pos2,
-			TANGENT_THICKNESS,
-			TANGENT_COLOR
 		);
 	}
 }
 
 void Editor::_render_curve_points()
 {
-	const int points_count = _curve.get_points_count();
+	int keys_count = _curve.get_keys_count();
 
-	for (
-		int control_id = 0;
-		    control_id < ( points_count - 1 ) / 3;
-		    control_id++
-	)
+	for ( int key_id = 0; key_id < keys_count; key_id++ )
 	{
+		int control_point_id = key_id * 3;
+
 		//  Get control point
-		const int point_id = control_id * 3;
-		const Point control_point = _curve.get_point( point_id );
+		const CurveKey& key = _curve.get_key( key_id );
 		const Vector2& control_pos =
-			_transform_curve_to_screen( control_point );
+			_transform_curve_to_screen( key.control );
 
 		//  Draw left tangent
-		int left_tangent_id = point_id - 1;
-		if ( _curve.is_valid_point_id( left_tangent_id ) )
+		if ( key_id > 0 )
 		{
 			const Vector2& tangent_pos = _transform_curve_to_screen(
-				control_point + _curve.get_point( left_tangent_id )
+				key.control + key.left_tangent
 			);
 
 			DrawLineEx(
@@ -567,15 +585,14 @@ void Editor::_render_curve_points()
 				TANGENT_COLOR
 			);
 
-			_render_point( left_tangent_id, tangent_pos );
+			_render_point( control_point_id - 1, tangent_pos );
 		}
 
 		//  Draw right tangent
-		int right_tangent_id = point_id + 1;
-		if ( _curve.is_valid_point_id( right_tangent_id ) )
+		if ( key_id < keys_count - 1 )
 		{
 			const Vector2& tangent_pos = _transform_curve_to_screen(
-				control_point + _curve.get_point( right_tangent_id )
+				key.control + key.right_tangent
 			);
 
 			DrawLineEx(
@@ -585,10 +602,10 @@ void Editor::_render_curve_points()
 				TANGENT_COLOR
 			);
 
-			_render_point( right_tangent_id, tangent_pos );
+			_render_point( control_point_id + 1, tangent_pos );
 		}
 
-		_render_point( point_id, control_pos );
+		_render_point( control_point_id, control_pos );
 	}
 }
 
@@ -776,7 +793,7 @@ void Editor::_render_grid()
 
 void Editor::_render_point( int point_id, const Vector2& pos )
 {
-	bool is_tangent = !_curve.is_control_point( point_id );
+	bool is_tangent = !_curve.is_control_point_id( point_id );
 	bool is_hovered = point_id == _hovered_point_id || point_id == _selected_point_id;
 	bool is_selected = point_id == _selected_point_id;
 
@@ -798,8 +815,8 @@ void Editor::_render_point( int point_id, const Vector2& pos )
 	//  Draw point
 	if ( is_tangent )
 	{
-		int tangent_id = _curve.get_key_id( point_id );
-		TangentMode mode = _curve.get_tangent_mode( tangent_id );
+		int key_id = _curve.get_point_key_id( point_id );
+		TangentMode mode = _curve.get_tangent_mode( key_id );
 
 		//  Draw point depending on mode
 		const char* mode_name = "N/A";
