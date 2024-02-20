@@ -39,6 +39,7 @@ void Editor::init()
 		{},
 		TangentMode::Mirrored
 	) );
+	_curve.compute_length();
 
 	/*_curve.add_key( CurveKey( 
 		{ 20.0f, 250.0f },
@@ -69,6 +70,19 @@ void Editor::update( float dt )
 
 	//  LCTRL-down: Grid snapping
 	_is_grid_snapping = IsKeyDown( KEY_LEFT_CONTROL );
+	if ( _is_grid_snapping )
+	{
+		_transformed_mouse_pos = _transform_curve_to_screen(
+			_transform_rounded_grid_snap(
+				_transform_screen_to_curve( mouse_pos ) 
+			)
+		);
+	}
+	else
+	{
+		_transformed_mouse_pos = mouse_pos;
+	}
+
 	//  LSHIFT-down: Quick curve evaluation
 	_is_quick_evaluating = IsKeyDown( KEY_LEFT_SHIFT );
 
@@ -186,6 +200,7 @@ void Editor::update( float dt )
 			//  ALT-down: insert key
 			if ( is_alt_down )
 			{
+				//  TODO: Find nearest key id from the mouse
 				int key_id = 1;
 				_curve.insert_key( key_id, key );
 				_selected_point_id = _curve.key_to_point_id( key_id );
@@ -217,13 +232,7 @@ void Editor::update( float dt )
 		&& _can_drag_selected_point )
 	{
 		//  Translate mouse screen-position to curve-position
-		Point new_point = _transform_screen_to_curve( mouse_pos );
-
-		//  Grid snapping
-		if ( _is_grid_snapping )
-		{
-			new_point = _transform_rounded_grid_snap( new_point );
-		}
+		Point new_point = _transform_screen_to_curve( _transformed_mouse_pos );
 
 		//  Tangents use a different function to apply the tangent 
 		//  mode constraint.
@@ -265,18 +274,25 @@ void Editor::update( float dt )
 	//  Quick curve evaluation
 	if ( _is_quick_evaluating )
 	{
-		Point new_point = _transform_screen_to_curve( mouse_pos );
-
-		//  Grid snapping
-		if ( _is_grid_snapping )
-		{
-			new_point = _transform_rounded_grid_snap( new_point );
-		}
+		Point new_point = _transform_screen_to_curve( 
+			_transformed_mouse_pos );
 		
 		//  Evaluate at mouse position
-		_quick_evaluation_pos.x = new_point.x;
-		_quick_evaluation_pos.y = _curve.evaluate_by_time( 
-			new_point.x );
+		switch ( _curve_interpolate_mode )
+		{
+			case CurveInterpolateMode::Bezier:
+			case CurveInterpolateMode::DistanceEvaluation:
+				_quick_evaluation_pos = _curve.get_nearest_point_to(
+					new_point
+				);
+				break;
+
+			case CurveInterpolateMode::TimeEvaluation:
+				_quick_evaluation_pos.x = new_point.x;
+				_quick_evaluation_pos.y = _curve.evaluate_by_time( 
+					new_point.x );
+				break;
+		}
 	}
 }
 
@@ -415,8 +431,11 @@ void Editor::_render_curve_screen()
 	//  Draw mouse position
 	if ( DRAW_MOUSE_POSITION )
 	{
-		Vector2 mouse_pos = GetMousePosition();
-		DrawCircleV( mouse_pos, SELECTION_RADIUS, TEXT_COLOR );
+		DrawCircleV( 
+			_transformed_mouse_pos, 
+			SELECTION_RADIUS, 
+			TEXT_COLOR 
+		);
 	}
 
 	//  Draw curve
@@ -443,20 +462,36 @@ void Editor::_render_curve_screen()
 	if ( _is_quick_evaluating )
 	{
 		const float font_size = 20.0f;
-		Vector2 pos = _transform_curve_to_screen( _quick_evaluation_pos );
+		Vector2 pos = _transform_curve_to_screen( 
+			_quick_evaluation_pos );
 		
-		DrawLineEx(
-			Vector2 {
-				pos.x,
-				_frame_outline.y,
-			},
-			Vector2 {
-				pos.x,
-				_frame_outline.y + _frame_outline.height,
-			},
-			QUICK_EVALUATION_THICKNESS,
-			QUICK_EVALUATION_COLOR
-		);
+		switch ( _curve_interpolate_mode )
+		{
+			case CurveInterpolateMode::Bezier:
+			case CurveInterpolateMode::DistanceEvaluation:
+				DrawLineEx( 
+					_transformed_mouse_pos,
+					pos,
+					QUICK_EVALUATION_THICKNESS,
+					QUICK_EVALUATION_COLOR
+				);
+				break;
+
+			case CurveInterpolateMode::TimeEvaluation:
+				DrawLineEx(
+					Vector2 {
+						pos.x,
+						_frame_outline.y,
+					},
+					Vector2 {
+						pos.x,
+						_frame_outline.y + _frame_outline.height,
+					},
+					QUICK_EVALUATION_THICKNESS,
+					QUICK_EVALUATION_COLOR
+				);
+				break;
+		}
 		
 		DrawCircleV( 
 			pos, 

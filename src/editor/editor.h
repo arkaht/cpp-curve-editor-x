@@ -134,6 +134,8 @@ namespace curve_editor_x
 
 		Rectangle _frame {};
 
+		Vector2 _transformed_mouse_pos {};
+
 		float _zoom = 1.0f;
 		Rectangle _viewport {};
 		Rectangle _frame_outline {};
