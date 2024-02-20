@@ -88,9 +88,14 @@ namespace curve_x
 			};
 		}
 
+		float length_sqr() const 
+		{
+			return x * x + y * y;
+		}
+
 		float length() const
 		{
-			return sqrtf( x * x + y * y );
+			return sqrtf( length_sqr() );
 		}
 
 		Point normalized() const
