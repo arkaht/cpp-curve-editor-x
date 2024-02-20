@@ -133,11 +133,13 @@ namespace curve_x
 		int get_curves_count() const;
 		int get_points_count() const;
 
-		//  TODO: Decide if this function should be non-const 
+		void mark_length_as_dirty();
+		void compute_length( const float steps = 1.0f / 100.0f );
+
 		float get_length();
+		float get_length() const;
 
 	private:
-		void _compute_length();
 
 	private:
 		bool _is_length_dirty = true;

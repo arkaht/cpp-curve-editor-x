@@ -30,8 +30,6 @@ Point Curve::evaluate_by_percent( float t ) const
 
 Point Curve::evaluate_by_distance( float d ) const
 {
-	//  TODO: After deciding if 'get_length' should be const or not,
-	//		  potentially change the '_length' by 'get_length'.
 	return evaluate_by_percent( d / _length );
 }
 
@@ -94,20 +92,6 @@ void Curve::insert_key( int key_id, const CurveKey& key )
 	_keys.insert( itr, key );
 
 	_is_length_dirty = true;
-
-	//  First key doesn't have a left tangent
-	/*if ( key_id > 0 )
-	{
-		_keys.insert( itr, left_tangent_point );
-	}
-
-	_points.insert( itr + 1, control_point );*/
-
-	//  Last key doesn't have a right tangent
-	/*if ( key_id <= get_key_id( get_points_count() - 1 ) )
-	{
-		_points.insert( itr + 2, right_tangent_point );
-	}*/
 }
 
 void Curve::remove_key( int key_id )
@@ -145,6 +129,8 @@ void Curve::set_point( int point_id, const Point& point )
 			key.left_tangent = point;
 			break;
 	}
+
+	_is_length_dirty = true;
 }
 
 void Curve::set_tangent_point( 
@@ -177,6 +163,8 @@ void Curve::set_tangent_point(
 			key.set_left_tangent( tangent );
 			break;
 	}
+
+	_is_length_dirty = true;
 }
 
 Point Curve::get_point( int point_id, PointSpace point_space ) const
@@ -248,7 +236,7 @@ void Curve::find_evaluation_keys_id_by_percent(
 	{
 		t = 1.0f;
 		
-		key_id = get_keys_count() - 1;
+		key_id = get_keys_count() - 2;
 	}
 	else
 	{
@@ -404,18 +392,25 @@ float Curve::get_length()
 {
 	if ( _is_length_dirty )
 	{
-		_compute_length();
-		_is_length_dirty = false;
+		compute_length();
 	}
 
 	return _length;
 }
 
-void Curve::_compute_length()
+float Curve::get_length() const
+{
+	return _length;
+}
+
+void Curve::mark_length_as_dirty()
+{
+	_is_length_dirty = true;
+}
+
+void Curve::compute_length( const float steps )
 {
 	_length = 0.0f;
-
-	const float steps = 1.0f / 100.0f;
 
 	Point last_point = get_key( 0 ).control;
 	for ( float t = steps; t < 1.0f; t += steps )
@@ -424,4 +419,6 @@ void Curve::_compute_length()
 		_length += ( point - last_point ).length();
 		last_point = point;
 	}
+
+	_is_length_dirty = false;
 }
