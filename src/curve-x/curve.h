@@ -63,6 +63,10 @@ namespace curve_x
 			const Point& point,
 			const float steps = 1.0f / 30.0f
 		) const;
+		float get_nearest_distance_to(
+			const Point& point,
+			const float steps = 1.0f / 30.0f
+		) const;
 
 		int point_to_key_id( int point_id ) const;
 		int key_to_point_id( int key_id ) const;
@@ -128,21 +132,25 @@ namespace curve_x
 			int* last_key_id,
 			float& t
 		) const;
+		void find_evaluation_keys_id_by_distance(
+			int* first_key_id,
+			int* last_key_id,
+			float d
+		) const;
 
 		int get_keys_count() const;
 		int get_curves_count() const;
 		int get_points_count() const;
 
-		void mark_length_as_dirty();
 		void compute_length( const float steps = 1.0f / 100.0f );
 
 		float get_length();
 		float get_length() const;
 
-	private:
+	public:
+		bool is_length_dirty = true;
 
 	private:
-		bool _is_length_dirty = true;
 		float _length = 0.0f;
 
 		std::vector<CurveKey> _keys;

@@ -44,6 +44,8 @@ namespace curve_x
 
 		TangentMode tangent_mode = TangentMode::Mirrored;
 
+		float distance = -1.0f;
+
 	private:
 		void _set_tangent( 
 			const Point& point, 

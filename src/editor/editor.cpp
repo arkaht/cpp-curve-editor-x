@@ -194,16 +194,28 @@ void Editor::update( float dt )
 		if ( _is_double_clicking( true ) )
 		{
 			CurveKey key( 
-				_transform_screen_to_curve( mouse_pos )
+				_transform_screen_to_curve( _transformed_mouse_pos )
 			);
 
 			//  ALT-down: insert key
 			if ( is_alt_down )
 			{
-				//  TODO: Find nearest key id from the mouse
-				int key_id = 1;
-				_curve.insert_key( key_id, key );
-				_selected_point_id = _curve.key_to_point_id( key_id );
+				//  TODO: fix this feature and Curve::compute_length
+				//  Find distance on curve from point
+				float dist = _curve.get_nearest_distance_to( 
+					key.control );
+
+				//  Find the key index to insert from
+				int first_key_id, last_key_id;
+				_curve.find_evaluation_keys_id_by_distance( 
+					&first_key_id, &last_key_id, dist );
+
+				printf( "=> %d:%d\n", first_key_id, last_key_id );
+
+				//  Insert and select the point
+				_curve.insert_key( last_key_id, key );
+				_selected_point_id = _curve.key_to_point_id( 
+					last_key_id );
 			}
 			//  NO ALT-down: add key
 			else
@@ -270,6 +282,10 @@ void Editor::update( float dt )
 		//  Apply the new tangent constraint
 		_curve.set_tangent_mode( key_id, next_tangent_mode );
 	}
+	else if ( _curve.is_length_dirty ) 
+	{
+		_curve.compute_length();
+	}
 
 	//  Quick curve evaluation
 	if ( _is_quick_evaluating )
@@ -293,6 +309,18 @@ void Editor::update( float dt )
 					new_point.x );
 				break;
 		}
+
+		float dist = _curve.get_nearest_distance_to( 
+			_transform_screen_to_curve( 
+				_transformed_mouse_pos 
+			) 
+		);
+
+		int first_key_id, last_key_id;
+		_curve.find_evaluation_keys_id_by_distance( 
+			&first_key_id, &last_key_id, dist );
+
+		printf( "%d:%d\n", first_key_id, last_key_id );
 	}
 }
 
@@ -939,7 +967,7 @@ void Editor::_render_point( int point_id, const Vector2& pos )
 		_render_circle_point( pos, color, is_selected );
 	}
 
-	if ( is_selected )
+	if ( is_selected && !_is_quick_evaluating )
 	{
 		const Point& point = _curve.get_point( point_id );
 
