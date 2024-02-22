@@ -1,5 +1,9 @@
 #include "editor.h"
 
+#include <curve-x/curve-serializer.h>
+
+#include <fstream>
+
 using namespace curve_editor_x;
 
 Editor::Editor( const Rectangle& frame )
@@ -167,6 +171,18 @@ void Editor::update( float dt )
 	{
 		int key_id = _curve.point_to_key_id( _selected_point_id );
 		_curve.remove_key( key_id );
+	}
+	else if ( _is_grid_snapping && IsKeyPressed( KEY_S ) )
+	{
+		export_to_file( "test." + FORMAT_EXTENSION );
+	}
+	else if ( _is_grid_snapping && IsKeyPressed( KEY_L ) )
+	{
+		import_from_file( "test." + FORMAT_EXTENSION );
+
+		//  Prevent update using the new curve since its validity
+		//  hasn't been checked yet
+		return;
 	}
 
 	//  Find the mouse hovered point
@@ -341,6 +357,64 @@ void Editor::fit_viewport_to_curve()
 	_zoom = 1.0f;
 
 	_invalidate_layout();
+}
+
+void Editor::export_to_file( const std::string& path )
+{
+	const char* c_path = path.c_str();
+	std::ofstream file;
+	file.open( c_path );
+
+	//  Check file exists
+	if ( !file.is_open() )
+	{
+		printf( 
+			"File '%s' doesn't exists, aborting export from file!\n", 
+			c_path
+		);
+		return;
+	}
+
+	//  Serialize curve
+	CurveSerializer serializer;
+	std::string data = serializer.serialize( _curve );
+
+	//  Write data to file
+	file << data;
+	file.close();
+
+	printf( "Exported curve to file '%s'\n", c_path );
+}
+
+void Editor::import_from_file( const std::string& path )
+{
+	const char* c_path = path.c_str();
+	std::ifstream file;
+	file.open( c_path );
+
+	//  Check file exists
+	if ( !file.is_open() )
+	{
+		printf( 
+			"File '%s' doesn't exists, aborting import from file!\n", 
+			c_path
+		);
+		return;
+	}
+
+	//  Read file's content
+	std::string data;
+	for ( std::string line; std::getline( file, line ); )
+	{
+		data += line + '\n';
+	}
+	file.close();
+
+	//  Unserialize data into curve
+	CurveSerializer serializer;
+	_curve = serializer.unserialize( data );
+
+	printf( "Imported curve from file '%s'\n", c_path );
 }
 
 void Editor::_invalidate_layout()

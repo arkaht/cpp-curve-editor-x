@@ -37,6 +37,9 @@ namespace curve_editor_x
 
 		void fit_viewport_to_curve();
 
+		void export_to_file( const std::string& path );
+		void import_from_file( const std::string& path );
+
 	private:
 		void _invalidate_layout();
 		void _invalidate_grid();

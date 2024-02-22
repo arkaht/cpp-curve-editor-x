@@ -27,6 +27,9 @@
     <ClCompile Include="src\curve-x\key.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\curve-x\curve-serializer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\curve-x\curve.h">
@@ -45,6 +48,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\curve-x\key.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\curve-x\curve-serializer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

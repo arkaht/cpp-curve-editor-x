@@ -128,12 +128,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\curve-x\curve-serializer.cpp" />
     <ClCompile Include="src\curve-x\curve.cpp" />
     <ClCompile Include="src\curve-x\key.cpp" />
     <ClCompile Include="src\editor\editor.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\curve-x\curve-serializer.h" />
     <ClInclude Include="src\curve-x\curve.h" />
     <ClInclude Include="src\curve-x\key.h" />
     <ClInclude Include="src\curve-x\point.h" />

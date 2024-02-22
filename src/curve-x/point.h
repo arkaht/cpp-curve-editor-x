@@ -1,5 +1,7 @@
 #pragma once
 
+#include <sstream>
+
 #include "utils.h"
 
 namespace curve_x
@@ -69,6 +71,12 @@ namespace curve_x
 				-x,
 				-y
 			};
+		}
+
+		std::string str() const
+		{
+			return "x=" + std::to_string( x ) + ";" 
+				 + "y=" + std::to_string( y );
 		}
 
 		Point remap( 

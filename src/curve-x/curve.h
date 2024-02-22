@@ -20,8 +20,7 @@ namespace curve_x
 	{
 	public:
 		Curve();
-		//  TODO: Add 'modes' vector
-		//Curve( std::vector<Point> points );
+		Curve( std::vector<CurveKey> keys );
 
 		/*
 		 * Evaluate a curve point at specified percent, in range 

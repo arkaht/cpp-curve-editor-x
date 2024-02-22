@@ -7,8 +7,9 @@ using namespace curve_x;
 Curve::Curve()
 {}
 
-//Curve::Curve( std::vector<Point> points )
-//	: _points( points ) {}
+Curve::Curve( std::vector<CurveKey> keys )
+	: _keys( keys )
+{}
 
 Point Curve::evaluate_by_percent( float t ) const
 {
