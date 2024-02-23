@@ -12,51 +12,17 @@ Editor::Editor( const Rectangle& frame )
 
 void Editor::init()
 {
-	_title = "curve-editor-test.cvx";
-
-	_curve.add_key( CurveKey( 
-		{ 0.0f, 1.0f },
-		{},
-		{ 0.75f, 5.0f }
-	) );
-	_curve.add_key( CurveKey( 
-		{ 4.0f, 2.0f },
-		{ -2.0f, -2.0f },
-		{ 1.0f, -1.0f },
-		TangentMode::Broken
-	) );
-	_curve.add_key( CurveKey( 
-		{ 6.0f, 2.0f },
-		{ -1.0f, -0.5f },
-		{ 10.0f, 0.0f },
-		TangentMode::Broken
-	) );
-	_curve.add_key( CurveKey( 
-		{ 10.0f, -3.5f },
-		{ -1.0f, -0.5f },
-		{ 1.0f, 0.5f },
-		TangentMode::Mirrored
-	) );
-	_curve.add_key( CurveKey( 
-		{ 15.0f, -5.0f },
-		{ -5.0f, 0.0f },
-		{},
-		TangentMode::Mirrored
-	) );
-	_curve.compute_length();
-
-	/*_curve.add_key( CurveKey( 
-		{ 20.0f, 250.0f },
-		{},
-		{ 10.0f, -230.0f },
-		TangentMode::Mirrored
-	) );
-	_curve.add_key( CurveKey( 
-		{ 220.0f, 20.0f },
-		{ -20.0f, 230.0f },
-		{},
-		TangentMode::Mirrored
-	) );*/
+	if ( !import_from_file( _path ) )
+	{
+		set_path( _path );
+		
+		_curve.add_key( CurveKey(
+			{ 0.0f, 1.0f }
+		) );
+		_curve.add_key( CurveKey(
+			{ 1.0f, 0.0f }
+		) );
+	}
 	
 	fit_viewport_to_curve();
 }
@@ -175,7 +141,7 @@ void Editor::update( float dt )
 	}
 	else if ( _is_grid_snapping && IsKeyPressed( KEY_S ) )
 	{
-		export_to_file( "tests/test." + FORMAT_EXTENSION );
+		export_to_file( _path );
 	}
 	else if ( _is_grid_snapping && IsKeyPressed( KEY_L ) )
 	{
@@ -365,7 +331,13 @@ void Editor::fit_viewport_to_curve()
 	_invalidate_layout();
 }
 
-void Editor::export_to_file( const std::string& path )
+void Editor::set_path( const std::string& path )
+{
+	_path = path;
+	_title = get_filename_from_path( path );
+}
+
+bool Editor::export_to_file( const std::string& path )
 {
 	const char* c_path = path.c_str();
 	std::ofstream file;
@@ -378,7 +350,7 @@ void Editor::export_to_file( const std::string& path )
 			"File '%s' doesn't exists, aborting export from file!\n", 
 			c_path
 		);
-		return;
+		return false;
 	}
 
 	//  Serialize curve
@@ -389,14 +361,15 @@ void Editor::export_to_file( const std::string& path )
 	file << data;
 	file.close();
 
-	//  Apply title
-	_title = get_filename_from_path( path );
+	//  Apply file
+	set_path( path );
 	_has_unsaved_changes = false;
 
 	printf( "Exported curve to file '%s'\n", c_path );
+	return true;
 }
 
-void Editor::import_from_file( const std::string& path )
+bool Editor::import_from_file( const std::string& path )
 {
 	const char* c_path = path.c_str();
 	std::ifstream file;
@@ -409,7 +382,7 @@ void Editor::import_from_file( const std::string& path )
 			"File '%s' doesn't exists, aborting import from file!\n", 
 			c_path
 		);
-		return;
+		return false;
 	}
 
 	//  Read file's content
@@ -424,11 +397,12 @@ void Editor::import_from_file( const std::string& path )
 	CurveSerializer serializer;
 	_curve = serializer.unserialize( data );
 
-	//  Apply title
-	_title = get_filename_from_path( path );
+	//  Apply file
+	set_path( path );
 	_has_unsaved_changes = false;
 
 	printf( "Imported curve from file '%s'\n", c_path );
+	return true;
 }
 
 void Editor::_invalidate_layout()

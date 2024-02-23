@@ -37,8 +37,9 @@ namespace curve_editor_x
 
 		void fit_viewport_to_curve();
 
-		void export_to_file( const std::string& path );
-		void import_from_file( const std::string& path );
+		void set_path( const std::string& path );
+		bool export_to_file( const std::string& path );
+		bool import_from_file( const std::string& path );
 
 	private:
 		void _invalidate_layout();
@@ -129,6 +130,7 @@ namespace curve_editor_x
 
 	private:
 		std::string _title {};
+		std::string _path = "tests/test.cvx";
 
 		Curve _curve {};
 		CurveExtrems _curve_extrems {};
@@ -157,6 +159,6 @@ namespace curve_editor_x
 		float _curve_thickness = CURVE_THICKNESS;
 		double _last_click_time = 0.0;
 
-		bool _has_unsaved_changes = false;
+		bool _has_unsaved_changes = true;
 	};
 }
