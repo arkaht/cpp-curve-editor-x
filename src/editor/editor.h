@@ -156,5 +156,7 @@ namespace curve_editor_x
 		bool _is_showing_points = true;
 		float _curve_thickness = CURVE_THICKNESS;
 		double _last_click_time = 0.0;
+
+		bool _has_unsaved_changes = false;
 	};
 }

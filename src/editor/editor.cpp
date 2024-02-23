@@ -171,6 +171,7 @@ void Editor::update( float dt )
 	{
 		int key_id = _curve.point_to_key_id( _selected_point_id );
 		_curve.remove_key( key_id );
+		_has_unsaved_changes = true;
 	}
 	else if ( _is_grid_snapping && IsKeyPressed( KEY_S ) )
 	{
@@ -239,6 +240,8 @@ void Editor::update( float dt )
 				_curve.add_key( key );
 				_selected_point_id = _curve.get_points_count() - 1;
 			}
+
+			_has_unsaved_changes = true;
 		}
 		//  LMB-pressed: Select hovered point
 		else
@@ -279,6 +282,8 @@ void Editor::update( float dt )
 				new_point
 			);
 		}
+
+		_has_unsaved_changes = true;
 	}
 	//  MMB-press: Switch tangent mode
 	else if ( IsMouseButtonPressed( MOUSE_BUTTON_MIDDLE ) 
@@ -297,6 +302,7 @@ void Editor::update( float dt )
 
 		//  Apply the new tangent constraint
 		_curve.set_tangent_mode( key_id, next_tangent_mode );
+		_has_unsaved_changes = true;
 	}
 	else if ( _curve.is_length_dirty ) 
 	{
@@ -385,6 +391,7 @@ void Editor::export_to_file( const std::string& path )
 
 	//  Apply title
 	_title = get_filename_from_path( path );
+	_has_unsaved_changes = false;
 
 	printf( "Exported curve to file '%s'\n", c_path );
 }
@@ -419,6 +426,7 @@ void Editor::import_from_file( const std::string& path )
 
 	//  Apply title
 	_title = get_filename_from_path( path );
+	_has_unsaved_changes = false;
 
 	printf( "Imported curve from file '%s'\n", c_path );
 }
@@ -473,7 +481,15 @@ void Editor::_invalidate_grid()
 
 void Editor::_render_title_text()
 {
-	const char* title_c_str = _title.c_str();
+	//  Format title text
+	std::string title = _title;
+	if ( _has_unsaved_changes )
+	{
+		title += "*";
+	}
+
+	//  Draw title text
+	const char* title_c_str = title.c_str();
 	DrawText(
 		title_c_str,
 		(int) _frame.x, (int) _frame.y,
@@ -481,10 +497,12 @@ void Editor::_render_title_text()
 		TEXT_COLOR
 	);
 
+	//  Format keys count text
 	const char* keys_text = TextFormat( 
 		"%d keys", _curve.get_keys_count() );
 	int points_width = MeasureText( keys_text, TITLE_FONT_SIZE );
 
+	//  Draw keys count
 	DrawText(
 		keys_text,
 		(int) _frame.x + (int) _frame.width - points_width,
