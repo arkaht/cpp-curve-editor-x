@@ -174,11 +174,11 @@ void Editor::update( float dt )
 	}
 	else if ( _is_grid_snapping && IsKeyPressed( KEY_S ) )
 	{
-		export_to_file( "test." + FORMAT_EXTENSION );
+		export_to_file( "tests/test." + FORMAT_EXTENSION );
 	}
 	else if ( _is_grid_snapping && IsKeyPressed( KEY_L ) )
 	{
-		import_from_file( "test." + FORMAT_EXTENSION );
+		import_from_file( "tests/heart." + FORMAT_EXTENSION );
 
 		//  Prevent update using the new curve since its validity
 		//  hasn't been checked yet
@@ -383,6 +383,9 @@ void Editor::export_to_file( const std::string& path )
 	file << data;
 	file.close();
 
+	//  Apply title
+	_title = get_filename_from_path( path );
+
 	printf( "Exported curve to file '%s'\n", c_path );
 }
 
@@ -413,6 +416,9 @@ void Editor::import_from_file( const std::string& path )
 	//  Unserialize data into curve
 	CurveSerializer serializer;
 	_curve = serializer.unserialize( data );
+
+	//  Apply title
+	_title = get_filename_from_path( path );
 
 	printf( "Imported curve from file '%s'\n", c_path );
 }

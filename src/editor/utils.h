@@ -30,4 +30,9 @@ namespace curve_editor_x
 
 		return target;
 	}
+
+	inline std::string get_filename_from_path( const std::string& path )
+	{
+		return path.substr( path.find_last_of( "/\\" ) + 1 );
+	}
 }
