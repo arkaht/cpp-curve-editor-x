@@ -87,10 +87,10 @@ namespace curve_x
 		) const
 		{
 			return Point {
-				curve_x::remap( x, 
+				Utils::remap( x, 
 					in_min_x, in_max_x, 
 					out_min_x, out_max_x ),
-				curve_x::remap( y, 
+				Utils::remap( y, 
 					in_min_y, in_max_y, 
 					out_min_y, out_max_y ),
 			};

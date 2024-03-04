@@ -131,6 +131,7 @@ namespace curve_editor_x
 	private:
 		std::string _title {};
 		std::string _path = "tests/test.cvx";
+		bool _is_current_file_exists = false;
 
 		Curve _curve {};
 		CurveExtrems _curve_extrems {};

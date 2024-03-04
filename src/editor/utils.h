@@ -1,38 +1,39 @@
 #pragma once
 
-#include <corecrt_math.h>
+#include <string>
+#include <vector>
 
 namespace curve_editor_x
 {
-	inline float lerp( float a, float b, float t )
+	class Utils
 	{
-		return a + t * ( b - a );
-	}
+	public:
+		static float lerp( float a, float b, float t );
 
-	inline float round( float value, float idp )
-	{
-		float mul = powf( 10.0f, idp );
-		return floorf( value * mul + 0.5f ) / mul;
-	}
+		static float round( float value, float idp );
 
-	inline float approach( float value, float target, float delta )
-	{
-		delta = fabsf( delta );
+		static float approach( float value, float target, float delta );
 
-		if ( value < target )
-		{
-			return fminf( value + delta, target );
-		}
-		else if ( value > target )
-		{
-			return fmaxf( value - delta, target );
-		}
+		static std::string get_filename_from_path( const std::string& path );
 
-		return target;
-	}
+		/*
+		 * Open a dialog asking the user to open a file.
+		 * Supported OS: Windows only
+		 */
+		static std::string get_user_open_file_path(
+			std::string title,
+			std::string filter,
+			std::vector<std::string> extensions
+		);
 
-	inline std::string get_filename_from_path( const std::string& path )
-	{
-		return path.substr( path.find_last_of( "/\\" ) + 1 );
-	}
+		/*
+		 * Open a dialog asking the user to save a file.
+		 * Supported OS: Windows only
+		 */
+		static std::string get_user_save_file_path(
+			std::string title,
+			std::string filter,
+			std::vector<std::string> extensions
+		);
+	};
 }

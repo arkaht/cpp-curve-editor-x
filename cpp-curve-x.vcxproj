@@ -132,6 +132,7 @@
     <ClCompile Include="src\curve-x\curve.cpp" />
     <ClCompile Include="src\curve-x\key.cpp" />
     <ClCompile Include="src\editor\editor.cpp" />
+    <ClCompile Include="src\editor\utils.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>

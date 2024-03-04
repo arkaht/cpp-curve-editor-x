@@ -26,7 +26,7 @@ Point Curve::evaluate_by_percent( float t ) const
 	const Point p3 = k1.control;
 	const Point p2 = p3 + k1.left_tangent;
 
-	return bezier_interp( p0, p1, p2, p3, t );
+	return Utils::bezier_interp( p0, p1, p2, p3, t );
 }
 
 Point Curve::evaluate_by_distance( float d ) const
@@ -77,7 +77,7 @@ float Curve::evaluate_by_time( float time ) const
 	const float y1 = p0.y + t1.y;
 	const float y2 = p3.y + t2.y;
 
-	return bezier_interp( p0.y, y1, y2, p3.y, t );
+	return Utils::bezier_interp( p0.y, y1, y2, p3.y, t );
 }
 
 void Curve::add_key( const CurveKey& key )

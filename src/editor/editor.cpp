@@ -131,6 +131,7 @@ void Editor::update( float dt )
 	{
 		_is_showing_points = !_is_showing_points;
 	}
+	//  Suppr: Delete current selected key
 	else if ( IsKeyPressed( KEY_DELETE ) 
 		&& is_valid_selected_point 
 		&& _curve.get_keys_count() > 2 )
@@ -139,13 +140,47 @@ void Editor::update( float dt )
 		_curve.remove_key( key_id );
 		_has_unsaved_changes = true;
 	}
+	//  Ctrl+S: Save to current file
 	else if ( _is_grid_snapping && IsKeyPressed( KEY_S ) )
 	{
-		export_to_file( _path );
+		std::string path = _path;
+
+		//  Shift-down: Choosing save file location
+		if ( _is_quick_evaluating || !_is_current_file_exists )
+		{
+			path = Utils::get_user_save_file_path(
+				"Curve-X",
+				"Curve-X Files(.cvx)",
+				std::vector<std::string> { FORMAT_EXTENSION }
+			);
+		}
+
+		//  Save file
+		if ( path.length() > 0 )
+		{
+			//  Force path to hold the format extension
+			path = TextFormat( 
+				"%s.%s",
+				GetFileNameWithoutExt( path.c_str() ),
+				FORMAT_EXTENSION.c_str()
+
+			);
+			export_to_file( path );
+		}
 	}
+	//  Ctrl+L: Load a file
 	else if ( _is_grid_snapping && IsKeyPressed( KEY_L ) )
 	{
-		import_from_file( "tests/heart." + FORMAT_EXTENSION );
+		std::string path = Utils::get_user_open_file_path(
+			"Curve-X",
+			"Curve-X Files(.cvx)",
+			std::vector<std::string> { FORMAT_EXTENSION }
+		);
+
+		if ( path.length() > 0 )
+		{
+			import_from_file( path );
+		}
 
 		//  Prevent update using the new curve since its validity
 		//  hasn't been checked yet
@@ -334,7 +369,7 @@ void Editor::fit_viewport_to_curve()
 void Editor::set_path( const std::string& path )
 {
 	_path = path;
-	_title = get_filename_from_path( path );
+	_title = Utils::get_filename_from_path( path );
 }
 
 bool Editor::export_to_file( const std::string& path )
@@ -347,9 +382,10 @@ bool Editor::export_to_file( const std::string& path )
 	if ( !file.is_open() )
 	{
 		printf( 
-			"File '%s' doesn't exists, aborting export from file!\n", 
+			"File '%s' isn't writtable, aborting export from file!\n", 
 			c_path
 		);
+		_is_current_file_exists = false;
 		return false;
 	}
 
@@ -364,6 +400,7 @@ bool Editor::export_to_file( const std::string& path )
 	//  Apply file
 	set_path( path );
 	_has_unsaved_changes = false;
+	_is_current_file_exists = true;
 
 	printf( "Exported curve to file '%s'\n", c_path );
 	return true;
@@ -382,6 +419,7 @@ bool Editor::import_from_file( const std::string& path )
 			"File '%s' doesn't exists, aborting import from file!\n", 
 			c_path
 		);
+		_is_current_file_exists = false;
 		return false;
 	}
 
@@ -400,6 +438,7 @@ bool Editor::import_from_file( const std::string& path )
 	//  Apply file
 	set_path( path );
 	_has_unsaved_changes = false;
+	_is_current_file_exists = true;
 
 	printf( "Imported curve from file '%s'\n", c_path );
 	return true;
@@ -1131,7 +1170,7 @@ bool Editor::_is_double_clicking( bool should_consume )
 
 float Editor::_transform_curve_to_screen_x( float x ) const
 {
-	return remap( 
+	return curve_x::Utils::remap( 
 		x, 
 		_curve_extrems.min_x, _curve_extrems.max_x, 
 		_viewport.x, _viewport.x + _viewport.width * _zoom
@@ -1140,7 +1179,7 @@ float Editor::_transform_curve_to_screen_x( float x ) const
 
 float Editor::_transform_curve_to_screen_y( float y ) const
 {
-	return remap( 
+	return curve_x::Utils::remap( 
 		y, 
 		_curve_extrems.min_y, _curve_extrems.max_y, 
 		_viewport.y + _viewport.height * _zoom, _viewport.y

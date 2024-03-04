@@ -31,8 +31,8 @@
  *  - [x] time curve evaluation (x-axis as time)
  *  - [/] grid scaling w/ zoom
  *  - [x] add & remove points
- *  - [ ] export to file
- *  - [ ] import from file
+ *  - [x] export to file
+ *  - [x] import from file
  *  - [ ] fix evaluation by time not accounting tangents X-axis
  */
 
