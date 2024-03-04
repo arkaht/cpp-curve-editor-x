@@ -15,21 +15,30 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\main.cpp">
+    <ClCompile Include="src\curve-x\curve.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\editor\editor.cpp">
+    <ClCompile Include="src\curve-x\curve-serializer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\editor\utils.cpp">
+    <ClCompile Include="src\curve-x\key.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\editor\editor.h">
+    <ClInclude Include="src\curve-x\curve.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\editor\utils.h">
+    <ClInclude Include="src\curve-x\curve-serializer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\curve-x\key.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\curve-x\point.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\curve-x\utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
