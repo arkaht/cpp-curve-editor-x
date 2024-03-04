@@ -132,18 +132,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\editor\editor.cpp" />
-    <ClCompile Include="src\editor\utils.cpp" />
-    <ClCompile Include="src\main.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="src\editor\editor.h" />
-    <ClInclude Include="src\editor\utils.h" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="curve-x.vcxproj">
       <Project>{e7db9330-44e2-48f0-bd7e-31e98369b276}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\curve-editor-x\editor.cpp" />
+    <ClCompile Include="src\curve-editor-x\main.cpp" />
+    <ClCompile Include="src\curve-editor-x\utils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\curve-editor-x\editor.h" />
+    <ClInclude Include="src\curve-editor-x\utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

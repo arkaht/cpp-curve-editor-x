@@ -44,7 +44,7 @@
 #include "raymath.h"
 
 #include <curve-x/curve.h>
-#include <editor/editor.h>
+#include <curve-editor-x/editor.h>
 
 using namespace curve_x;
 using namespace curve_editor_x;

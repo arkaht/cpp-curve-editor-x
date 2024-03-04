@@ -6,7 +6,7 @@
 #include <string>
 
 #include <curve-x/curve.h>
-#include <editor/utils.h>
+#include <curve-editor-x/utils.h>
 
 namespace curve_editor_x
 {
@@ -14,11 +14,19 @@ namespace curve_editor_x
 
 	enum class CurveInterpolateMode
 	{
-		//  Use of raylib functions
+		/*
+		 * Use of raylib functions
+		 */
 		Bezier,
-		//  Use of time-evaluation
+
+		/*
+		 * Use of time-evaluation
+		 */
 		TimeEvaluation,
-		//  Use of distance-evaluation
+
+		/*
+		 * Use of distance-evaluation
+		 */
 		DistanceEvaluation,
 
 		MAX,

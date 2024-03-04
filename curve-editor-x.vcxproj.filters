@@ -15,21 +15,21 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\main.cpp">
+    <ClCompile Include="src\curve-editor-x\editor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\editor\editor.cpp">
+    <ClCompile Include="src\curve-editor-x\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\editor\utils.cpp">
+    <ClCompile Include="src\curve-editor-x\utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\editor\editor.h">
+    <ClInclude Include="src\curve-editor-x\editor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\editor\utils.h">
+    <ClInclude Include="src\curve-editor-x\utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
