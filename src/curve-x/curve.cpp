@@ -7,7 +7,7 @@ using namespace curve_x;
 Curve::Curve()
 {}
 
-Curve::Curve( std::vector<CurveKey> keys )
+Curve::Curve( const std::vector<CurveKey>& keys )
 	: _keys( keys )
 {}
 
@@ -235,54 +235,6 @@ int Curve::key_to_point_id( int key_id ) const
 	return key_id * 3;
 }
 
-void Curve::find_evaluation_keys_id_by_percent(
-	int* first_key_id,
-	int* last_key_id,
-	float& t
-) const
-{
-	int key_id = -1;
-
-	if ( t >= 1.0f )
-	{
-		t = 1.0f;
-		
-		key_id = get_keys_count() - 2;
-	}
-	else
-	{
-		t = fmaxf( t, 0.0f ) * get_curves_count();
-		key_id = (int)floorf( t );
-		t -= (float)key_id;
-	}
-
-	*first_key_id = key_id;
-	*last_key_id = key_id + 1;
-}
-
-void Curve::find_evaluation_keys_id_by_distance( 
-	int* first_key_id, 
-	int* last_key_id, 
-	float d 
-) const
-{
-	int keys_count = get_keys_count();
-
-	//  Iterate over all keys to find out
-	for ( int key_id = 0; key_id < keys_count; key_id++ )
-	{
-		const CurveKey& key = get_key( key_id );
-		if ( d > key.distance ) continue;
-
-		*first_key_id = key_id - 1;
-		*last_key_id = key_id;
-		return;
-	}
-
-	*first_key_id = keys_count;
-	*last_key_id = *first_key_id;
-}
-
 void Curve::set_tangent_mode( 
 	int key_id, 
 	TangentMode mode,
@@ -405,6 +357,54 @@ void Curve::find_evaluation_keys_id_by_time(
 
 	*first_key_id = first_id - 1;
 	*last_key_id = first_id;
+}
+
+void Curve::find_evaluation_keys_id_by_percent(
+	int* first_key_id,
+	int* last_key_id,
+	float& t
+) const
+{
+	int key_id = -1;
+
+	if ( t >= 1.0f )
+	{
+		t = 1.0f;
+		
+		key_id = get_keys_count() - 2;
+	}
+	else
+	{
+		t = fmaxf( t, 0.0f ) * get_curves_count();
+		key_id = (int)floorf( t );
+		t -= (float)key_id;
+	}
+
+	*first_key_id = key_id;
+	*last_key_id = key_id + 1;
+}
+
+void Curve::find_evaluation_keys_id_by_distance( 
+	int* first_key_id, 
+	int* last_key_id, 
+	float d 
+) const
+{
+	int keys_count = get_keys_count();
+
+	//  Iterate over all keys to find out
+	for ( int key_id = 0; key_id < keys_count; key_id++ )
+	{
+		const CurveKey& key = get_key( key_id );
+		if ( d > key.distance ) continue;
+
+		*first_key_id = key_id - 1;
+		*last_key_id = key_id;
+		return;
+	}
+
+	*first_key_id = keys_count;
+	*last_key_id = *first_key_id;
 }
 
 int Curve::get_keys_count() const
