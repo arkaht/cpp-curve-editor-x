@@ -79,13 +79,21 @@ void Editor::update( float dt )
 			float old_zoom = _zoom;
 
 			//  Change zoom scale
-			_zoom = fminf( 
-				ZOOM_MAX, 
-				fmaxf( 
-					ZOOM_MIN, 
-					_zoom + mouse_wheel_delta * ZOOM_SENSITIVITY 
-				) 
-			);
+			float scale = 1.0f + mouse_wheel_delta * ZOOM_SENSITIVITY;
+			if ( IS_ZOOM_CLAMPED )
+			{
+				_zoom = fminf( 
+					ZOOM_MAX, 
+					fmaxf( 
+						ZOOM_MIN, 
+						_zoom * scale
+					) 
+				);
+			}
+			else
+			{
+				_zoom *= scale;
+			}
 			_invalidate_grid();
 
 			//  Offset viewport to simulate zooming to mouse position

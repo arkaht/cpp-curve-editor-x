@@ -135,6 +135,8 @@ namespace curve_editor_x
 		const bool  ENABLE_CLIPPING = true;
 		const bool  DRAW_MOUSE_POSITION = true;
 		const bool  MUST_DOUBLE_CLICK_TO_DRAG_POINT = false;
+		//  Does the zoom is clamped between ZOOM_MIN and ZOOM_MAX?
+		const bool  IS_ZOOM_CLAMPED = false;
 
 	private:
 		std::string _title {};
