@@ -62,6 +62,8 @@ namespace curve_editor_x
 		void _render_curve_by_bezier();
 		void _render_curve_points();
 
+		void _render_ui_interpolation_modes();
+
 		void _render_invalid_curve_screen();
 
 		void _render_grid();

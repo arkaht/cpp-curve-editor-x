@@ -703,6 +703,9 @@ void Editor::_render_curve_screen()
 			QUICK_EVALUATION_COLOR
 		);
 	}
+
+	//  Draw interpolation modes
+	_render_ui_interpolation_modes();
 }
 
 void Editor::_render_curve_by_distance()
@@ -712,7 +715,7 @@ void Editor::_render_curve_by_distance()
 	DrawText(
 		TextFormat( "length: %.3f", length ),
 		(int) ( _frame_outline.x + 25 + CURVE_FRAME_PADDING * 0.5f ),
-		(int) ( _frame_outline.y + CURVE_FRAME_PADDING * 0.5f ),
+		(int) ( _frame_outline.y + 25 + CURVE_FRAME_PADDING * 0.5f ),
 		20,
 		TEXT_COLOR
 	);
@@ -851,6 +854,82 @@ void Editor::_render_curve_points()
 		}
 
 		_render_point( control_point_id, control_pos );
+	}
+}
+
+void Editor::_render_ui_interpolation_modes()
+{
+	const float margin = 16.0f;
+	const float background_padding = 4.0f;
+
+	Vector2 pos {
+		_frame_outline.x + CURVE_FRAME_PADDING * 1.0f,
+		_frame_outline.y + CURVE_FRAME_PADDING * 0.75f
+	};
+
+	for ( int i = 0; i < (int)CurveInterpolateMode::MAX; i++ )
+	{
+		bool is_selected = (CurveInterpolateMode)i == _curve_interpolate_mode;
+
+		std::string text = "F" + std::to_string( i + 1 );
+		Color text_color { 210, 210, 210, 255 };
+		Color background_color { 170, 170, 170, 255 };
+		Color background_outline_color = GRAY;
+
+		if ( is_selected )
+		{
+			switch ( _curve_interpolate_mode )
+			{
+				case CurveInterpolateMode::Bezier:
+					text = "AUTO";
+					text_color = RED;
+					break;
+				case CurveInterpolateMode::TimeEvaluation:
+					text = "TIME";
+					text_color = Color { 0, 200, 0, 255 };
+					break;
+				case CurveInterpolateMode::DistanceEvaluation:
+					text = "DISTANCE";
+					text_color = BLUE;
+					break;
+			}
+
+			background_color = Color { 190, 190, 190, 255 };
+			background_outline_color = { 160, 160, 160, 255 };
+		}
+
+		//  Measure text size
+		const char* text_cstr = text.c_str();
+		const float font_size = is_selected ? 20.0f : 16.0f;
+		const float spacing = 1.0f;
+		Vector2 text_size = 
+			MeasureTextEx( _font, text_cstr, font_size, spacing );
+
+		//  Draw background
+		const Rectangle background_rect {
+			pos.x - background_padding * 2.0f,
+			pos.y - background_padding,
+			text_size.x + background_padding * 4.0f,
+			text_size.y + background_padding * 2.0f,
+		};
+		DrawRectangleRec( 
+			background_rect, 
+			background_color 
+		);
+		DrawRectangleLinesEx( background_rect, 2.0f, background_outline_color );
+
+		//  Draw text
+		DrawTextEx(
+			_font,
+			text_cstr,
+			pos,
+			font_size,
+			spacing,
+			text_color
+		);
+
+		//  Offset X-pos
+		pos.x += text_size.x + margin + background_padding * 2.0f;
 	}
 }
 
