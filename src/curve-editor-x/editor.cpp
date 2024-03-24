@@ -713,13 +713,13 @@ void Editor::_render_curve_by_distance()
 {
 	//  Draw curve's length
 	const float length = _curve.get_length();
-	DrawText(
+	/*DrawText(
 		TextFormat( "length: %.3f", length ),
 		(int) ( _frame_outline.x + 25 + CURVE_FRAME_PADDING * 0.5f ),
 		(int) ( _frame_outline.y + 25 + CURVE_FRAME_PADDING * 0.5f ),
 		20,
 		TEXT_COLOR
-	);
+	);*/
 
 	Vector2 previous_pos = _transform_curve_to_screen(
 		_curve.evaluate_by_distance( 0.0f ) );
