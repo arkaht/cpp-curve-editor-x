@@ -115,6 +115,8 @@ namespace curve_editor_x
 		const float GRID_SMALL_GAP = 1.0f;
 		//  Number of small grid lines to form a larger line
 		const float GRID_LARGE_COUNT = 10.0f;
+		//  Levels to snap on for zooming inside the grid
+		const float GRID_LEVELS[3] { 1.0f, 2.0f, 5.0f };
 		const float GRID_SMALL_LINE_THICKNESS = 1.0f;
 		const float GRID_LARGE_LINE_THICKNESS = 2.0f;
 		const float GRID_SMALL_GRID_FONT_SIZE = 16.0f;

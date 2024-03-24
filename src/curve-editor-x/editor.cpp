@@ -474,30 +474,64 @@ void Editor::_invalidate_layout()
 
 void Editor::_invalidate_grid()
 {
+	//  Determine visible range in curve units
 	const Vector2& left_pos = _transform_screen_to_curve( 
 		{ _frame_outline.x, 0.0f } );
 	const Vector2& right_pos = _transform_screen_to_curve(
 		{ _frame_outline.x + _frame_outline.width, 0.0f } );
 	const float visible_range = right_pos.x - left_pos.x;
 
-	float zoomed_width = visible_range;
+	/*printf( "inputs: visible_range=%f; zoom=%f\n", 
+		visible_range, _zoom );*/
 
-	const int LEVELS_COUNT = 3;
-	const float levels[LEVELS_COUNT] { 1.0f, 2.0f, 5.0f };
-	const float max_width_level = 100.0f;
-	const float max_width_exponent = 500.0f;
+	//  Subdivide visible range
+	_grid_gap = visible_range / ( GRID_LARGE_COUNT * GRID_SMALL_GAP );
 
-	int level_id = (int)floorf( 
-		fmodf( zoomed_width, max_width_level ) / max_width_level 
-	  * LEVELS_COUNT
-	);
-	float exponent = floorf( zoomed_width / max_width_level );
-	printf( "level=%f; exponent=%f\n", 
-		levels[level_id], exponent );
+	//  Get level power depending on zoom range
+	float level_power = 0.0f;
+	if ( _grid_gap >= 1.0f )
+	{
+		std::string str_grid_gap = std::to_string( (int)floorf( _grid_gap ) );
+		//printf( "%s\n", str_grid_gap.c_str() );
 
-	_grid_gap = levels[level_id] * powf( 10.0f, exponent );
-	printf( "%f => %f grid-gap\n", 
-		zoomed_width, _grid_gap );
+		level_power = str_grid_gap.length() - 1;
+	}
+	else
+	{
+		std::string str_grid_gap = std::to_string( _grid_gap );
+		//printf( "%s\n", str_grid_gap.c_str() );
+
+		//  Count number of zeros until first digit
+		int zero_count = 0;
+		for ( char letter : str_grid_gap )
+		{
+			if ( letter == '.' ) continue;
+			if ( letter != '0' ) break;
+
+			zero_count++;
+		}
+
+		level_power = -zero_count;
+	}
+
+	//  Snap grid gap to closest level
+	float closest_dist = visible_range;
+	float closest_level = 0; 
+	for ( float level : GRID_LEVELS )
+	{
+		float exponent = powf( 10.0f, level_power );
+		level *= exponent;
+
+		float dist = fabsf( _grid_gap - level );
+		if ( dist < closest_dist )
+		{
+			closest_level = level;
+			closest_dist = dist;
+		}
+	}
+	_grid_gap = closest_level;
+
+	//printf( "output: grid_gap=%f\n", _grid_gap );
 }
 
 void Editor::_render_title_text()
