@@ -65,6 +65,10 @@ namespace curve_editor_x
 		void _render_invalid_curve_screen();
 
 		void _render_grid();
+		void _render_grid_line( 
+			float value,
+			bool is_horizontal
+		);
 
 		void _render_point( int point_id, const Vector2& pos );
 		void _render_circle_point( 
@@ -160,6 +164,7 @@ namespace curve_editor_x
 
 		bool _is_grid_snapping = false;
 		float _grid_gap = 1.0f;
+		std::string _grid_label_format;
 
 		bool _is_quick_evaluating = false;
 		Vector2 _quick_evaluation_pos {};

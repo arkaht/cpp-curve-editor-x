@@ -495,6 +495,9 @@ void Editor::_invalidate_grid()
 		//printf( "%s\n", str_grid_gap.c_str() );
 
 		level_power = str_grid_gap.length() - 1;
+
+		//  Update label format
+		_grid_label_format = "%.0f";
 	}
 	else
 	{
@@ -512,6 +515,9 @@ void Editor::_invalidate_grid()
 		}
 
 		level_power = -zero_count;
+		
+		//  Update label format
+		_grid_label_format = "%.0" + std::to_string( zero_count ) + "f";
 	}
 
 	//  Snap grid gap to closest level
@@ -918,8 +924,6 @@ void Editor::_render_invalid_curve_screen()
 
 void Editor::_render_grid()
 {
-	Font font = GetFontDefault();
-
 	//  Find in-frame curve coordinates extrems, these positions
 	//  will be used to draw our grid in a performant way where
 	//  only visible grid lines will be rendered
@@ -944,48 +948,7 @@ void Editor::_render_grid()
 		      x += _grid_gap 
 	)
 	{
-		float screen_x = _transform_curve_to_screen_x( x );
-
-		bool is_large_line = fmodf( 
-			x, GRID_LARGE_COUNT * _grid_gap ) == 0.0f;
-
-		float font_size = is_large_line 
-			? GRID_LARGE_GRID_FONT_SIZE 
-			: GRID_SMALL_GRID_FONT_SIZE;
-
-		const char* text = TextFormat( "%.0f", x );
-		Vector2 text_size = MeasureTextEx( 
-			font, text, font_size, GRID_FONT_SPACING );
-
-		//  Draw grid line
-		DrawLineEx( 
-			Vector2 {
-				screen_x,
-				_frame_outline.y
-					+ GRID_TEXT_PADDING + text_size.y,
-			},
-			Vector2 {
-				screen_x,
-				_frame_outline.y + _frame_outline.height,
-			},
-			is_large_line 
-				? GRID_LARGE_LINE_THICKNESS 
-				: GRID_SMALL_LINE_THICKNESS,
-			GRID_LINE_COLOR
-		);
-
-		//  Draw text for X-axis
-		DrawTextEx( 
-			font,
-			text, 
-			Vector2 {
-				screen_x - text_size.x * 0.5f,
-				_frame_outline.y + GRID_TEXT_PADDING,
-			},
-			font_size,
-			GRID_FONT_SPACING,
-			GRID_LINE_COLOR
-		);
+		_render_grid_line( x, false );
 	}
 
 	//  Draw horizontal lines
@@ -995,49 +958,79 @@ void Editor::_render_grid()
 		      y += _grid_gap 
 	)
 	{
-		float screen_y = _transform_curve_to_screen_y( y );
-
-		bool is_large_line = fmodf( 
-			y, GRID_LARGE_COUNT * _grid_gap ) == 0.0f;
-
-		float font_size = is_large_line 
-			? GRID_LARGE_GRID_FONT_SIZE 
-			: GRID_SMALL_GRID_FONT_SIZE;
-
-		const char* text = TextFormat( "%.0f", y );
-		Vector2 text_size = MeasureTextEx( 
-			font, text, font_size, GRID_FONT_SPACING );
-
-		//  Draw grid line
-		DrawLineEx( 
-			Vector2 {
-				_frame_outline.x
-					+ GRID_TEXT_PADDING * 4.0f + text_size.x,
-				screen_y,
-			},
-			Vector2 {
-				( _frame_outline.x + _frame_outline.width ),
-				screen_y,
-			},
-			is_large_line 
-				? GRID_LARGE_LINE_THICKNESS 
-				: GRID_SMALL_LINE_THICKNESS,
-			GRID_LINE_COLOR
-		);
-
-		//  Draw text for Y-axis
-		DrawTextEx( 
-			font,
-			text, 
-			Vector2 {
-				_frame_outline.x + GRID_TEXT_PADDING * 2.0f,
-				screen_y - text_size.y * 0.5f,
-			},
-			font_size,
-			GRID_FONT_SPACING,
-			GRID_LINE_COLOR
-		);
+		_render_grid_line( y, true );
 	}
+}
+
+void Editor::_render_grid_line( float value, bool is_horizontal )
+{
+	Font font = GetFontDefault();
+
+	float screen_value = is_horizontal 
+		? _transform_curve_to_screen_y( value )
+		: _transform_curve_to_screen_x( value );
+
+	//  Determine style depending on line type
+	bool is_large_line = fmodf( 
+		value, GRID_LARGE_COUNT * _grid_gap ) == 0.0f;
+	float font_size = is_large_line 
+		? GRID_LARGE_GRID_FONT_SIZE 
+		: GRID_SMALL_GRID_FONT_SIZE;
+	float line_thickness = is_large_line 
+		? GRID_LARGE_LINE_THICKNESS 
+		: GRID_SMALL_LINE_THICKNESS;
+
+	//  Compute text & its size
+	const char* text = TextFormat( _grid_label_format.c_str(), value );
+	Vector2 text_size = MeasureTextEx( 
+		font, text, font_size, GRID_FONT_SPACING );
+
+	//  Determine positions
+	Vector2 text_pos {};
+	Vector2 line_start_pos {};
+	Vector2 line_end_pos {};
+	if ( is_horizontal )
+	{
+		text_pos.x = _frame_outline.x + GRID_TEXT_PADDING * 2.0f;
+		text_pos.y = screen_value - text_size.y * 0.5f;
+
+		line_start_pos.x = _frame_outline.x 
+			+ GRID_TEXT_PADDING * 4.0f + text_size.x;
+		line_start_pos.y = screen_value;
+
+		line_end_pos.x = _frame_outline.x + _frame_outline.width;
+		line_end_pos.y = screen_value;
+	}
+	else
+	{
+		text_pos.x = screen_value - text_size.x * 0.5f;
+		text_pos.y = _frame_outline.y + GRID_TEXT_PADDING;
+
+		line_start_pos.x = screen_value;
+		line_start_pos.y = _frame_outline.y 
+			+ GRID_TEXT_PADDING + text_size.y;
+
+		line_end_pos.x = screen_value;
+		line_end_pos.y = _frame_outline.y + _frame_outline.height;
+	}
+
+	//  Draw line
+	DrawLineEx( 
+		line_start_pos,
+		line_end_pos,
+		line_thickness,
+		GRID_LINE_COLOR
+	);
+
+	//  Draw label
+	DrawTextEx( 
+		font,
+		text, 
+		text_pos,
+		font_size,
+		GRID_FONT_SPACING,
+		GRID_LINE_COLOR
+	);
 }
 
 void Editor::_render_point( int point_id, const Vector2& pos )
