@@ -29,7 +29,7 @@
  *  - [x] grid-snapping
  *  - [x] quick curve evaluation (ctrl + hover)
  *  - [x] time curve evaluation (x-axis as time)
- *  - [/] grid scaling w/ zoom
+ *  - [x] grid scaling w/ zoom
  *  - [x] add & remove points
  *  - [x] export to file
  *  - [x] import from file
