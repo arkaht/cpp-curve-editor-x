@@ -12,6 +12,10 @@ Editor::Editor( const Rectangle& frame )
 
 void Editor::init()
 {
+	//  Setting the default font after raylib has been initialized
+	_font = GetFontDefault();
+
+	//  Import a curve file or create a simple one by default
 	if ( !import_from_file( _path ) )
 	{
 		set_path( _path );
@@ -865,7 +869,6 @@ void Editor::_render_invalid_curve_screen()
 	};
 
 	//  Setup text rendering
-	Font font = GetFontDefault();
 	float font_size = 20.0f;
 	float spacing = 2.0f;
 	Vector2 pos {
@@ -880,7 +883,7 @@ void Editor::_render_invalid_curve_screen()
 
 		//  Measure line size
 		Vector2 text_size = MeasureTextEx( 
-			font, 
+			_font, 
 			text, 
 			font_size, 
 			spacing 
@@ -888,7 +891,7 @@ void Editor::_render_invalid_curve_screen()
 
 		//  Draw centered line
 		DrawTextPro( 
-			font,
+			_font,
 			text, 
 			Vector2 {
 				pos.x - text_size.x * 0.5f,
@@ -948,8 +951,6 @@ void Editor::_render_grid()
 
 void Editor::_render_grid_line( float value, bool is_horizontal )
 {
-	Font font = GetFontDefault();
-
 	float screen_value = is_horizontal 
 		? _transform_curve_to_screen_y( value )
 		: _transform_curve_to_screen_x( value );
@@ -967,7 +968,7 @@ void Editor::_render_grid_line( float value, bool is_horizontal )
 	//  Compute text & its size
 	const char* text = TextFormat( _grid_label_format.c_str(), value );
 	Vector2 text_size = MeasureTextEx( 
-		font, text, font_size, GRID_FONT_SPACING );
+		_font, text, font_size, GRID_FONT_SPACING );
 
 	//  Determine positions
 	Vector2 text_pos {};
@@ -1008,7 +1009,7 @@ void Editor::_render_grid_line( float value, bool is_horizontal )
 
 	//  Draw label
 	DrawTextEx( 
-		font,
+		_font,
 		text, 
 		text_pos,
 		font_size,
@@ -1022,8 +1023,6 @@ void Editor::_render_point( int point_id, const Vector2& pos )
 	bool is_tangent = !_curve.is_control_point_id( point_id );
 	bool is_hovered = point_id == _hovered_point_id || point_id == _selected_point_id;
 	bool is_selected = point_id == _selected_point_id;
-
-	Font font = GetFontDefault();
 
 	//  Choose color
 	Color color;
@@ -1072,7 +1071,7 @@ void Editor::_render_point( int point_id, const Vector2& pos )
 
 			//  measure text size
 			Vector2 size = MeasureTextEx( 
-				font, 
+				_font, 
 				mode_name,
 				font_size,
 				spacing
@@ -1080,7 +1079,7 @@ void Editor::_render_point( int point_id, const Vector2& pos )
 
 			//  draw text
 			DrawTextEx( 
-				font,
+				_font,
 				mode_name,
 				Vector2 {
 					pos.x - size.x * 0.5f,
@@ -1103,7 +1102,7 @@ void Editor::_render_point( int point_id, const Vector2& pos )
 
 		//  Draw coordinates
 		DrawTextEx( 
-			font,
+			_font,
 			TextFormat( "x=%.3f\ny=%.3f", point.x, point.y ),
 			Vector2 {
 				pos.x + POINT_SIZE * 2.0f,

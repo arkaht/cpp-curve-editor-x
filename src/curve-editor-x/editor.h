@@ -150,6 +150,8 @@ namespace curve_editor_x
 		std::string _path = "tests/test.cvx";
 		bool _is_current_file_exists = false;
 
+		Font _font {};
+
 		Curve _curve {};
 		CurveExtrems _curve_extrems {};
 		CurveInterpolateMode _curve_interpolate_mode 
