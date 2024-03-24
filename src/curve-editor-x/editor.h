@@ -157,7 +157,7 @@ namespace curve_editor_x
 		Curve _curve {};
 		CurveExtrems _curve_extrems {};
 		CurveInterpolateMode _curve_interpolate_mode 
-			= CurveInterpolateMode::Bezier;
+			= CurveInterpolateMode::TimeEvaluation;
 
 		Rectangle _frame {};
 
