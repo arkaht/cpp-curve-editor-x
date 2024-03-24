@@ -704,7 +704,7 @@ void Editor::_render_curve_screen()
 void Editor::_render_curve_by_distance()
 {
 	//  Draw curve's length
-	float length = _curve.get_length();
+	const float length = _curve.get_length();
 	DrawText(
 		TextFormat( "length: %.3f", length ),
 		(int) ( _frame_outline.x + 25 + CURVE_FRAME_PADDING * 0.5f ),
@@ -717,21 +717,11 @@ void Editor::_render_curve_by_distance()
 		_curve.evaluate_by_distance( 0.0f ) );
 
 	//  Draw curve using distance-evaluation
-	for ( 
-		float dist = CURVE_RENDER_STEPS; 
-		      dist < length; 
-		      dist += CURVE_RENDER_STEPS 
-	)
+	const float step = length * CURVE_RENDER_SUBDIVISIONS;
+	for ( float dist = step; dist < length; dist += step )
 	{
 		const Vector2 pos = _transform_curve_to_screen(
 			_curve.evaluate_by_distance( dist ) );
-
-		//  Draw point
-		/*DrawCircleV(
-			pos,
-			_curve_thickness,
-			PURPLE
-		);*/
 
 		//  Draw line
 		DrawLineEx(
@@ -747,17 +737,18 @@ void Editor::_render_curve_by_distance()
 
 void Editor::_render_curve_by_time()
 {
-	int points_count = _curve.get_points_count();
+	const int points_count = _curve.get_points_count();
 
-	float min_x = _curve.get_point( 0 ).x;
-	float max_x = _curve.get_point( points_count - 1 ).x 
-		+ CURVE_RENDER_STEPS;
+	//  Determine bounds and steps
+	const float min_x = _curve.get_point( 0 ).x;
+	const float max_x = _curve.get_point( points_count - 1 ).x;
+	const float step = ( max_x - min_x ) * CURVE_RENDER_SUBDIVISIONS;
 
 	Vector2 previous_pos = _transform_curve_to_screen(
 		_curve.evaluate_by_percent( 0.0f ) );
 
 	//  Draw curve using time-evaluation
-	for ( float x = min_x; x < max_x; x += CURVE_RENDER_STEPS )
+	for ( float x = min_x; x < max_x + step; x += step )
 	{
 		const Vector2 pos = _transform_curve_to_screen(
 			Point {
@@ -765,13 +756,6 @@ void Editor::_render_curve_by_time()
 				_curve.evaluate_by_time( x ),
 			}
 		);
-
-		//  Draw point
-		/*DrawCircleV(
-			pos,
-			_curve_thickness,
-			GREEN
-		);*/
 
 		//  Draw line
 		DrawLineEx(

@@ -108,7 +108,8 @@ namespace curve_editor_x
 		const float CURVE_THICKNESS = 2.0f;
 		//  How much to offset the thickness per wheel scroll?
 		const float CURVE_THICKNESS_SENSITIVITY = 0.5f;
-		const float CURVE_RENDER_STEPS = 0.1f;
+		//  Subdivisions for rendering a curve
+		const float CURVE_RENDER_SUBDIVISIONS = 0.01f;
 		const float TANGENT_THICKNESS = 2.0f;
 		const float POINT_SIZE = CURVE_THICKNESS * 3.0f;
 		const float POINT_SELECTED_OFFSET_SIZE = 3.0f;
