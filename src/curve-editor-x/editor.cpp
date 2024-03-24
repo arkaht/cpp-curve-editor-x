@@ -736,7 +736,7 @@ void Editor::_render_curve_by_distance()
 			previous_pos,
 			pos,
 			_curve_thickness,
-			PURPLE
+			BLUE
 		);
 
 		previous_pos = pos;
