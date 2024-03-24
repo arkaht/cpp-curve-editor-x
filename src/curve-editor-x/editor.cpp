@@ -12,7 +12,7 @@ Editor::Editor( const Rectangle& frame )
 
 void Editor::init()
 {
-	//  Setting the default font after raylib has been initialized
+	//  Set the default font after raylib has been initialized
 	_font = GetFontDefault();
 
 	//  Import a curve file or create a simple one by default

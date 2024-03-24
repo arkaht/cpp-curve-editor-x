@@ -33,7 +33,9 @@
  *  - [x] add & remove points
  *  - [x] export to file
  *  - [x] import from file
+ *  - [ ] dev-tool to build a quick release of the library
  *  - [ ] fix evaluation by time not accounting tangents X-axis
+ *  - [ ] fix distance computation for keys
  */
 
  //  Includes
