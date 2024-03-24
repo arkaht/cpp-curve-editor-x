@@ -494,7 +494,7 @@ void Editor::_invalidate_grid()
 		std::string str_grid_gap = std::to_string( (int)floorf( _grid_gap ) );
 		//printf( "%s\n", str_grid_gap.c_str() );
 
-		level_power = str_grid_gap.length() - 1;
+		level_power = (float)( str_grid_gap.length() - 1 );
 
 		//  Update label format
 		_grid_label_format = "%.0f";
@@ -514,7 +514,7 @@ void Editor::_invalidate_grid()
 			zero_count++;
 		}
 
-		level_power = -zero_count;
+		level_power = (float)( -zero_count );
 		
 		//  Update label format
 		_grid_label_format = "%.0" + std::to_string( zero_count ) + "f";
