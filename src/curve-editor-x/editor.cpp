@@ -26,9 +26,9 @@ void Editor::init()
 		_curve.add_key( CurveKey(
 			{ 1.0f, 0.0f }
 		) );
+
+		fit_viewport_to_curve();
 	}
-	
-	fit_viewport_to_curve();
 }
 
 void Editor::update( float dt )
@@ -451,6 +451,7 @@ bool Editor::import_from_file( const std::string& path )
 	set_path( path );
 	_has_unsaved_changes = false;
 	_is_current_file_exists = true;
+	fit_viewport_to_curve();
 
 	printf( "Imported curve from file '%s'\n", c_path );
 	return true;
