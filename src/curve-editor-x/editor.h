@@ -34,12 +34,16 @@ namespace curve_editor_x
 
 	struct CurveLayer
 	{
+		CurveLayer() {}
 		CurveLayer( const Curve& curve )
 			: curve( curve )
 		{}
 
 		Curve curve;
-		std::string path = "default." + curve_x::FORMAT_EXTENSION;
+		Color color = RED;
+
+		std::string path = "default.cvx";
+		std::string name = "default";
 	};
 
 	class Editor
@@ -65,12 +69,13 @@ namespace curve_editor_x
 
 		void _render_title_text();
 		void _render_frame();
+		void _render_layers_tab();
 
 		void _render_curve_screen();
-		void _render_curve_by_distance();
-		void _render_curve_by_time();
-		void _render_curve_by_bezier();
-		void _render_curve_points();
+		void _render_curve_by_distance( const CurveLayer& layer );
+		void _render_curve_by_time( const CurveLayer& layer );
+		void _render_curve_by_bezier( const CurveLayer& layer );
+		void _render_curve_points( const CurveLayer& layer );
 
 		void _render_ui_interpolation_modes();
 
@@ -94,7 +99,8 @@ namespace curve_editor_x
 			bool is_selected
 		);
 
-		CurveLayer& _get_selected_curve();
+		CurveLayer& _get_selected_curve_layer();
+		Color _get_curve_color_at( int index );
 		bool _is_selected_curve_valid() const;
 		bool _is_double_clicking( bool should_consume );
 
@@ -159,7 +165,7 @@ namespace curve_editor_x
 		//  Does the zoom is clamped between ZOOM_MIN and ZOOM_MAX?
 		const bool  IS_ZOOM_CLAMPED = false;
 
-		const std::string DEFAULT_CURVE_PATH = "tests/test." + curve_x::FORMAT_EXTENSION;
+		const std::string DEFAULT_CURVE_PATH = "tests/test.cvx";
 
 	private:
 		std::string _title {};
@@ -182,6 +188,7 @@ namespace curve_editor_x
 		float _zoom = 1.0f;
 		Rectangle _viewport {};
 		Rectangle _frame_outline {};
+		Rectangle _layers_tab {};
 
 		bool _is_grid_snapping = false;
 		float _grid_gap = 1.0f;

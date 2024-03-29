@@ -33,6 +33,7 @@
  *  - [x] add & remove points
  *  - [x] export to file
  *  - [x] import from file
+ *  - [*] multiple curves layering
  *  - [ ] dev-tool to build a quick release of the library
  *  - [ ] fix evaluation by time not accounting tangents X-axis
  *  - [ ] fix distance computation for keys
@@ -53,7 +54,7 @@ using namespace curve_editor_x;
 
 //  Application settings
 
-const int	WINDOW_WIDTH = 800;
+const int	WINDOW_WIDTH = 1000;
 const int	WINDOW_HEIGHT = 600;
 const char*	WINDOW_TITLE = "Curve-X Editor";
 const int	WINDOW_TARGET_FPS = 60;
@@ -64,13 +65,13 @@ const float	WINDOW_PADDING = 16.0f;
 
 int main( void )
 {
-	Editor editor(
+	Editor editor( 
 		Rectangle {
 			WINDOW_PADDING,
 			WINDOW_PADDING,
 			WINDOW_WIDTH - WINDOW_PADDING * 2.0f,
 			WINDOW_HEIGHT - WINDOW_PADDING * 2.0f,
-		}
+		} 
 	);
 
 	InitWindow( WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE );
