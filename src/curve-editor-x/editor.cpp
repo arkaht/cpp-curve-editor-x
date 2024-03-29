@@ -66,11 +66,23 @@ void Editor::update( float dt )
 	_is_quick_evaluating = IsKeyDown( KEY_LEFT_SHIFT );
 
 	//  RMB: Move viewport around
-	if ( IsMouseButtonDown( MOUSE_BUTTON_RIGHT ) )
+	if ( IsMouseButtonPressed( MOUSE_BUTTON_RIGHT ) )
+	{
+		_is_moving_viewport = CheckCollisionPointRec( 
+			mouse_pos, 
+			_frame_outline
+		);
+	}
+	else if ( IsMouseButtonReleased( MOUSE_BUTTON_RIGHT ) )
+	{
+		_is_moving_viewport = false;
+	}
+	if ( _is_moving_viewport )
 	{
 		_viewport.x += mouse_delta.x;
 		_viewport.y += mouse_delta.y;
 	}
+
 	//  WHEEL
 	if ( float mouse_wheel_delta = GetMouseWheelMove() )
 	{

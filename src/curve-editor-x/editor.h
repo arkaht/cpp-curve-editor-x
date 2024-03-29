@@ -164,6 +164,7 @@ namespace curve_editor_x
 	private:
 		std::string _title {};
 		bool _is_current_file_exists = false;
+		bool _is_moving_viewport = false;
 
 		Font _font {};
 
