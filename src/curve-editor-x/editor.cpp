@@ -46,6 +46,10 @@ void Editor::update( float dt )
 	bool is_alt_down = IsKeyDown( KEY_LEFT_ALT );
 	bool is_valid_selected_point = 
 		curve.is_valid_point_id( _selected_point_id );
+	bool is_mouse_in_viewport = CheckCollisionPointRec( 
+		mouse_pos, 
+		_frame_outline
+	);
 
 	//  LCTRL-down: Grid snapping
 	_is_grid_snapping = IsKeyDown( KEY_LEFT_CONTROL );
@@ -68,10 +72,7 @@ void Editor::update( float dt )
 	//  RMB: Move viewport around
 	if ( IsMouseButtonPressed( MOUSE_BUTTON_RIGHT ) )
 	{
-		_is_moving_viewport = CheckCollisionPointRec( 
-			mouse_pos, 
-			_frame_outline
-		);
+		_is_moving_viewport = is_mouse_in_viewport;
 	}
 	else if ( IsMouseButtonReleased( MOUSE_BUTTON_RIGHT ) )
 	{
@@ -86,51 +87,54 @@ void Editor::update( float dt )
 	//  WHEEL
 	if ( float mouse_wheel_delta = GetMouseWheelMove() )
 	{
-		//  WHEEL + ALT-down: control curve thickness
-		if ( is_alt_down )
+		if ( is_mouse_in_viewport )
 		{
-			_curve_thickness = fmaxf( 
-				CURVE_THICKNESS, 
-				_curve_thickness + mouse_wheel_delta * CURVE_THICKNESS_SENSITIVITY 
-			);
-		}
-		//  WHEEL: Zoom to mouse
-		else
-		{
-			float old_zoom = _zoom;
-
-			//  Change zoom scale
-			float scale = 1.0f + mouse_wheel_delta * ZOOM_SENSITIVITY;
-			if ( IS_ZOOM_CLAMPED )
+			//  WHEEL + ALT-down: control curve thickness
+			if ( is_alt_down )
 			{
-				_zoom = fminf( 
-					ZOOM_MAX, 
-					fmaxf( 
-						ZOOM_MIN, 
-						_zoom * scale
-					) 
+				_curve_thickness = fmaxf( 
+					CURVE_THICKNESS, 
+					_curve_thickness + mouse_wheel_delta * CURVE_THICKNESS_SENSITIVITY 
 				);
 			}
+			//  WHEEL: Zoom to mouse
 			else
 			{
-				_zoom *= scale;
-			}
-			_invalidate_grid();
+				float old_zoom = _zoom;
 
-			//  Offset viewport to simulate zooming to mouse position
-			if ( _zoom != old_zoom )
-			{
-				Vector2 offset {
-					mouse_pos.x - _viewport.x,
-					mouse_pos.y - _viewport.y
-				};
+				//  Change zoom scale
+				float scale = 1.0f + mouse_wheel_delta * ZOOM_SENSITIVITY;
+				if ( IS_ZOOM_CLAMPED )
+				{
+					_zoom = fminf( 
+						ZOOM_MAX, 
+						fmaxf( 
+							ZOOM_MIN, 
+							_zoom * scale
+						) 
+					);
+				}
+				else
+				{
+					_zoom *= scale;
+				}
+				_invalidate_grid();
 
-				float zoom_ratio = mouse_wheel_delta > 0.0f
-					? 1.0f / ( old_zoom / _zoom )
-					: _zoom / old_zoom;
+				//  Offset viewport to simulate zooming to mouse position
+				if ( _zoom != old_zoom )
+				{
+					Vector2 offset {
+						mouse_pos.x - _viewport.x,
+						mouse_pos.y - _viewport.y
+					};
 
-				_viewport.x += offset.x - offset.x * zoom_ratio;
-				_viewport.y += offset.y - offset.y * zoom_ratio;
+					float zoom_ratio = mouse_wheel_delta > 0.0f
+						? 1.0f / ( old_zoom / _zoom )
+						: _zoom / old_zoom;
+
+					_viewport.x += offset.x - offset.x * zoom_ratio;
+					_viewport.y += offset.y - offset.y * zoom_ratio;
+				}
 			}
 		}
 	}
