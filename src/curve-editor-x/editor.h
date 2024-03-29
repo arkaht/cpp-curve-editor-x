@@ -32,6 +32,16 @@ namespace curve_editor_x
 		MAX,
 	};
 
+	struct CurveLayer
+	{
+		CurveLayer( const Curve& curve )
+			: curve( curve )
+		{}
+
+		Curve curve;
+		std::string path = "default." + curve_x::FORMAT_EXTENSION;
+	};
+
 	class Editor
 	{
 	public:
@@ -43,7 +53,7 @@ namespace curve_editor_x
 		void update( float dt );
 		void render();
 
-		void fit_viewport_to_curve();
+		void fit_viewport_to_curves();
 
 		void set_path( const std::string& path );
 		bool export_to_file( const std::string& path );
@@ -84,6 +94,8 @@ namespace curve_editor_x
 			bool is_selected
 		);
 
+		CurveLayer& _get_selected_curve();
+		bool _is_selected_curve_valid() const;
 		bool _is_double_clicking( bool should_consume );
 
 		float _transform_curve_to_screen_x( float x ) const;
@@ -147,14 +159,17 @@ namespace curve_editor_x
 		//  Does the zoom is clamped between ZOOM_MIN and ZOOM_MAX?
 		const bool  IS_ZOOM_CLAMPED = false;
 
+		const std::string DEFAULT_CURVE_PATH = "tests/test." + curve_x::FORMAT_EXTENSION;
+
 	private:
 		std::string _title {};
-		std::string _path = "tests/test.cvx";
 		bool _is_current_file_exists = false;
 
 		Font _font {};
 
-		Curve _curve {};
+		std::vector<CurveLayer> _curve_layers {};
+		int _selected_curve_id = 0;
+
 		CurveExtrems _curve_extrems {};
 		CurveInterpolateMode _curve_interpolate_mode 
 			= CurveInterpolateMode::TimeEvaluation;

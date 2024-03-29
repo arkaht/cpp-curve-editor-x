@@ -16,31 +16,36 @@ void Editor::init()
 	_font = GetFontDefault();
 
 	//  Import a curve file or create a simple one by default
-	if ( !import_from_file( _path ) )
+	if ( !import_from_file( DEFAULT_CURVE_PATH ) )
 	{
-		set_path( _path );
+		set_path( DEFAULT_CURVE_PATH );
 		
-		_curve.add_key( CurveKey(
+		Curve curve {};
+		curve.add_key( CurveKey(
 			{ 0.0f, 1.0f }
 		) );
-		_curve.add_key( CurveKey(
+		curve.add_key( CurveKey(
 			{ 1.0f, 0.0f }
 		) );
+		_curve_layers.push_back( curve );
 
-		fit_viewport_to_curve();
+		fit_viewport_to_curves();
 	}
 }
 
 void Editor::update( float dt )
 {
-	if ( !_curve.is_valid() ) return;
+	if ( !_is_selected_curve_valid() ) return;
+
+	CurveLayer& curve_ref = _get_selected_curve();
+	Curve& curve = curve_ref.curve;
 
 	Vector2 mouse_pos = GetMousePosition();
 	Vector2 mouse_delta = GetMouseDelta();
 
 	bool is_alt_down = IsKeyDown( KEY_LEFT_ALT );
 	bool is_valid_selected_point = 
-		_curve.is_valid_point_id( _selected_point_id );
+		curve.is_valid_point_id( _selected_point_id );
 
 	//  LCTRL-down: Grid snapping
 	_is_grid_snapping = IsKeyDown( KEY_LEFT_CONTROL );
@@ -136,7 +141,7 @@ void Editor::update( float dt )
 	//  F: Fit viewport to curve
 	else if ( IsKeyPressed( KEY_F ) )
 	{
-		fit_viewport_to_curve();
+		fit_viewport_to_curves();
 	}
 	//  TAB: Toggle editor points visibility
 	else if ( IsKeyPressed( KEY_TAB ) )
@@ -146,16 +151,16 @@ void Editor::update( float dt )
 	//  Suppr: Delete current selected key
 	else if ( IsKeyPressed( KEY_DELETE ) 
 		&& is_valid_selected_point 
-		&& _curve.get_keys_count() > 2 )
+		&& curve.get_keys_count() > 2 )
 	{
-		int key_id = _curve.point_to_key_id( _selected_point_id );
-		_curve.remove_key( key_id );
+		int key_id = curve.point_to_key_id( _selected_point_id );
+		curve.remove_key( key_id );
 		_has_unsaved_changes = true;
 	}
 	//  Ctrl+S: Save to current file
 	else if ( _is_grid_snapping && IsKeyPressed( KEY_S ) )
 	{
-		std::string path = _path;
+		std::string path = curve_ref.path;
 
 		//  Shift-down: Choosing save file location
 		if ( _is_quick_evaluating || !_is_current_file_exists )
@@ -201,9 +206,9 @@ void Editor::update( float dt )
 
 	//  Find the mouse hovered point
 	_hovered_point_id = -1;
-	for ( int i = 0; i < _curve.get_points_count(); i++ )
+	for ( int i = 0; i < curve.get_points_count(); i++ )
 	{
-		const Point& point = _curve.get_point( i, PointSpace::Global );
+		const Point& point = curve.get_point( i, PointSpace::Global );
 		const Vector2 screen_point = _transform_curve_to_screen( 
 			point );
 
@@ -232,26 +237,26 @@ void Editor::update( float dt )
 			{
 				//  TODO: fix this feature and Curve::compute_length
 				//  Find distance on curve from point
-				float dist = _curve.get_nearest_distance_to( 
+				float dist = curve.get_nearest_distance_to( 
 					key.control );
 
 				//  Find the key index to insert from
 				int first_key_id, last_key_id;
-				_curve.find_evaluation_keys_id_by_distance( 
+				curve.find_evaluation_keys_id_by_distance( 
 					&first_key_id, &last_key_id, dist );
 
 				printf( "=> %d:%d\n", first_key_id, last_key_id );
 
 				//  Insert and select the point
-				_curve.insert_key( last_key_id, key );
-				_selected_point_id = _curve.key_to_point_id( 
+				curve.insert_key( last_key_id, key );
+				_selected_point_id = curve.key_to_point_id( 
 					last_key_id );
 			}
 			//  NO ALT-down: add key
 			else
 			{
-				_curve.add_key( key );
-				_selected_point_id = _curve.get_points_count() - 1;
+				curve.add_key( key );
+				_selected_point_id = curve.get_points_count() - 1;
 			}
 
 			_has_unsaved_changes = true;
@@ -280,9 +285,9 @@ void Editor::update( float dt )
 
 		//  Tangents use a different function to apply the tangent 
 		//  mode constraint.
-		if ( !_curve.is_control_point_id( _selected_point_id ) )
+		if ( !curve.is_control_point_id( _selected_point_id ) )
 		{
-			_curve.set_tangent_point( 
+			curve.set_tangent_point( 
 				_selected_point_id,
 				new_point,
 				PointSpace::Global
@@ -290,7 +295,7 @@ void Editor::update( float dt )
 		}
 		else
 		{
-			_curve.set_point(
+			curve.set_point(
 				_selected_point_id, 
 				new_point
 			);
@@ -303,9 +308,9 @@ void Editor::update( float dt )
 		&& is_valid_selected_point )
 	{
 		int key_id = 
-			_curve.point_to_key_id( _selected_point_id );
+			curve.point_to_key_id( _selected_point_id );
 		TangentMode tangent_mode = 
-			_curve.get_tangent_mode( key_id );
+			curve.get_tangent_mode( key_id );
 
 		//  Cycle through tangent modes
 		TangentMode next_tangent_mode = 
@@ -314,12 +319,12 @@ void Editor::update( float dt )
 			: (TangentMode)( (int)tangent_mode + 1 );
 
 		//  Apply the new tangent constraint
-		_curve.set_tangent_mode( key_id, next_tangent_mode );
+		curve.set_tangent_mode( key_id, next_tangent_mode );
 		_has_unsaved_changes = true;
 	}
-	else if ( _curve.is_length_dirty ) 
+	else if ( curve.is_length_dirty ) 
 	{
-		_curve.compute_length();
+		curve.compute_length();
 	}
 
 	//  Quick curve evaluation
@@ -333,26 +338,26 @@ void Editor::update( float dt )
 		{
 			case CurveInterpolateMode::Bezier:
 			case CurveInterpolateMode::DistanceEvaluation:
-				_quick_evaluation_pos = _curve.get_nearest_point_to(
+				_quick_evaluation_pos = curve.get_nearest_point_to(
 					new_point
 				);
 				break;
 
 			case CurveInterpolateMode::TimeEvaluation:
 				_quick_evaluation_pos.x = new_point.x;
-				_quick_evaluation_pos.y = _curve.evaluate_by_time( 
+				_quick_evaluation_pos.y = curve.evaluate_by_time( 
 					new_point.x );
 				break;
 		}
 
-		float dist = _curve.get_nearest_distance_to( 
+		float dist = curve.get_nearest_distance_to( 
 			_transform_screen_to_curve( 
 				_transformed_mouse_pos 
 			) 
 		);
 
 		int first_key_id, last_key_id;
-		_curve.find_evaluation_keys_id_by_distance( 
+		curve.find_evaluation_keys_id_by_distance( 
 			&first_key_id, &last_key_id, dist );
 
 		printf( "%d:%d\n", first_key_id, last_key_id );
@@ -367,11 +372,23 @@ void Editor::render()
 	_render_frame();
 }
 
-void Editor::fit_viewport_to_curve()
+void Editor::fit_viewport_to_curves()
 {
-	if ( _curve.is_valid() )
+	_curve_extrems = CurveExtrems {};
+	for ( const auto& layer : _curve_layers )
 	{
-		_curve_extrems = _curve.get_extrems();
+		if ( layer.curve.is_valid() )
+		{
+			auto extrems = layer.curve.get_extrems();
+			_curve_extrems.min_x = 
+				std::max( _curve_extrems.min_x, extrems.min_x );
+			_curve_extrems.max_x = 
+				std::max( _curve_extrems.max_x, extrems.max_x );
+			_curve_extrems.min_y = 
+				std::max( _curve_extrems.min_y, extrems.min_y );
+			_curve_extrems.max_y = 
+				std::max( _curve_extrems.max_y, extrems.max_y );
+		}
 	}
 	_zoom = 1.0f;
 
@@ -380,7 +397,8 @@ void Editor::fit_viewport_to_curve()
 
 void Editor::set_path( const std::string& path )
 {
-	_path = path;
+	auto& curve_ref = _get_selected_curve();
+	curve_ref.path = path;
 	_title = Utils::get_filename_from_path( path );
 }
 
@@ -451,7 +469,7 @@ bool Editor::import_from_file( const std::string& path )
 	set_path( path );
 	_has_unsaved_changes = false;
 	_is_current_file_exists = true;
-	fit_viewport_to_curve();
+	fit_viewport_to_curves();
 
 	printf( "Imported curve from file '%s'\n", c_path );
 	return true;
@@ -1249,6 +1267,18 @@ void Editor::_render_square_point(
 			POINT_SELECTED_COLOR
 		);
 	}
+}
+
+CurveLayer& Editor::_get_selected_curve()
+{
+	return _curve_layers[_selected_curve_id];
+}
+
+bool Editor::_is_selected_curve_valid() const
+{
+	int count = _curve_layers.size();
+	return _selected_curve_id >= 0 && _selected_curve_id < count
+		&& _curve_layers[_selected_curve_id].curve.is_valid();
 }
 
 bool Editor::_is_double_clicking( bool should_consume )
