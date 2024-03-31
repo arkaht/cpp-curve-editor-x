@@ -15,45 +15,30 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\curve-editor-x\editor.cpp">
+    <ClCompile Include="curve.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\curve-editor-x\main.cpp">
+    <ClCompile Include="curve-serializer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\curve-editor-x\utils.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\curve-editor-x\curve-layer-row-widget.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\curve-editor-x\widget-manager.cpp">
+    <ClCompile Include="key.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\curve-editor-x\editor.h">
+    <ClInclude Include="curve.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\curve-editor-x\utils.h">
+    <ClInclude Include="curve-serializer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\curve-editor-x\widget.h">
+    <ClInclude Include="key.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\curve-editor-x\curve-layer-row-widget.h">
+    <ClInclude Include="point.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\curve-editor-x\usings.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\curve-editor-x\widget-manager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\curve-editor-x\curve-layer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\curve-editor-x\event.h">
+    <ClInclude Include="utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

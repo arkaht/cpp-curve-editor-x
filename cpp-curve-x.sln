@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34525.116
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "curve-x", "curve-x.vcxproj", "{E7DB9330-44E2-48F0-BD7E-31E98369B276}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "curve-x", "projects/curve-x/curve-x.vcxproj", "{E7DB9330-44E2-48F0-BD7E-31E98369B276}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "curve-editor-x", "curve-editor-x.vcxproj", "{19CCEA6E-A27B-4EDB-A645-0DF769DF2810}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "curve-editor-x", "projects/curve-editor-x/curve-editor-x.vcxproj", "{19CCEA6E-A27B-4EDB-A645-0DF769DF2810}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
