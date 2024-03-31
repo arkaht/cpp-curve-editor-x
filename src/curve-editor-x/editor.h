@@ -55,8 +55,12 @@ namespace curve_editor_x
 		);
 		bool import_from_file( const std::string& path );
 
+		void unselect_curve_layer();
+		void select_curve_layer( int layer_id );
+
 	private:
 		void _add_curve_layer( ref<CurveLayer>& layer );
+		void _on_curve_layer_row_selected( ref<CurveLayerRowWidget> widget );
 
 		void _invalidate_layout();
 		void _invalidate_widgets();
@@ -119,6 +123,7 @@ namespace curve_editor_x
 		const Color POINT_SELECTED_COLOR { 255, 255, 255, 255 };
 		const Color GRID_LINE_COLOR { 120, 120, 120, 255 };
 		const Color QUICK_EVALUATION_COLOR { 90, 90, 90, 255 };
+		const unsigned char CURVE_UNSELECTED_OPACITY = 80;
 
 		const float QUICK_EVALUATION_THICKNESS = 2.0f;
 		const float CURVE_THICKNESS = 2.0f;

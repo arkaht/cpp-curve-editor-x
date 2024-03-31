@@ -15,6 +15,7 @@ namespace curve_editor_x
 
 		Curve curve;
 		Color color = RED;
+		bool is_selected = false;
 
 		std::string path = "default.cvx";
 		std::string name = "default";

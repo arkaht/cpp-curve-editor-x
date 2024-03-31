@@ -151,6 +151,7 @@
     <ClInclude Include="src\curve-editor-x\curve-layer-row-widget.h" />
     <ClInclude Include="src\curve-editor-x\curve-layer.h" />
     <ClInclude Include="src\curve-editor-x\editor.h" />
+    <ClInclude Include="src\curve-editor-x\event.h" />
     <ClInclude Include="src\curve-editor-x\usings.h" />
     <ClInclude Include="src\curve-editor-x\utils.h" />
     <ClInclude Include="src\curve-editor-x\widget-manager.h" />

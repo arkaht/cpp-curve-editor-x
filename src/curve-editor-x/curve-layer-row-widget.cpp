@@ -13,29 +13,41 @@ void CurveLayerRowWidget::update( float dt )
 
 	if ( is_hovered && IsMouseButtonPressed( MOUSE_BUTTON_LEFT ) )
 	{
-		is_selected = !is_selected;
+		if ( !layer->is_selected )
+		{
+			auto caller = cast<CurveLayerRowWidget>();
+			on_selected.invoke( caller );
+		}
 	}
 }
 
 void CurveLayerRowWidget::render()
 {
-	DrawRectangleRec( frame, color );
+	//  Draw background
+	const Color background_color = is_selected() 
+		? BACKGROUND_SELECTED_COLOR 
+		: BACKGROUND_COLOR;
+	DrawRectangleRec( frame, background_color );
 
+	//  Draw radial button
 	const float padding = 2.0f;
-	const float radius = frame.height * 0.5f - padding;
+	const float radius = frame.height * 0.35f - padding;
 	DrawCircle( 
 		frame.x + frame.height * 0.5f, 
 		frame.y + frame.height * 0.5f,
-		radius * 0.9f,
+		radius,
 		GRAY
 	);
 	DrawCircle( 
 		frame.x + frame.height * 0.5f, 
 		frame.y + frame.height * 0.5f,
 		radius * 0.8f,
-		is_selected ? WHITE : LIGHTGRAY
+		is_selected() 
+			? layer->color 
+			: LIGHTGRAY
 	);
 
+	//  Draw layer name text
 	const Font font = GetFontDefault();
 	const float font_size = 16.0f;
 	const float text_spacing = 1.0f;
@@ -45,11 +57,17 @@ void CurveLayerRowWidget::render()
 		font,
 		text_cstr,
 		Vector2 {
-			frame.x + radius * 2.0f + padding * 2.0f,
+			frame.x + frame.height,
 			frame.y + frame.height * 0.5f - text_size.y * 0.5f,
 		},
 		font_size, 
 		text_spacing, 
 		BLACK 
 	);
+}
+
+bool CurveLayerRowWidget::is_selected() const
+{
+	if ( layer == nullptr ) return false;
+	return layer->is_selected;
 }

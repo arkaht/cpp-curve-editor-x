@@ -500,6 +500,7 @@ bool Editor::import_from_file( const std::string& path )
 	layer->path = path;
 	layer->name = GetFileNameWithoutExt( path.c_str() );
 	layer->color = _get_curve_color_at( _curve_layers.size() );
+	layer->is_selected = true;
 	_add_curve_layer( layer );
 
 	//  Apply file
@@ -512,15 +513,54 @@ bool Editor::import_from_file( const std::string& path )
 	return true;
 }
 
+void Editor::unselect_curve_layer()
+{
+	if ( !_is_selected_curve_valid() ) return;
+
+	auto selected_layer = _get_selected_curve_layer();
+	selected_layer->is_selected = false;
+}
+
+void Editor::select_curve_layer( int layer_id )
+{
+	//  Un-select previous layer
+	unselect_curve_layer();
+
+	//  Select specified layer
+	auto& layer = _curve_layers.at( layer_id );
+	layer->is_selected = true;
+	_selected_curve_id = layer_id;
+}
+
 void Editor::_add_curve_layer( ref<CurveLayer>& layer )
 {
+	//  Add to layers
 	_curve_layers.push_back( layer );
 
+	//  If asked for, select the new layer
+	if ( layer->is_selected )
+	{
+		select_curve_layer( _curve_layers.size() - 1 );
+	}
+
+	//  Create related layer row widget
 	auto widget = std::make_shared<CurveLayerRowWidget>( layer );
+	widget->on_selected.listen( "editor", 
+		std::bind( 
+			&Editor::_on_curve_layer_row_selected, this,
+			std::placeholders::_1 
+		) 
+	);
 	_curve_layer_rows.push_back( widget );
 	add_widget( widget );
 
+	//  Update position
 	_invalidate_widgets();
+}
+
+void Editor::_on_curve_layer_row_selected( ref<CurveLayerRowWidget> widget )
+{
+	select_curve_layer( widget->child_index );
 }
 
 void Editor::_invalidate_layout()
@@ -553,13 +593,16 @@ void Editor::_invalidate_layout()
 void Editor::_invalidate_widgets()
 {
 	//  Invalidate curve layer rows
+	const float PADDING = 2.0f;
 	for ( int i = 0; i < _curve_layer_rows.size(); i++ )
 	{
 		auto& widget = _curve_layer_rows[i];
-		widget->frame.width = _layers_tab.width;
+		widget->frame.width = _layers_tab.width - PADDING * 2.0f;
 		widget->frame.height = 32.0f;
-		widget->frame.x = _layers_tab.x;
-		widget->frame.y = _layers_tab.y + i * widget->frame.height;
+		widget->frame.x = _layers_tab.x + PADDING;
+		widget->frame.y = _layers_tab.y + PADDING 
+			+ i * widget->frame.height;  //  Vertical layout
+		widget->child_index = i;
 	}
 }
 
@@ -811,7 +854,9 @@ void Editor::_render_curve_screen()
 	_render_ui_interpolation_modes();
 }
 
-void Editor::_render_curve_by_distance( const ref<CurveLayer>& layer )
+void Editor::_render_curve_by_distance( 
+	const ref<CurveLayer>& layer 
+)
 {
 	//  Draw curve's length
 	const float length = layer->curve.get_length();
@@ -822,6 +867,13 @@ void Editor::_render_curve_by_distance( const ref<CurveLayer>& layer )
 		20,
 		TEXT_COLOR
 	);*/
+
+	const Color color {
+		layer->color.r,
+		layer->color.g,
+		layer->color.b,
+		layer->is_selected ? 255 : CURVE_UNSELECTED_OPACITY
+	};
 
 	Vector2 previous_pos = _transform_curve_to_screen(
 		layer->curve.evaluate_by_distance( 0.0f ) );
@@ -838,7 +890,7 @@ void Editor::_render_curve_by_distance( const ref<CurveLayer>& layer )
 			previous_pos,
 			pos,
 			_curve_thickness,
-			layer->color
+			color
 		);
 
 		previous_pos = pos;
@@ -848,6 +900,13 @@ void Editor::_render_curve_by_distance( const ref<CurveLayer>& layer )
 void Editor::_render_curve_by_time( const ref<CurveLayer>& layer )
 {
 	const int points_count = layer->curve.get_points_count();
+
+	const Color color {
+		layer->color.r,
+		layer->color.g,
+		layer->color.b,
+		layer->is_selected ? 255 : CURVE_UNSELECTED_OPACITY
+	};
 
 	//  Determine bounds and steps
 	const float min_x = layer->curve.get_point( 0 ).x;
@@ -872,7 +931,7 @@ void Editor::_render_curve_by_time( const ref<CurveLayer>& layer )
 			previous_pos,
 			pos,
 			_curve_thickness,
-			layer->color
+			color
 		);
 
 		previous_pos = pos;
@@ -882,6 +941,13 @@ void Editor::_render_curve_by_time( const ref<CurveLayer>& layer )
 void Editor::_render_curve_by_bezier( const ref<CurveLayer>& layer )
 {
 	int points_count = layer->curve.get_points_count();
+
+	const Color color {
+		layer->color.r,
+		layer->color.g,
+		layer->color.b,
+		layer->is_selected ? 255 : CURVE_UNSELECTED_OPACITY
+	};
 
 	for ( int i = 0; i < points_count - 1; i += 3 )
 	{
@@ -904,7 +970,7 @@ void Editor::_render_curve_by_bezier( const ref<CurveLayer>& layer )
 			pos2,
 			pos3,
 			_curve_thickness,
-			layer->color
+			color
 		);
 	}
 }

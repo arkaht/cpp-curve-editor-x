@@ -53,5 +53,8 @@
     <ClInclude Include="src\curve-editor-x\curve-layer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\curve-editor-x\event.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
