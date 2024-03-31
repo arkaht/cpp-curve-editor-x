@@ -428,9 +428,9 @@ void Editor::fit_viewport_to_curves()
 	_invalidate_layout();
 }
 
-void Editor::set_path( const std::string& path )
+void Editor::set_title( const std::string& title )
 {
-	_title = Utils::get_filename_from_path( path );
+	_title = title;
 }
 
 bool Editor::export_to_file( 
@@ -462,7 +462,6 @@ bool Editor::export_to_file(
 	file.close();
 
 	//  Apply file
-	set_path( path );
 	_has_unsaved_changes = false;
 	_is_current_file_exists = true;
 
@@ -507,7 +506,6 @@ bool Editor::import_from_file( const std::string& path )
 	_add_curve_layer( layer );
 
 	//  Apply file
-	set_path( path );
 	_has_unsaved_changes = false;
 	_is_current_file_exists = true;
 	fit_viewport_to_curves();
@@ -533,6 +531,9 @@ void Editor::select_curve_layer( int layer_id )
 	auto& layer = _curve_layers.at( layer_id );
 	layer->is_selected = true;
 	_selected_curve_id = layer_id;
+
+	//  Set title to layer's filename
+	set_title( Utils::get_filename_from_path( layer->path ) );
 }
 
 void Editor::_add_curve_layer( ref<CurveLayer>& layer )

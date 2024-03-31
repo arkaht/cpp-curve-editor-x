@@ -48,7 +48,7 @@ namespace curve_editor_x
 
 		void fit_viewport_to_curves();
 
-		void set_path( const std::string& path );
+		void set_title( const std::string& title );
 		bool export_to_file( 
 			const ref<CurveLayer>& layer, 
 			const std::string& path 
