@@ -585,10 +585,11 @@ void Editor::_invalidate_layout()
 	_frame_outline.height = _frame.height - offset_y;
 
 	//  Update viewport
+	const float ui_height = 32.0f;
 	_viewport.x = _frame_outline.x + CURVE_FRAME_PADDING;
-	_viewport.y = _frame_outline.y + CURVE_FRAME_PADDING;
+	_viewport.y = _frame_outline.y + CURVE_FRAME_PADDING + ui_height;
 	_viewport.width = _frame_outline.width - CURVE_FRAME_PADDING * 2.0f;
-	_viewport.height = _frame_outline.height - CURVE_FRAME_PADDING * 2.0f;
+	_viewport.height = _frame_outline.height - CURVE_FRAME_PADDING * 2.0f - ui_height;
 
 	_invalidate_widgets();
 	_invalidate_grid();
