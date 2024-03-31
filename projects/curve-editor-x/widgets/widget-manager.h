@@ -1,8 +1,9 @@
 #pragma once
 
+#include "widget.h"
+
 #include <vector>
 
-#include <curve-editor-x/widget.h>
 #include <curve-editor-x/usings.h>
 
 namespace curve_editor_x

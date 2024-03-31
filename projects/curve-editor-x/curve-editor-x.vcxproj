@@ -144,21 +144,21 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="curve-layer-row-widget.cpp" />
+    <ClCompile Include="widgets\curve-layer-row-widget.cpp" />
     <ClCompile Include="editor.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="utils.cpp" />
-    <ClCompile Include="widget-manager.cpp" />
+    <ClCompile Include="widgets\widget-manager.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="curve-layer-row-widget.h" />
+    <ClInclude Include="widgets\curve-layer-row-widget.h" />
     <ClInclude Include="curve-layer.h" />
     <ClInclude Include="editor.h" />
     <ClInclude Include="event.h" />
     <ClInclude Include="usings.h" />
     <ClInclude Include="utils.h" />
-    <ClInclude Include="widget-manager.h" />
-    <ClInclude Include="widget.h" />
+    <ClInclude Include="widgets\widget-manager.h" />
+    <ClInclude Include="widgets\widget.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

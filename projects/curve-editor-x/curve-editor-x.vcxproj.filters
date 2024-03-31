@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="curve-layer-row-widget.cpp">
+    <ClCompile Include="widgets\curve-layer-row-widget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="editor.cpp">
@@ -27,18 +27,18 @@
     <ClCompile Include="utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="widget-manager.cpp">
+    <ClCompile Include="widgets\widget-manager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="widget-manager.h">
+    <ClInclude Include="widgets\widget-manager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="curve-layer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="curve-layer-row-widget.h">
+    <ClInclude Include="widgets\curve-layer-row-widget.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="editor.h">
@@ -53,7 +53,7 @@
     <ClInclude Include="utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="widget.h">
+    <ClInclude Include="widgets\widget.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

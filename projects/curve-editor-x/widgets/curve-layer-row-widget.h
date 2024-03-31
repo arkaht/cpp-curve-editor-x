@@ -1,5 +1,5 @@
 #pragma once
-#include <curve-editor-x/widget.h>
+#include "widget.h"
 
 #include <curve-editor-x/usings.h>
 #include <curve-editor-x/event.h>

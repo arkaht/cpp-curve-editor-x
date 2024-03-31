@@ -8,8 +8,8 @@
 #include <curve-editor-x/utils.h>
 #include <curve-editor-x/curve-layer.h>
 
-#include <curve-editor-x/widget-manager.h>
-#include <curve-editor-x/curve-layer-row-widget.h>
+#include <curve-editor-x/widgets/widget-manager.h>
+#include <curve-editor-x/widgets/curve-layer-row-widget.h>
 
 namespace curve_editor_x
 {
