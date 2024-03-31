@@ -182,7 +182,7 @@ void Editor::update( float dt )
 		//  Shift-down: Choosing save file location
 		if ( _is_quick_evaluating || !_is_current_file_exists )
 		{
-			path = Utils::get_user_save_file_path(
+			path = Utils::get_user_save_file(
 				"Curve-X",
 				"Curve-X Files(.cvx)",
 				std::vector<std::string> { FORMAT_EXTENSION }
@@ -204,13 +204,13 @@ void Editor::update( float dt )
 	//  Ctrl+L: Load a file
 	else if ( _is_grid_snapping && IsKeyPressed( KEY_L ) )
 	{
-		std::string path = Utils::get_user_open_file_path(
+		auto paths = Utils::get_user_open_files(
 			"Curve-X",
 			"Curve-X Files(.cvx)",
 			std::vector<std::string> { FORMAT_EXTENSION }
 		);
 
-		if ( path.length() > 0 )
+		for ( const auto& path : paths )
 		{
 			import_from_file( path );
 		}

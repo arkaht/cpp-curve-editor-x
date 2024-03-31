@@ -20,7 +20,17 @@ namespace curve_editor_x
 		 * Open a dialog asking the user to open a file.
 		 * Supported OS: Windows only
 		 */
-		static std::string get_user_open_file_path(
+		static std::string get_user_open_file(
+			std::string title,
+			std::string filter,
+			std::vector<std::string> extensions
+		);
+
+		/*
+		 * Open a dialog asking the user to open multiple files.
+		 * Supported OS: Windows only
+		 */
+		static std::vector<std::string> get_user_open_files(
 			std::string title,
 			std::string filter,
 			std::vector<std::string> extensions
@@ -30,7 +40,7 @@ namespace curve_editor_x
 		 * Open a dialog asking the user to save a file.
 		 * Supported OS: Windows only
 		 */
-		static std::string get_user_save_file_path(
+		static std::string get_user_save_file(
 			std::string title,
 			std::string filter,
 			std::vector<std::string> extensions

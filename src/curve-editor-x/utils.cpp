@@ -37,6 +37,12 @@ std::string Utils::get_filename_from_path( const std::string& path )
 	return path.substr( path.find_last_of( "/\\" ) + 1 );
 }
 
+std::string LPWSTR_to_str( LPWSTR str )
+{
+	std::wstring path( str );
+	return std::string( path.begin(), path.end() );
+}
+
 std::wstring str_to_wstr( const std::string& str )
 {
 	return std::wstring( str.begin(), str.end() );
@@ -61,7 +67,8 @@ std::string concat_extensions(
 	return text;
 }
 
-std::string Utils::get_user_open_file_path(
+const int FILE_BUFFER_SIZE = 1024;
+std::string Utils::get_user_open_file(
 	std::string title,
 	std::string filter,
 	std::vector<std::string> extensions
@@ -79,16 +86,18 @@ std::string Utils::get_user_open_file_path(
 	);
 	std::wstring full_title_wstr = str_to_wstr( full_title );
 
+	//  Allocate file buffer
+    LPWSTR filebuff = new wchar_t[FILE_BUFFER_SIZE];
+	filebuff[0] = '\0';
+
 	//  Setup Windows's open file name structure
-    LPWSTR filebuff = new wchar_t[256];
 	OPENFILENAME open = { 0 };
     open.lStructSize = sizeof( OPENFILENAME );
     open.hwndOwner = GetActiveWindow();
     open.lpstrFilter = filter_wstr.c_str();
     open.lpstrCustomFilter = NULL;
     open.lpstrFile = filebuff;
-    open.lpstrFile[0] = '\0';
-    open.nMaxFile = 256;
+    open.nMaxFile = FILE_BUFFER_SIZE;
     open.nFilterIndex = 1;
     open.lpstrInitialDir = NULL;
     open.lpstrTitle = full_title_wstr.c_str();
@@ -107,7 +116,73 @@ std::string Utils::get_user_open_file_path(
 	return std::string();
 }
 
-std::string Utils::get_user_save_file_path( 
+std::vector<std::string> Utils::get_user_open_files( 
+	std::string title, 
+	std::string filter, 
+	std::vector<std::string> extensions 
+)
+{
+	//  Using string literals so '\0' are taken in account somehow
+	using namespace std::literals::string_literals;
+
+	//  Format texts
+	std::string full_title = "Select " + title + " files";
+	std::string concated_extensions = concat_extensions( extensions );
+	std::wstring filter_wstr = str_to_wstr( 
+		  filter + "\0"s
+		+ concated_extensions + "\0\0"s
+	);
+	std::wstring full_title_wstr = str_to_wstr( full_title );
+
+	//  Allocate file buffer
+    LPWSTR filebuff = new wchar_t[FILE_BUFFER_SIZE];
+	filebuff[0] = '\0';
+
+	//  Setup Windows's open file name structure
+	OPENFILENAME open = { 0 };
+    open.lStructSize = sizeof( OPENFILENAME );
+    open.hwndOwner = GetActiveWindow();
+    open.lpstrFilter = filter_wstr.c_str();
+    open.lpstrCustomFilter = NULL;
+    open.lpstrFile = filebuff;
+    open.nMaxFile = FILE_BUFFER_SIZE;
+    open.nFilterIndex = 1;
+    open.lpstrInitialDir = NULL;
+    open.lpstrTitle = full_title_wstr.c_str();
+    open.nMaxFileTitle = strlen( full_title.c_str() );
+    open.Flags = OFN_PATHMUSTEXIST 
+			   | OFN_FILEMUSTEXIST
+			   | OFN_ALLOWMULTISELECT
+			   | OFN_EXPLORER;
+	
+	//  Open file dialog
+	std::vector<std::string> files;
+	if ( GetOpenFileName( &open ) )
+	{
+		auto ptr = open.lpstrFile;
+
+		//  Get directory path
+		ptr[open.nFileOffset - 1] = 0;
+		std::string directory_path = LPWSTR_to_str( ptr ) + '\\';
+		ptr += open.nFileOffset;
+
+		//  Get all selected files
+		while ( *ptr )
+		{
+			//  Get current file path
+			std::string path = directory_path + LPWSTR_to_str( ptr );
+			files.push_back( path );
+
+			//printf( "File %i: %s\n", (int)files.size(), path.c_str() );
+			//  Move pointer to next path
+			ptr += lstrlen( ptr ) + 1;
+		}
+	}
+
+	return files;
+}
+
+std::string Utils::get_user_save_file( 
 	std::string title, 
 	std::string filter, 
 	std::vector<std::string> extensions
@@ -126,16 +201,18 @@ std::string Utils::get_user_save_file_path(
 	auto full_title_wstr = str_to_wstr( full_title );
 	auto default_extension_wstr = str_to_wstr( extensions.at( 0 ) );
 
+	//  Allocate file buffer
+	LPWSTR filebuff = new wchar_t[FILE_BUFFER_SIZE];
+	filebuff[0] = '\0';
+
 	//  Setup Windows's open file name structure
-    LPWSTR filebuff = new wchar_t[256];
 	OPENFILENAME open = { 0 };
     open.lStructSize = sizeof( OPENFILENAME );
     open.hwndOwner = GetActiveWindow();
     open.lpstrFilter = filter_wstr.c_str();
     open.lpstrCustomFilter = NULL;
     open.lpstrFile = filebuff;
-    open.lpstrFile[0] = '\0';
-    open.nMaxFile = 256;
+    open.nMaxFile = FILE_BUFFER_SIZE;
     open.nFilterIndex = 1;
     open.lpstrInitialDir = NULL;
     open.lpstrTitle = full_title_wstr.c_str();
