@@ -5,8 +5,11 @@
 
 #include <string>
 
-#include <curve-x/curve.h>
 #include <curve-editor-x/utils.h>
+#include <curve-editor-x/curve-layer.h>
+
+#include <curve-editor-x/widget-manager.h>
+#include <curve-editor-x/curve-layer-row-widget.h>
 
 namespace curve_editor_x
 {
@@ -32,21 +35,7 @@ namespace curve_editor_x
 		MAX,
 	};
 
-	struct CurveLayer
-	{
-		CurveLayer() {}
-		CurveLayer( const Curve& curve )
-			: curve( curve )
-		{}
-
-		Curve curve;
-		Color color = RED;
-
-		std::string path = "default.cvx";
-		std::string name = "default";
-	};
-
-	class Editor
+	class Editor : public WidgetManager
 	{
 	public:
 		Editor( 
@@ -60,22 +49,29 @@ namespace curve_editor_x
 		void fit_viewport_to_curves();
 
 		void set_path( const std::string& path );
-		bool export_to_file( const std::string& path );
+		bool export_to_file( 
+			const ref<CurveLayer>& layer, 
+			const std::string& path 
+		);
 		bool import_from_file( const std::string& path );
 
 	private:
+		void _add_curve_layer( ref<CurveLayer>& layer );
+
 		void _invalidate_layout();
+		void _invalidate_widgets();
 		void _invalidate_grid();
 
 		void _render_title_text();
 		void _render_frame();
+		//  TODO: Delete
 		void _render_layers_tab();
 
 		void _render_curve_screen();
-		void _render_curve_by_distance( const CurveLayer& layer );
-		void _render_curve_by_time( const CurveLayer& layer );
-		void _render_curve_by_bezier( const CurveLayer& layer );
-		void _render_curve_points( const CurveLayer& layer );
+		void _render_curve_by_distance( const ref<CurveLayer>& layer );
+		void _render_curve_by_time( const ref<CurveLayer>& layer );
+		void _render_curve_by_bezier( const ref<CurveLayer>& layer );
+		void _render_curve_points( const ref<CurveLayer>& layer );
 
 		void _render_ui_interpolation_modes();
 
@@ -99,7 +95,7 @@ namespace curve_editor_x
 			bool is_selected
 		);
 
-		CurveLayer& _get_selected_curve_layer();
+		ref<CurveLayer> _get_selected_curve_layer();
 		Color _get_curve_color_at( int index );
 		bool _is_selected_curve_valid() const;
 		bool _is_double_clicking( bool should_consume );
@@ -174,7 +170,9 @@ namespace curve_editor_x
 
 		Font _font {};
 
-		std::vector<CurveLayer> _curve_layers {};
+		std::vector<ref<CurveLayerRowWidget>> _curve_layer_rows {};
+
+		std::vector<ref<CurveLayer>> _curve_layers {};
 		int _selected_curve_id = 0;
 
 		CurveExtrems _curve_extrems {};

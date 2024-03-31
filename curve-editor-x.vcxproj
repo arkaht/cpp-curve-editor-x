@@ -141,13 +141,20 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\curve-editor-x\curve-layer-row-widget.cpp" />
     <ClCompile Include="src\curve-editor-x\editor.cpp" />
     <ClCompile Include="src\curve-editor-x\main.cpp" />
     <ClCompile Include="src\curve-editor-x\utils.cpp" />
+    <ClCompile Include="src\curve-editor-x\widget-manager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\curve-editor-x\curve-layer-row-widget.h" />
+    <ClInclude Include="src\curve-editor-x\curve-layer.h" />
     <ClInclude Include="src\curve-editor-x\editor.h" />
+    <ClInclude Include="src\curve-editor-x\usings.h" />
     <ClInclude Include="src\curve-editor-x\utils.h" />
+    <ClInclude Include="src\curve-editor-x\widget-manager.h" />
+    <ClInclude Include="src\curve-editor-x\widget.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

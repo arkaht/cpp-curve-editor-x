@@ -28,7 +28,8 @@ void Editor::init()
 			{ 1.0f, 0.0f }
 		) );
 		//  TODO: fill default layer info
-		_curve_layers.push_back( curve );
+		auto layer = std::make_shared<CurveLayer>( curve );
+		_add_curve_layer( layer );
 
 		fit_viewport_to_curves();
 	}
@@ -38,8 +39,8 @@ void Editor::update( float dt )
 {
 	if ( !_is_selected_curve_valid() ) return;
 
-	CurveLayer& curve_ref = _get_selected_curve_layer();
-	Curve& curve = curve_ref.curve;
+	auto curve_ref = _get_selected_curve_layer();
+	Curve& curve = curve_ref->curve;
 
 	Vector2 mouse_pos = GetMousePosition();
 	Vector2 mouse_delta = GetMouseDelta();
@@ -177,7 +178,7 @@ void Editor::update( float dt )
 	//  Ctrl+S: Save to current file
 	else if ( _is_grid_snapping && IsKeyPressed( KEY_S ) )
 	{
-		std::string path = curve_ref.path;
+		std::string path = curve_ref->path;
 
 		//  Shift-down: Choosing save file location
 		if ( _is_quick_evaluating || !_is_current_file_exists )
@@ -198,7 +199,7 @@ void Editor::update( float dt )
 				GetFileNameWithoutExt( path.c_str() ),
 				FORMAT_EXTENSION.c_str()
 			);
-			export_to_file( path );
+			export_to_file( curve_ref, path );
 		}
 	}
 	//  Ctrl+L: Load a file
@@ -378,6 +379,12 @@ void Editor::update( float dt )
 
 		printf( "%d:%d\n", first_key_id, last_key_id );
 	}
+
+	//  Update widgets
+	for ( auto& widget : _widgets )
+	{
+		widget->update( dt );
+	}
 }
 
 void Editor::render()
@@ -387,6 +394,12 @@ void Editor::render()
 	_render_title_text();
 	_render_frame();
 	_render_layers_tab();
+
+	//  Render widgets
+	for ( auto& widget : _widgets )
+	{
+		widget->render();
+	}
 }
 
 void Editor::fit_viewport_to_curves()
@@ -394,9 +407,9 @@ void Editor::fit_viewport_to_curves()
 	_curve_extrems = CurveExtrems {};
 	for ( const auto& layer : _curve_layers )
 	{
-		if ( layer.curve.is_valid() )
+		if ( layer->curve.is_valid() )
 		{
-			auto extrems = layer.curve.get_extrems();
+			auto extrems = layer->curve.get_extrems();
 			_curve_extrems.min_x = 
 				std::min( _curve_extrems.min_x, extrems.min_x );
 			_curve_extrems.max_x = 
@@ -414,12 +427,13 @@ void Editor::fit_viewport_to_curves()
 
 void Editor::set_path( const std::string& path )
 {
-	auto& curve_ref = _get_selected_curve_layer();
-	curve_ref.path = path;
 	_title = Utils::get_filename_from_path( path );
 }
 
-bool Editor::export_to_file( const std::string& path )
+bool Editor::export_to_file( 
+	const ref<CurveLayer>& layer, 
+	const std::string& path 
+)
 {
 	const char* c_path = path.c_str();
 	std::ofstream file;
@@ -436,11 +450,9 @@ bool Editor::export_to_file( const std::string& path )
 		return false;
 	}
 
-	const CurveLayer& layer = _get_selected_curve_layer();
-
 	//  Serialize curve
 	CurveSerializer serializer;
-	std::string data = serializer.serialize( layer.curve );
+	std::string data = serializer.serialize( layer->curve );
 
 	//  Write data to file
 	file << data;
@@ -451,7 +463,8 @@ bool Editor::export_to_file( const std::string& path )
 	_has_unsaved_changes = false;
 	_is_current_file_exists = true;
 
-	printf( "Exported curve to file '%s'\n", c_path );
+	printf( "Exported curve '%s' to file '%s'\n", 
+		layer->name.c_str(), c_path );
 	return true;
 }
 
@@ -482,12 +495,12 @@ bool Editor::import_from_file( const std::string& path )
 
 	//  Unserialize data into curve
 	CurveSerializer serializer;
-	CurveLayer new_layer {};
-	new_layer.curve = serializer.unserialize( data );
-	new_layer.path = path;
-	new_layer.name = Utils::get_filename_from_path( path );
-	new_layer.color = _get_curve_color_at( _curve_layers.size() );
-	_curve_layers.push_back( new_layer );
+	auto layer = std::make_shared<CurveLayer>();
+	layer->curve = serializer.unserialize( data );
+	layer->path = path;
+	layer->name = GetFileNameWithoutExt( path.c_str() );
+	layer->color = _get_curve_color_at( _curve_layers.size() );
+	_add_curve_layer( layer );
 
 	//  Apply file
 	set_path( path );
@@ -497,6 +510,17 @@ bool Editor::import_from_file( const std::string& path )
 
 	printf( "Imported curve from file '%s'\n", c_path );
 	return true;
+}
+
+void Editor::_add_curve_layer( ref<CurveLayer>& layer )
+{
+	_curve_layers.push_back( layer );
+
+	auto widget = std::make_shared<CurveLayerRowWidget>( layer );
+	_curve_layer_rows.push_back( widget );
+	add_widget( widget );
+
+	_invalidate_widgets();
 }
 
 void Editor::_invalidate_layout()
@@ -522,7 +546,21 @@ void Editor::_invalidate_layout()
 	_viewport.width = _frame_outline.width - CURVE_FRAME_PADDING * 2.0f;
 	_viewport.height = _frame_outline.height - CURVE_FRAME_PADDING * 2.0f;
 
+	_invalidate_widgets();
 	_invalidate_grid();
+}
+
+void Editor::_invalidate_widgets()
+{
+	//  Invalidate curve layer rows
+	for ( int i = 0; i < _curve_layer_rows.size(); i++ )
+	{
+		auto& widget = _curve_layer_rows[i];
+		widget->frame.width = _layers_tab.width;
+		widget->frame.height = 32.0f;
+		widget->frame.x = _layers_tab.x;
+		widget->frame.y = _layers_tab.y + i * widget->frame.height;
+	}
 }
 
 void Editor::_invalidate_grid()
@@ -614,7 +652,7 @@ void Editor::_render_title_text()
 	//  Format keys count text
 	const auto& selected_layer = _get_selected_curve_layer();
 	const char* keys_text = TextFormat( 
-		"%d keys", selected_layer.curve.get_keys_count() );
+		"%d keys", selected_layer->curve.get_keys_count() );
 	int points_width = MeasureText( keys_text, TITLE_FONT_SIZE );
 
 	//  Draw keys count
@@ -647,7 +685,7 @@ void Editor::_render_frame()
 
 	//  Draw in-frame
 	const auto& selected_layer = _get_selected_curve_layer();
-	if ( selected_layer.curve.is_valid() ) 
+	if ( selected_layer->curve.is_valid() ) 
 	{
 		_render_curve_screen();
 	}
@@ -670,27 +708,13 @@ void Editor::_render_frame()
 
 void Editor::_render_layers_tab()
 {
-	Vector2 layer_text_pos { _layers_tab.x + 8.0f, _layers_tab.y + 8.0f };
-	for ( const auto& layer : _curve_layers )
-	{
-		DrawTextEx( 
-			_font, 
-			layer.name.c_str(), 
-			layer_text_pos, 
-			20.0f, 
-			1.0f, 
-			BLACK 
-		);
-		layer_text_pos.y += 40.0f;
-	}
-
 	DrawRectangleLinesEx( _layers_tab, 2.0f, CURVE_FRAME_COLOR );
 }
 
 void Editor::_render_curve_screen()
 {
 	const auto& selected_layer = _get_selected_curve_layer();
-	int points_count = selected_layer.curve.get_points_count();
+	int points_count = selected_layer->curve.get_points_count();
 
 	//  Draw grid
 	_render_grid();
@@ -787,10 +811,10 @@ void Editor::_render_curve_screen()
 	_render_ui_interpolation_modes();
 }
 
-void Editor::_render_curve_by_distance( const CurveLayer& layer )
+void Editor::_render_curve_by_distance( const ref<CurveLayer>& layer )
 {
 	//  Draw curve's length
-	const float length = layer.curve.get_length();
+	const float length = layer->curve.get_length();
 	/*DrawText(
 		TextFormat( "length: %.3f", length ),
 		(int) ( _frame_outline.x + 25 + CURVE_FRAME_PADDING * 0.5f ),
@@ -800,38 +824,38 @@ void Editor::_render_curve_by_distance( const CurveLayer& layer )
 	);*/
 
 	Vector2 previous_pos = _transform_curve_to_screen(
-		layer.curve.evaluate_by_distance( 0.0f ) );
+		layer->curve.evaluate_by_distance( 0.0f ) );
 
 	//  Draw curve using distance-evaluation
 	const float step = length * CURVE_RENDER_SUBDIVISIONS;
 	for ( float dist = step; dist < length; dist += step )
 	{
 		const Vector2 pos = _transform_curve_to_screen(
-			layer.curve.evaluate_by_distance( dist ) );
+			layer->curve.evaluate_by_distance( dist ) );
 
 		//  Draw line
 		DrawLineEx(
 			previous_pos,
 			pos,
 			_curve_thickness,
-			layer.color
+			layer->color
 		);
 
 		previous_pos = pos;
 	}
 }
 
-void Editor::_render_curve_by_time( const CurveLayer& layer )
+void Editor::_render_curve_by_time( const ref<CurveLayer>& layer )
 {
-	const int points_count = layer.curve.get_points_count();
+	const int points_count = layer->curve.get_points_count();
 
 	//  Determine bounds and steps
-	const float min_x = layer.curve.get_point( 0 ).x;
-	const float max_x = layer.curve.get_point( points_count - 1 ).x;
+	const float min_x = layer->curve.get_point( 0 ).x;
+	const float max_x = layer->curve.get_point( points_count - 1 ).x;
 	const float step = ( max_x - min_x ) * CURVE_RENDER_SUBDIVISIONS;
 
 	Vector2 previous_pos = _transform_curve_to_screen(
-		layer.curve.evaluate_by_percent( 0.0f ) );
+		layer->curve.evaluate_by_percent( 0.0f ) );
 
 	//  Draw curve using time-evaluation
 	for ( float x = min_x; x < max_x + step; x += step )
@@ -839,7 +863,7 @@ void Editor::_render_curve_by_time( const CurveLayer& layer )
 		const Vector2 pos = _transform_curve_to_screen(
 			Point {
 				x,
-				layer.curve.evaluate_by_time( x ),
+				layer->curve.evaluate_by_time( x ),
 			}
 		);
 
@@ -848,24 +872,24 @@ void Editor::_render_curve_by_time( const CurveLayer& layer )
 			previous_pos,
 			pos,
 			_curve_thickness,
-			layer.color
+			layer->color
 		);
 
 		previous_pos = pos;
 	}
 }
 
-void Editor::_render_curve_by_bezier( const CurveLayer& layer )
+void Editor::_render_curve_by_bezier( const ref<CurveLayer>& layer )
 {
-	int points_count = layer.curve.get_points_count();
+	int points_count = layer->curve.get_points_count();
 
 	for ( int i = 0; i < points_count - 1; i += 3 )
 	{
 		//  Get points
-		Point p0 = layer.curve.get_point( i );
-		Point t0 = layer.curve.get_point( i + 1 );
-		Point t1 = layer.curve.get_point( i + 2 );
-		Point p1 = layer.curve.get_point( i + 3 );
+		Point p0 = layer->curve.get_point( i );
+		Point t0 = layer->curve.get_point( i + 1 );
+		Point t1 = layer->curve.get_point( i + 2 );
+		Point p1 = layer->curve.get_point( i + 3 );
 
 		//  Translate them from curve-space to screen-space
 		Vector2 pos0 = _transform_curve_to_screen( p0 );
@@ -880,21 +904,21 @@ void Editor::_render_curve_by_bezier( const CurveLayer& layer )
 			pos2,
 			pos3,
 			_curve_thickness,
-			layer.color
+			layer->color
 		);
 	}
 }
 
-void Editor::_render_curve_points( const CurveLayer& layer )
+void Editor::_render_curve_points( const ref<CurveLayer>& layer )
 {
-	int keys_count = layer.curve.get_keys_count();
+	int keys_count = layer->curve.get_keys_count();
 
 	for ( int key_id = 0; key_id < keys_count; key_id++ )
 	{
-		int control_point_id = layer.curve.key_to_point_id( key_id );
+		int control_point_id = layer->curve.key_to_point_id( key_id );
 
 		//  Get control point
-		const CurveKey& key = layer.curve.get_key( key_id );
+		const CurveKey& key = layer->curve.get_key( key_id );
 		const Vector2& control_pos =
 			_transform_curve_to_screen( key.control );
 
@@ -1014,7 +1038,7 @@ void Editor::_render_ui_interpolation_modes()
 void Editor::_render_invalid_curve_screen()
 {
 	const auto& selected_layer = _get_selected_curve_layer();
-	int keys_count = selected_layer.curve.get_keys_count();
+	int keys_count = selected_layer->curve.get_keys_count();
 
 	//  Setup text strings
 	const int TEXT_SIZE = 2;
@@ -1179,7 +1203,7 @@ void Editor::_render_grid_line( float value, bool is_horizontal )
 void Editor::_render_point( int point_id, const Vector2& pos )
 {
 	const auto& selected_layer = _get_selected_curve_layer();
-	bool is_tangent = !selected_layer.curve.is_control_point_id( point_id );
+	bool is_tangent = !selected_layer->curve.is_control_point_id( point_id );
 	bool is_hovered = point_id == _hovered_point_id || point_id == _selected_point_id;
 	bool is_selected = point_id == _selected_point_id;
 
@@ -1199,8 +1223,8 @@ void Editor::_render_point( int point_id, const Vector2& pos )
 	//  Draw point
 	if ( is_tangent )
 	{
-		int key_id = selected_layer.curve.point_to_key_id( point_id );
-		TangentMode mode = selected_layer.curve.get_tangent_mode( key_id );
+		int key_id = selected_layer->curve.point_to_key_id( point_id );
+		TangentMode mode = selected_layer->curve.get_tangent_mode( key_id );
 
 		//  Draw point depending on mode
 		const char* mode_name = "N/A";
@@ -1257,7 +1281,7 @@ void Editor::_render_point( int point_id, const Vector2& pos )
 
 	if ( is_selected && !_is_quick_evaluating )
 	{
-		const Point& point = selected_layer.curve.get_point( point_id );
+		const Point& point = selected_layer->curve.get_point( point_id );
 
 		//  Draw coordinates
 		DrawTextEx( 
@@ -1330,7 +1354,7 @@ void Editor::_render_square_point(
 	}
 }
 
-CurveLayer& Editor::_get_selected_curve_layer()
+ref<CurveLayer> Editor::_get_selected_curve_layer()
 {
 	return _curve_layers[_selected_curve_id];
 }
@@ -1362,7 +1386,7 @@ bool Editor::_is_selected_curve_valid() const
 {
 	int count = _curve_layers.size();
 	return _selected_curve_id >= 0 && _selected_curve_id < count
-		&& _curve_layers[_selected_curve_id].curve.is_valid();
+		&& _curve_layers[_selected_curve_id]->curve.is_valid();
 }
 
 bool Editor::_is_double_clicking( bool should_consume )
