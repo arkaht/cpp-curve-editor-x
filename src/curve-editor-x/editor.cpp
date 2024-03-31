@@ -18,8 +18,7 @@ void Editor::init()
 	//  Import a curve file or create a simple one by default
 	if ( !import_from_file( DEFAULT_CURVE_PATH ) )
 	{
-		set_path( DEFAULT_CURVE_PATH );
-		
+		//  Create default curve
 		Curve curve {};
 		curve.add_key( CurveKey(
 			{ 0.0f, 1.0f }
@@ -27,10 +26,14 @@ void Editor::init()
 		curve.add_key( CurveKey(
 			{ 1.0f, 0.0f }
 		) );
-		//  TODO: fill default layer info
+
+		//  Create associated layer and select it
 		auto layer = std::make_shared<CurveLayer>( curve );
+		layer->is_selected = true;
+		layer->color = _get_curve_color_at( 0 );
 		_add_curve_layer( layer );
 
+		//  Fit viewport
 		fit_viewport_to_curves();
 	}
 }
