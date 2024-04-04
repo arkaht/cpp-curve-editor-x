@@ -210,7 +210,7 @@ bool Application::import_from_file( const std::string& path )
 	layer->color = _get_curve_color_at( _curve_layers.size() );
 	layer->is_selected = true;
 	layer->is_file_exists = true;
-	layer->has_unsaved_changes = true;
+	layer->has_unsaved_changes = false;
 	_add_curve_layer( layer );
 
 	_curve_editor->fit_viewport();
