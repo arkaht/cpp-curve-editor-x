@@ -361,10 +361,10 @@ void CurveEditorWidget::invalidate_layout()
 
 	//  Update viewport
 	const float ui_height = 32.0f;
-	_viewport.x = frame.x + CURVE_FRAME_PADDING;
-	_viewport.y = frame.y + CURVE_FRAME_PADDING + ui_height;
-	_viewport.width = frame.width - CURVE_FRAME_PADDING * 2.0f;
-	_viewport.height = frame.height - CURVE_FRAME_PADDING * 2.0f - ui_height;
+	_viewport.x = _viewport_frame.x + CURVE_FRAME_PADDING;
+	_viewport.y = _viewport_frame.y + CURVE_FRAME_PADDING + ui_height;
+	_viewport.width = _viewport_frame.width - CURVE_FRAME_PADDING * 2.0f;
+	_viewport.height = _viewport_frame.height - CURVE_FRAME_PADDING * 2.0f - ui_height;
 
 	_invalidate_grid();
 }
