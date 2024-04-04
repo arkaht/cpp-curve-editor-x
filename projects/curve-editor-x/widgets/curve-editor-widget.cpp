@@ -1,48 +1,21 @@
-#include "editor.h"
+#include "curve-editor-widget.h"
 
-#include <curve-x/curve-serializer.h>
-
-#include <fstream>
+#include <curve-editor-x/application.h>
 
 using namespace curve_editor_x;
 
-Editor::Editor( const Rectangle& frame )
-	: _frame( frame )
-{}
-
-void Editor::init()
+CurveEditorWidget::CurveEditorWidget( 
+	Application* application 
+)
+	: _application( application )
 {
-	//  Set the default font after raylib has been initialized
-	_font = GetFontDefault();
-
-	//  Import a curve file or create a simple one by default
-	if ( !import_from_file( DEFAULT_CURVE_PATH ) )
-	{
-		//  Create default curve
-		Curve curve {};
-		curve.add_key( CurveKey(
-			{ 0.0f, 1.0f }
-		) );
-		curve.add_key( CurveKey(
-			{ 1.0f, 0.0f }
-		) );
-
-		//  Create associated layer and select it
-		auto layer = std::make_shared<CurveLayer>( curve );
-		layer->is_selected = true;
-		layer->color = _get_curve_color_at( 0 );
-		_add_curve_layer( layer );
-
-		//  Fit viewport
-		fit_viewport_to_curves();
-	}
 }
 
-void Editor::update( float dt )
+void CurveEditorWidget::update( float dt )
 {
-	if ( !_is_selected_curve_valid() ) return;
+	if ( !_application->is_valid_curve_id( _application->get_selected_curve_id() ) ) return;
 
-	auto curve_ref = _get_selected_curve_layer();
+	auto curve_ref = _application->get_selected_curve_layer();
 	Curve& curve = curve_ref->curve;
 
 	Vector2 mouse_pos = GetMousePosition();
@@ -51,10 +24,8 @@ void Editor::update( float dt )
 	bool is_alt_down = IsKeyDown( KEY_LEFT_ALT );
 	bool is_valid_selected_point = 
 		curve.is_valid_point_id( _selected_point_id );
-	bool is_mouse_in_viewport = CheckCollisionPointRec( 
-		mouse_pos, 
-		_frame_outline
-	);
+	bool is_hovered = CheckCollisionPointRec( 
+		mouse_pos, frame );
 
 	//  LCTRL-down: Grid snapping
 	_is_grid_snapping = IsKeyDown( KEY_LEFT_CONTROL );
@@ -77,7 +48,7 @@ void Editor::update( float dt )
 	//  RMB: Move viewport around
 	if ( IsMouseButtonPressed( MOUSE_BUTTON_RIGHT ) )
 	{
-		_is_moving_viewport = is_mouse_in_viewport;
+		_is_moving_viewport = is_hovered;
 	}
 	else if ( IsMouseButtonReleased( MOUSE_BUTTON_RIGHT ) )
 	{
@@ -92,7 +63,7 @@ void Editor::update( float dt )
 	//  WHEEL
 	if ( float mouse_wheel_delta = GetMouseWheelMove() )
 	{
-		if ( is_mouse_in_viewport )
+		if ( is_hovered )
 		{
 			//  WHEEL + ALT-down: control curve thickness
 			if ( is_alt_down )
@@ -162,7 +133,7 @@ void Editor::update( float dt )
 	//  F: Fit viewport to curve
 	else if ( IsKeyPressed( KEY_F ) )
 	{
-		fit_viewport_to_curves();
+		fit_viewport();
 	}
 	//  TAB: Toggle editor points visibility
 	else if ( IsKeyPressed( KEY_TAB ) )
@@ -176,52 +147,7 @@ void Editor::update( float dt )
 	{
 		int key_id = curve.point_to_key_id( _selected_point_id );
 		curve.remove_key( key_id );
-		_has_unsaved_changes = true;
-	}
-	//  Ctrl+S: Save to current file
-	else if ( _is_grid_snapping && IsKeyPressed( KEY_S ) )
-	{
-		std::string path = curve_ref->path;
-
-		//  Shift-down: Choosing save file location
-		if ( _is_quick_evaluating || !_is_current_file_exists )
-		{
-			path = Utils::get_user_save_file(
-				"Curve-X",
-				"Curve-X Files(.cvx)",
-				std::vector<std::string> { FORMAT_EXTENSION }
-			);
-		}
-
-		//  Save file
-		if ( path.length() > 0 )
-		{
-			//  Force path to hold the format extension
-			path = TextFormat( 
-				"%s.%s",
-				GetFileNameWithoutExt( path.c_str() ),
-				FORMAT_EXTENSION.c_str()
-			);
-			export_to_file( curve_ref, path );
-		}
-	}
-	//  Ctrl+L: Load a file
-	else if ( _is_grid_snapping && IsKeyPressed( KEY_L ) )
-	{
-		auto paths = Utils::get_user_open_files(
-			"Curve-X",
-			"Curve-X Files(.cvx)",
-			std::vector<std::string> { FORMAT_EXTENSION }
-		);
-
-		for ( const auto& path : paths )
-		{
-			import_from_file( path );
-		}
-
-		//  Prevent update using the new curve since its validity
-		//  hasn't been checked yet
-		return;
+		curve_ref->has_unsaved_changes = true;
 	}
 
 	//  Find the mouse hovered point
@@ -279,7 +205,7 @@ void Editor::update( float dt )
 				_selected_point_id = curve.get_points_count() - 1;
 			}
 
-			_has_unsaved_changes = true;
+			curve_ref->has_unsaved_changes = true;
 		}
 		//  LMB-pressed: Select hovered point
 		else
@@ -321,7 +247,7 @@ void Editor::update( float dt )
 			);
 		}
 
-		_has_unsaved_changes = true;
+		curve_ref->has_unsaved_changes = true;
 	}
 	//  MMB-press: Switch tangent mode
 	else if ( IsMouseButtonPressed( MOUSE_BUTTON_MIDDLE ) 
@@ -340,7 +266,7 @@ void Editor::update( float dt )
 
 		//  Apply the new tangent constraint
 		curve.set_tangent_mode( key_id, next_tangent_mode );
-		_has_unsaved_changes = true;
+		curve_ref->has_unsaved_changes = true;
 	}
 	else if ( curve.is_length_dirty ) 
 	{
@@ -382,33 +308,72 @@ void Editor::update( float dt )
 
 		printf( "%d:%d\n", first_key_id, last_key_id );
 	}
-
-	//  Update widgets
-	for ( auto& widget : _widgets )
-	{
-		widget->update( dt );
-	}
 }
 
-void Editor::render()
+void CurveEditorWidget::render()
 {
-	ClearBackground( BACKGROUND_COLOR );
-
 	_render_title_text();
-	_render_frame();
-	_render_layers_tab();
 
-	//  Render widgets
-	for ( auto& widget : _widgets )
+	//  Draw viewport frame
+	DrawRectangleLinesEx( _viewport_frame, 2.0f, GRAY );
+
+	//  Enable clipping
+	if ( ENABLE_CLIPPING )
 	{
-		widget->render();
+		BeginScissorMode( 
+			(int)_viewport_frame.x, (int)_viewport_frame.y, 
+			(int)_viewport_frame.width, (int)_viewport_frame.height 
+		);
 	}
+
+	//  Draw in-frame
+	const auto& layer = _application->get_selected_curve_layer();
+	if ( layer->curve.is_valid() ) 
+	{
+		_render_curve_screen();
+	}
+	else
+	{
+		_render_invalid_curve_screen();
+	}
+
+	//  Disable clipping
+	if ( ENABLE_CLIPPING )
+	{
+		EndScissorMode();
+	}
+
+	//  DEBUG: Draw frame
+	//DrawRectangleLinesEx( frame, 2.0f, PINK );
+	//  DEBUG: Draw viewport
+	//DrawRectangleLinesEx( _viewport, 2.0f, PINK );
 }
 
-void Editor::fit_viewport_to_curves()
+void CurveEditorWidget::invalidate_layout()
+{
+	//  Update viewport frame
+	const float offset_y = 
+		TITLE_FONT_SIZE + TITLE_DOCK_MARGIN_BOTTOM;
+	_viewport_frame.x = frame.x;
+	_viewport_frame.y = frame.y + offset_y;
+	_viewport_frame.width = frame.width;
+	_viewport_frame.height = frame.height - offset_y;
+
+	//  Update viewport
+	const float ui_height = 32.0f;
+	_viewport.x = frame.x + CURVE_FRAME_PADDING;
+	_viewport.y = frame.y + CURVE_FRAME_PADDING + ui_height;
+	_viewport.width = frame.width - CURVE_FRAME_PADDING * 2.0f;
+	_viewport.height = frame.height - CURVE_FRAME_PADDING * 2.0f - ui_height;
+
+	_invalidate_grid();
+}
+
+void CurveEditorWidget::fit_viewport()
 {
 	_curve_extrems = CurveExtrems {};
-	for ( const auto& layer : _curve_layers )
+	auto layers = _application->get_curve_layers();
+	for ( const auto& layer : layers )
 	{
 		if ( layer->curve.is_valid() )
 		{
@@ -425,199 +390,16 @@ void Editor::fit_viewport_to_curves()
 	}
 	_zoom = 1.0f;
 
-	_invalidate_layout();
+	invalidate_layout();
 }
 
-void Editor::set_title( const std::string& title )
-{
-	_title = title;
-}
-
-bool Editor::export_to_file( 
-	const ref<CurveLayer>& layer, 
-	const std::string& path 
-)
-{
-	const char* c_path = path.c_str();
-	std::ofstream file;
-	file.open( c_path );
-
-	//  Check file exists
-	if ( !file.is_open() )
-	{
-		printf( 
-			"File '%s' isn't writtable, aborting export from file!\n", 
-			c_path
-		);
-		_is_current_file_exists = false;
-		return false;
-	}
-
-	//  Serialize curve
-	CurveSerializer serializer;
-	std::string data = serializer.serialize( layer->curve );
-
-	//  Write data to file
-	file << data;
-	file.close();
-
-	//  Apply file
-	_has_unsaved_changes = false;
-	_is_current_file_exists = true;
-
-	printf( "Exported curve '%s' to file '%s'\n", 
-		layer->name.c_str(), c_path );
-	return true;
-}
-
-bool Editor::import_from_file( const std::string& path )
-{
-	const char* c_path = path.c_str();
-	std::ifstream file;
-	file.open( c_path );
-
-	//  Check file exists
-	if ( !file.is_open() )
-	{
-		printf( 
-			"File '%s' doesn't exists, aborting import from file!\n", 
-			c_path
-		);
-		_is_current_file_exists = false;
-		return false;
-	}
-
-	//  Read file's content
-	std::string data;
-	for ( std::string line; std::getline( file, line ); )
-	{
-		data += line + '\n';
-	}
-	file.close();
-
-	//  Unserialize data into curve
-	CurveSerializer serializer;
-	auto layer = std::make_shared<CurveLayer>();
-	layer->curve = serializer.unserialize( data );
-	layer->path = path;
-	layer->name = GetFileNameWithoutExt( path.c_str() );
-	layer->color = _get_curve_color_at( _curve_layers.size() );
-	layer->is_selected = true;
-	_add_curve_layer( layer );
-
-	//  Apply file
-	_has_unsaved_changes = false;
-	_is_current_file_exists = true;
-	fit_viewport_to_curves();
-
-	printf( "Imported curve from file '%s'\n", c_path );
-	return true;
-}
-
-void Editor::unselect_curve_layer()
-{
-	if ( !_is_selected_curve_valid() ) return;
-
-	auto selected_layer = _get_selected_curve_layer();
-	selected_layer->is_selected = false;
-}
-
-void Editor::select_curve_layer( int layer_id )
-{
-	//  Un-select previous layer
-	unselect_curve_layer();
-
-	//  Select specified layer
-	auto& layer = _curve_layers.at( layer_id );
-	layer->is_selected = true;
-	_selected_curve_id = layer_id;
-
-	//  Set title to layer's filename
-	set_title( Utils::get_filename_from_path( layer->path ) );
-}
-
-void Editor::_add_curve_layer( ref<CurveLayer>& layer )
-{
-	//  Add to layers
-	_curve_layers.push_back( layer );
-
-	//  If asked for, select the new layer
-	if ( layer->is_selected )
-	{
-		select_curve_layer( _curve_layers.size() - 1 );
-	}
-
-	//  Create related layer row widget
-	auto widget = std::make_shared<CurveLayerRowWidget>( layer );
-	widget->on_selected.listen( "editor", 
-		std::bind( 
-			&Editor::_on_curve_layer_row_selected, this,
-			std::placeholders::_1 
-		) 
-	);
-	_curve_layer_rows.push_back( widget );
-	add_widget( widget );
-
-	//  Update position
-	_invalidate_widgets();
-}
-
-void Editor::_on_curve_layer_row_selected( ref<CurveLayerRowWidget> widget )
-{
-	select_curve_layer( widget->child_index );
-}
-
-void Editor::_invalidate_layout()
-{
-	const float offset_y = 
-		TITLE_FONT_SIZE + TITLE_DOCK_MARGIN_BOTTOM;
-
-	//  Update layers tab
-	_layers_tab.height = _frame.height;
-	_layers_tab.width = _frame.width * 0.3f;
-	_layers_tab.x = _frame.x + _frame.width - _layers_tab.width;
-	_layers_tab.y = _frame.y;
-
-	//  Update frame outline
-	_frame_outline.x = _frame.x;
-	_frame_outline.y = _frame.y + offset_y;
-	_frame_outline.width = _frame.width - _layers_tab.width - CURVE_FRAME_PADDING;
-	_frame_outline.height = _frame.height - offset_y;
-
-	//  Update viewport
-	const float ui_height = 32.0f;
-	_viewport.x = _frame_outline.x + CURVE_FRAME_PADDING;
-	_viewport.y = _frame_outline.y + CURVE_FRAME_PADDING + ui_height;
-	_viewport.width = _frame_outline.width - CURVE_FRAME_PADDING * 2.0f;
-	_viewport.height = _frame_outline.height - CURVE_FRAME_PADDING * 2.0f - ui_height;
-
-	_invalidate_widgets();
-	_invalidate_grid();
-}
-
-void Editor::_invalidate_widgets()
-{
-	//  Invalidate curve layer rows
-	const float PADDING = 2.0f;
-	for ( int i = 0; i < _curve_layer_rows.size(); i++ )
-	{
-		auto& widget = _curve_layer_rows[i];
-		widget->frame.width = _layers_tab.width - PADDING * 2.0f;
-		widget->frame.height = 32.0f;
-		widget->frame.x = _layers_tab.x + PADDING;
-		widget->frame.y = _layers_tab.y + PADDING 
-			+ i * widget->frame.height;  //  Vertical layout
-		widget->child_index = i;
-	}
-}
-
-void Editor::_invalidate_grid()
+void CurveEditorWidget::_invalidate_grid()
 {
 	//  Determine visible range in curve units
 	const Vector2& left_pos = _transform_screen_to_curve( 
-		{ _frame_outline.x, 0.0f } );
+		{ frame.x, 0.0f } );
 	const Vector2& right_pos = _transform_screen_to_curve(
-		{ _frame_outline.x + _frame_outline.width, 0.0f } );
+		{ frame.x + frame.width, 0.0f } );
 	const float visible_range = right_pos.x - left_pos.x;
 
 	/*printf( "inputs: visible_range=%f; zoom=%f\n", 
@@ -679,89 +461,129 @@ void Editor::_invalidate_grid()
 	//printf( "output: grid_gap=%f\n", _grid_gap );
 }
 
-void Editor::_render_title_text()
+bool CurveEditorWidget::_is_double_clicking( bool should_consume )
 {
-	//  Format title text
-	std::string title = _title;
-	if ( _has_unsaved_changes )
+	double time = GetTime();
+	bool is_double_clicking = time - _last_click_time <= DOUBLE_CLICK_TIME;
+
+	if ( should_consume )
 	{
-		title += "*";
+		_last_click_time = is_double_clicking
+			? 0.0
+			: time;
+	}
+
+	return is_double_clicking;
+}
+
+float CurveEditorWidget::_transform_curve_to_screen_x( float x ) const
+{
+	return curve_x::Utils::remap( 
+		x, 
+		_curve_extrems.min_x, _curve_extrems.max_x, 
+		_viewport.x, _viewport.x + _viewport.width * _zoom
+	);
+}
+
+float CurveEditorWidget::_transform_curve_to_screen_y( float y ) const
+{
+	return curve_x::Utils::remap( 
+		y, 
+		_curve_extrems.min_y, _curve_extrems.max_y, 
+		_viewport.y + _viewport.height * _zoom, _viewport.y
+	);
+}
+
+Vector2 CurveEditorWidget::_transform_curve_to_screen( 
+	const Point& point 
+) const
+{	
+	return Vector2 {
+		_transform_curve_to_screen_x( point.x ),
+		_transform_curve_to_screen_y( point.y ),
+	};
+}
+
+Vector2 CurveEditorWidget::_transform_screen_to_curve( 
+	const Vector2& pos 
+) const
+{
+	Point to_curve = pos;
+	return to_curve.remap(
+		//  x-mapping
+		_viewport.x, _viewport.x + _viewport.width * _zoom,
+		_curve_extrems.min_x, _curve_extrems.max_x, 
+		//  y-mapping
+		_viewport.y + _viewport.height * _zoom, _viewport.y,
+		_curve_extrems.min_y, _curve_extrems.max_y
+	);
+}
+
+Vector2 CurveEditorWidget::_transform_rounded_grid_snap( 
+	const Vector2& pos 
+) const
+{
+	return Vector2 {
+		roundf( pos.x / _grid_gap ) * _grid_gap,
+		roundf( pos.y / _grid_gap ) * _grid_gap,
+	};
+}
+
+Vector2 CurveEditorWidget::_transform_ceiled_grid_snap( 
+	const Vector2& pos 
+) const
+{
+	return Vector2 {
+		ceilf( pos.x / _grid_gap ) * _grid_gap,
+		ceilf( pos.y / _grid_gap ) * _grid_gap,
+	};
+}
+
+void CurveEditorWidget::_render_title_text()
+{
+	std::string title = "No selected curve";
+	std::string keys = "";
+
+	int selected_curve_id = _application->get_selected_curve_id();
+	if ( _application->is_valid_curve_id( selected_curve_id ) )
+	{
+		auto layer = _application->get_curve_layer( selected_curve_id );
+		
+		//  Format title
+		title = layer->name;
+		if ( layer->has_unsaved_changes )
+		{
+			title += "*";
+		}
+
+		//  Format keys count text
+		keys = TextFormat( "%d keys", layer->curve.get_keys_count() );
 	}
 
 	//  Draw title text
-	const char* title_c_str = title.c_str();
 	DrawText(
-		title_c_str,
-		(int) _frame.x, (int) _frame.y,
+		title.c_str(),
+		(int)frame.x, (int)frame.y,
 		TITLE_FONT_SIZE,
 		TEXT_COLOR
 	);
 
-	//  Format keys count text
-	const auto& selected_layer = _get_selected_curve_layer();
-	const char* keys_text = TextFormat( 
-		"%d keys", selected_layer->curve.get_keys_count() );
+	const char* keys_text = keys.c_str();
 	int points_width = MeasureText( keys_text, TITLE_FONT_SIZE );
 
 	//  Draw keys count
 	DrawText(
 		keys_text,
-		(int) _frame.x + (int) _frame_outline.width - points_width,
-		(int) _frame.y,
+		(int)frame.x + (int)frame.width - points_width,
+		(int)frame.y,
 		TITLE_FONT_SIZE,
 		TEXT_COLOR
 	);
 }
 
-void Editor::_render_frame()
+void CurveEditorWidget::_render_curve_screen()
 {
-	//  Draw frame outline
-	DrawRectangleLinesEx( 
-		_frame_outline, 
-		2.0f, 
-		CURVE_FRAME_COLOR 
-	);
-
-	//  Enable clipping
-	if ( ENABLE_CLIPPING )
-	{
-		BeginScissorMode( 
-			(int)_frame_outline.x, (int)_frame_outline.y, 
-			(int)_frame_outline.width, (int)_frame_outline.height 
-		);
-	}
-
-	//  Draw in-frame
-	const auto& selected_layer = _get_selected_curve_layer();
-	if ( selected_layer->curve.is_valid() ) 
-	{
-		_render_curve_screen();
-	}
-	else
-	{
-		_render_invalid_curve_screen();
-	}
-
-	//  Disable clipping
-	if ( ENABLE_CLIPPING )
-	{
-		EndScissorMode();
-	}
-
-	//  DEBUG: Draw frame
-	//DrawRectangleLinesEx( _frame, 2.0f, PINK );
-	//  DEBUG: Draw viewport
-	//DrawRectangleLinesEx( _viewport, 2.0f, PINK );
-}
-
-void Editor::_render_layers_tab()
-{
-	DrawRectangleLinesEx( _layers_tab, 2.0f, CURVE_FRAME_COLOR );
-}
-
-void Editor::_render_curve_screen()
-{
-	const auto& selected_layer = _get_selected_curve_layer();
+	const auto& selected_layer = _application->get_selected_curve_layer();
 	int points_count = selected_layer->curve.get_points_count();
 
 	//  Draw grid
@@ -778,7 +600,8 @@ void Editor::_render_curve_screen()
 	}
 
 	//  Draw curve layers
-	for ( const auto& layer : _curve_layers )
+	auto layers = _application->get_curve_layers();
+	for ( const auto& layer : layers )
 	{
 		switch ( _curve_interpolate_mode )
 		{
@@ -823,11 +646,11 @@ void Editor::_render_curve_screen()
 				DrawLineEx(
 					Vector2 {
 						pos.x,
-						_frame_outline.y,
+						frame.y,
 					},
 					Vector2 {
 						pos.x,
-						_frame_outline.y + _frame_outline.height,
+						frame.y + frame.height,
 					},
 					QUICK_EVALUATION_THICKNESS,
 					QUICK_EVALUATION_COLOR
@@ -859,7 +682,63 @@ void Editor::_render_curve_screen()
 	_render_ui_interpolation_modes();
 }
 
-void Editor::_render_curve_by_distance( 
+void CurveEditorWidget::_render_invalid_curve_screen()
+{
+	const auto& selected_layer = _application->get_selected_curve_layer();
+	int keys_count = selected_layer->curve.get_keys_count();
+
+	//  Setup text strings
+	const int TEXT_SIZE = 2;
+	const char* texts[TEXT_SIZE] {
+		"INVALID KEYS COUNT!",
+		TextFormat( 
+			"%d keys instead of 2 at minimum", 
+			keys_count
+		),
+	};
+
+	//  Setup text rendering
+	float font_size = 20.0f;
+	float spacing = 2.0f;
+	Vector2 pos {
+		_viewport_frame.x + _viewport_frame.width * 0.5f,
+		_viewport_frame.y + _viewport_frame.height * 0.5f
+	};
+
+	//  Draw all lines
+	for ( int i = 0; i < TEXT_SIZE; i++ )
+	{
+		const char* text = texts[i];
+
+		//  Measure line size
+		Vector2 text_size = MeasureTextEx( 
+			GetFontDefault(), 
+			text, 
+			font_size, 
+			spacing 
+		);
+
+		//  Draw centered line
+		DrawTextPro( 
+			GetFontDefault(),
+			text, 
+			Vector2 {
+				pos.x - text_size.x * 0.5f,
+				pos.y - text_size.y * 0.5f,
+			},
+			Vector2 {},
+			0.0f,
+			font_size,
+			spacing,
+			TEXT_ERROR_COLOR
+		);
+
+		//  Offset next line
+		pos.y += text_size.y + 2.0f;
+	}
+}
+
+void CurveEditorWidget::_render_curve_by_distance( 
 	const ref<CurveLayer>& layer 
 )
 {
@@ -867,8 +746,8 @@ void Editor::_render_curve_by_distance(
 	const float length = layer->curve.get_length();
 	/*DrawText(
 		TextFormat( "length: %.3f", length ),
-		(int) ( _frame_outline.x + 25 + CURVE_FRAME_PADDING * 0.5f ),
-		(int) ( _frame_outline.y + 25 + CURVE_FRAME_PADDING * 0.5f ),
+		(int) ( _viewport_frame.x + 25 + CURVE_FRAME_PADDING * 0.5f ),
+		(int) ( _viewport_frame.y + 25 + CURVE_FRAME_PADDING * 0.5f ),
 		20,
 		TEXT_COLOR
 	);*/
@@ -902,7 +781,9 @@ void Editor::_render_curve_by_distance(
 	}
 }
 
-void Editor::_render_curve_by_time( const ref<CurveLayer>& layer )
+void CurveEditorWidget::_render_curve_by_time( 
+	const ref<CurveLayer>& layer 
+)
 {
 	const int points_count = layer->curve.get_points_count();
 
@@ -943,7 +824,9 @@ void Editor::_render_curve_by_time( const ref<CurveLayer>& layer )
 	}
 }
 
-void Editor::_render_curve_by_bezier( const ref<CurveLayer>& layer )
+void CurveEditorWidget::_render_curve_by_bezier( 
+	const ref<CurveLayer>& layer 
+)
 {
 	int points_count = layer->curve.get_points_count();
 
@@ -980,7 +863,9 @@ void Editor::_render_curve_by_bezier( const ref<CurveLayer>& layer )
 	}
 }
 
-void Editor::_render_curve_points( const ref<CurveLayer>& layer )
+void CurveEditorWidget::_render_curve_points( 
+	const ref<CurveLayer>& layer 
+)
 {
 	int keys_count = layer->curve.get_keys_count();
 
@@ -1030,14 +915,14 @@ void Editor::_render_curve_points( const ref<CurveLayer>& layer )
 	}
 }
 
-void Editor::_render_ui_interpolation_modes()
+void CurveEditorWidget::_render_ui_interpolation_modes()
 {
 	const float margin = 16.0f;
 	const float background_padding = 4.0f;
 
 	Vector2 pos {
-		_frame_outline.x + CURVE_FRAME_PADDING * 1.0f,
-		_frame_outline.y + CURVE_FRAME_PADDING * 0.75f
+		_viewport_frame.x + CURVE_FRAME_PADDING * 1.0f,
+		_viewport_frame.y + CURVE_FRAME_PADDING * 0.75f
 	};
 
 	for ( int i = 0; i < (int)CurveInterpolateMode::MAX; i++ )
@@ -1076,7 +961,7 @@ void Editor::_render_ui_interpolation_modes()
 		const float font_size = is_selected ? 20.0f : 16.0f;
 		const float spacing = 1.0f;
 		Vector2 text_size = 
-			MeasureTextEx( _font, text_cstr, font_size, spacing );
+			MeasureTextEx( GetFontDefault(), text_cstr, font_size, spacing );
 
 		//  Draw background
 		const Rectangle background_rect {
@@ -1093,7 +978,7 @@ void Editor::_render_ui_interpolation_modes()
 
 		//  Draw text
 		DrawTextEx(
-			_font,
+			GetFontDefault(),
 			text_cstr,
 			pos,
 			font_size,
@@ -1106,74 +991,18 @@ void Editor::_render_ui_interpolation_modes()
 	}
 }
 
-void Editor::_render_invalid_curve_screen()
-{
-	const auto& selected_layer = _get_selected_curve_layer();
-	int keys_count = selected_layer->curve.get_keys_count();
-
-	//  Setup text strings
-	const int TEXT_SIZE = 2;
-	const char* texts[TEXT_SIZE] {
-		"INVALID KEYS COUNT!",
-		TextFormat( 
-			"%d keys instead of 2 at minimum", 
-			keys_count
-		),
-	};
-
-	//  Setup text rendering
-	float font_size = 20.0f;
-	float spacing = 2.0f;
-	Vector2 pos {
-		_frame.x + _frame.width * 0.5f,
-		_frame.y + _frame.height * 0.5f
-	};
-
-	//  Draw all lines
-	for ( int i = 0; i < TEXT_SIZE; i++ )
-	{
-		const char* text = texts[i];
-
-		//  Measure line size
-		Vector2 text_size = MeasureTextEx( 
-			_font, 
-			text, 
-			font_size, 
-			spacing 
-		);
-
-		//  Draw centered line
-		DrawTextPro( 
-			_font,
-			text, 
-			Vector2 {
-				pos.x - text_size.x * 0.5f,
-				pos.y - text_size.y * 0.5f,
-			},
-			Vector2 {},
-			0.0f,
-			font_size,
-			spacing,
-			TEXT_ERROR_COLOR
-		);
-
-		//  Offset next line
-		pos.y += text_size.y + 2.0f;
-	}
-}
-
-void Editor::_render_grid()
+void CurveEditorWidget::_render_grid()
 {
 	//  Find in-frame curve coordinates extrems, these positions
 	//  will be used to draw our grid in a performant way where
 	//  only visible grid lines will be rendered
 	Vector2 curve_top_left = _transform_screen_to_curve( { 
-		_frame_outline.x, 
-		_frame_outline.y 
+		_viewport_frame.x, 
+		_viewport_frame.y 
 	} );
 	Vector2 curve_bottom_right = _transform_screen_to_curve( { 
-		_frame_outline.x + _frame_outline.width, 
-		_frame_outline.y + _frame_outline.height 
+		_viewport_frame.x + _viewport_frame.width, 
+		_viewport_frame.y + _viewport_frame.height 
 	} );
 
 	//  Grid-snap positions 
@@ -1202,7 +1031,7 @@ void Editor::_render_grid()
 	}
 }
 
-void Editor::_render_grid_line( float value, bool is_horizontal )
+void CurveEditorWidget::_render_grid_line( float value, bool is_horizontal )
 {
 	float screen_value = is_horizontal 
 		? _transform_curve_to_screen_y( value )
@@ -1221,7 +1050,7 @@ void Editor::_render_grid_line( float value, bool is_horizontal )
 	//  Compute text & its size
 	const char* text = TextFormat( _grid_label_format.c_str(), value );
 	Vector2 text_size = MeasureTextEx( 
-		_font, text, font_size, GRID_FONT_SPACING );
+		GetFontDefault(), text, font_size, GRID_FONT_SPACING );
 
 	//  Determine positions
 	Vector2 text_pos {};
@@ -1229,27 +1058,27 @@ void Editor::_render_grid_line( float value, bool is_horizontal )
 	Vector2 line_end_pos {};
 	if ( is_horizontal )
 	{
-		text_pos.x = _frame_outline.x + GRID_TEXT_PADDING * 2.0f;
+		text_pos.x = _viewport_frame.x + GRID_TEXT_PADDING * 2.0f;
 		text_pos.y = screen_value - text_size.y * 0.5f;
 
-		line_start_pos.x = _frame_outline.x 
+		line_start_pos.x = _viewport_frame.x 
 			+ GRID_TEXT_PADDING * 4.0f + text_size.x;
 		line_start_pos.y = screen_value;
 
-		line_end_pos.x = _frame_outline.x + _frame_outline.width;
+		line_end_pos.x = _viewport_frame.x + _viewport_frame.width;
 		line_end_pos.y = screen_value;
 	}
 	else
 	{
 		text_pos.x = screen_value - text_size.x * 0.5f;
-		text_pos.y = _frame_outline.y + GRID_TEXT_PADDING;
+		text_pos.y = _viewport_frame.y + GRID_TEXT_PADDING;
 
 		line_start_pos.x = screen_value;
-		line_start_pos.y = _frame_outline.y 
+		line_start_pos.y = _viewport_frame.y 
 			+ GRID_TEXT_PADDING + text_size.y;
 
 		line_end_pos.x = screen_value;
-		line_end_pos.y = _frame_outline.y + _frame_outline.height;
+		line_end_pos.y = _viewport_frame.y + _viewport_frame.height;
 	}
 
 	//  Draw line
@@ -1262,7 +1091,7 @@ void Editor::_render_grid_line( float value, bool is_horizontal )
 
 	//  Draw label
 	DrawTextEx( 
-		_font,
+		GetFontDefault(),
 		text, 
 		text_pos,
 		font_size,
@@ -1271,11 +1100,12 @@ void Editor::_render_grid_line( float value, bool is_horizontal )
 	);
 }
 
-void Editor::_render_point( int point_id, const Vector2& pos )
+void CurveEditorWidget::_render_point( int point_id, const Vector2& pos )
 {
-	const auto& selected_layer = _get_selected_curve_layer();
+	const auto& selected_layer = _application->get_selected_curve_layer();
 	bool is_tangent = !selected_layer->curve.is_control_point_id( point_id );
-	bool is_hovered = point_id == _hovered_point_id || point_id == _selected_point_id;
+	bool is_hovered = point_id == _hovered_point_id 
+				   || point_id == _selected_point_id;
 	bool is_selected = point_id == _selected_point_id;
 
 	//  Choose color
@@ -1325,7 +1155,7 @@ void Editor::_render_point( int point_id, const Vector2& pos )
 
 			//  measure text size
 			Vector2 size = MeasureTextEx( 
-				_font, 
+				GetFontDefault(), 
 				mode_name,
 				font_size,
 				spacing
@@ -1333,7 +1163,7 @@ void Editor::_render_point( int point_id, const Vector2& pos )
 
 			//  draw text
 			DrawTextEx( 
-				_font,
+				GetFontDefault(),
 				mode_name,
 				Vector2 {
 					pos.x - size.x * 0.5f,
@@ -1356,7 +1186,7 @@ void Editor::_render_point( int point_id, const Vector2& pos )
 
 		//  Draw coordinates
 		DrawTextEx( 
-			_font,
+			GetFontDefault(),
 			TextFormat( "x=%.3f\ny=%.3f", point.x, point.y ),
 			Vector2 {
 				pos.x + POINT_SIZE * 2.0f,
@@ -1369,7 +1199,7 @@ void Editor::_render_point( int point_id, const Vector2& pos )
 	}
 }
 
-void Editor::_render_circle_point( 
+void CurveEditorWidget::_render_circle_point( 
 	const Vector2& pos, 
 	const Color& color,
 	bool is_selected
@@ -1393,7 +1223,7 @@ void Editor::_render_circle_point(
 	}
 }
 
-void Editor::_render_square_point( 
+void CurveEditorWidget::_render_square_point( 
 	const Vector2& pos, 
 	const Color& color,
 	bool is_selected
@@ -1423,109 +1253,4 @@ void Editor::_render_square_point(
 			POINT_SELECTED_COLOR
 		);
 	}
-}
-
-ref<CurveLayer> Editor::_get_selected_curve_layer()
-{
-	return _curve_layers[_selected_curve_id];
-}
-
-Color Editor::_get_curve_color_at( int index )
-{
-	switch ( index )
-	{
-		case 0:
-			return RED;
-		case 1:
-			return GREEN;
-		case 2:
-			return BLUE;
-		case 3:
-			return ORANGE;
-		case 4:
-			return PURPLE;
-		case 5:
-			return YELLOW;
-		case 6:
-			return BROWN;
-	}
-
-	return PINK;
-}
-
-bool Editor::_is_selected_curve_valid() const
-{
-	int count = _curve_layers.size();
-	return _selected_curve_id >= 0 && _selected_curve_id < count
-		&& _curve_layers[_selected_curve_id]->curve.is_valid();
-}
-
-bool Editor::_is_double_clicking( bool should_consume )
-{
-	double time = GetTime();
-	bool is_double_clicking = time - _last_click_time <= DOUBLE_CLICK_TIME;
-
-	if ( should_consume )
-	{
-		_last_click_time = is_double_clicking
-			? 0.0
-			: time;
-	}
-
-	return is_double_clicking;
-}
-
-float Editor::_transform_curve_to_screen_x( float x ) const
-{
-	return curve_x::Utils::remap( 
-		x, 
-		_curve_extrems.min_x, _curve_extrems.max_x, 
-		_viewport.x, _viewport.x + _viewport.width * _zoom
-	);
-}
-
-float Editor::_transform_curve_to_screen_y( float y ) const
-{
-	return curve_x::Utils::remap( 
-		y, 
-		_curve_extrems.min_y, _curve_extrems.max_y, 
-		_viewport.y + _viewport.height * _zoom, _viewport.y
-	);
-}
-
-Vector2 Editor::_transform_curve_to_screen( const Point& point ) const
-{	
-	return Vector2 {
-		_transform_curve_to_screen_x( point.x ),
-		_transform_curve_to_screen_y( point.y ),
-	};
-}
-
-Vector2 Editor::_transform_screen_to_curve( const Vector2& pos ) const
-{
-	Point to_curve = pos;
-	return to_curve.remap(
-		//  x-mapping
-		_viewport.x, _viewport.x + _viewport.width * _zoom,
-		_curve_extrems.min_x, _curve_extrems.max_x, 
-		//  y-mapping
-		_viewport.y + _viewport.height * _zoom, _viewport.y,
-		_curve_extrems.min_y, _curve_extrems.max_y
-	);
-}
-
-Vector2 Editor::_transform_rounded_grid_snap( const Vector2& pos ) const
-{
-	return Vector2 {
-		roundf( pos.x / _grid_gap ) * _grid_gap,
-		roundf( pos.y / _grid_gap ) * _grid_gap,
-	};
-}
-
-Vector2 Editor::_transform_ceiled_grid_snap( const Vector2& pos ) const
-{
-	return Vector2 {
-		ceilf( pos.x / _grid_gap ) * _grid_gap,
-		ceilf( pos.y / _grid_gap ) * _grid_gap,
-	};
 }

@@ -18,7 +18,7 @@
     <ClCompile Include="widgets\curve-layer-row-widget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="editor.cpp">
+    <ClCompile Include="application.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
@@ -28,6 +28,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="widgets\widget-manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\curve-editor-widget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="widgets\curve-layers-tab-widget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -41,7 +47,7 @@
     <ClInclude Include="widgets\curve-layer-row-widget.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="editor.h">
+    <ClInclude Include="application.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="event.h">
@@ -54,6 +60,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="widgets\widget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="widgets\curve-editor-widget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="curve-interpolate-mode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="application.fwd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="widgets\curve-layers-tab-widget.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

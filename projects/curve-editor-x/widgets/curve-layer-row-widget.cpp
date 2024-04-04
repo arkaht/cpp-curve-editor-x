@@ -66,6 +66,10 @@ void CurveLayerRowWidget::render()
 	);
 }
 
+void CurveLayerRowWidget::invalidate_layout()
+{
+}
+
 bool CurveLayerRowWidget::is_selected() const
 {
 	if ( layer == nullptr ) return false;

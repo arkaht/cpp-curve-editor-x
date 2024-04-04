@@ -17,6 +17,8 @@ namespace curve_editor_x
 		virtual void update( float dt ) = 0;
 		virtual void render() = 0;
 
+		virtual void invalidate_layout() = 0;
+
 		template <typename T>
 		ref<T> cast()
 		{

@@ -47,7 +47,7 @@
 #include "raymath.h"
 
 #include <curve-x/curve.h>
-#include <curve-editor-x/editor.h>
+#include <curve-editor-x/application.h>
 
 using namespace curve_x;
 using namespace curve_editor_x;
@@ -56,7 +56,7 @@ using namespace curve_editor_x;
 
 const int	WINDOW_WIDTH = 1000;
 const int	WINDOW_HEIGHT = 600;
-const char*	WINDOW_TITLE = "Curve-X Editor";
+const char*	WINDOW_TITLE = "Curve-X Application";
 const int	WINDOW_TARGET_FPS = 60;
 
 const float	WINDOW_PADDING = 16.0f;
@@ -65,7 +65,10 @@ const float	WINDOW_PADDING = 16.0f;
 
 int main( void )
 {
-	Editor editor( 
+	InitWindow( WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE );
+	SetTargetFPS( WINDOW_TARGET_FPS );
+
+	Application application( 
 		Rectangle {
 			WINDOW_PADDING,
 			WINDOW_PADDING,
@@ -73,18 +76,14 @@ int main( void )
 			WINDOW_HEIGHT - WINDOW_PADDING * 2.0f,
 		} 
 	);
-
-	InitWindow( WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE );
-	SetTargetFPS( WINDOW_TARGET_FPS );
-
-	editor.init();
+	application.init();
 
 	while ( !WindowShouldClose() )
 	{
-		editor.update( GetFrameTime() );
+		application.update( GetFrameTime() );
 
 		BeginDrawing();
-		editor.render();
+		application.render();
 		EndDrawing();
 	}
 

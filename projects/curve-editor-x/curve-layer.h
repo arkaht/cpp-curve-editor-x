@@ -17,6 +17,8 @@ namespace curve_editor_x
 		Color color = RED;
 		bool is_selected = false;
 
+		bool has_unsaved_changes = true;
+		bool is_file_exists = false;
 		std::string path = "default.cvx";
 		std::string name = "default";
 	};

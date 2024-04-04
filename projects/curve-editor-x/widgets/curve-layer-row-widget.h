@@ -1,7 +1,6 @@
 #pragma once
 #include "widget.h"
 
-#include <curve-editor-x/usings.h>
 #include <curve-editor-x/event.h>
 #include <curve-editor-x/curve-layer.h>
 
@@ -14,6 +13,8 @@ namespace curve_editor_x
 
 		void update( float dt ) override;
 		void render() override;
+
+		void invalidate_layout() override;
 
 		bool is_selected() const;
 
