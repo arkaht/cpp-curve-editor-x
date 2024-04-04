@@ -756,7 +756,9 @@ void CurveEditorWidget::_render_curve_by_distance(
 		layer->color.r,
 		layer->color.g,
 		layer->color.b,
-		layer->is_selected ? 255 : CURVE_UNSELECTED_OPACITY
+		layer->is_selected 
+			? CURVE_SELECTED_OPACITY 
+			: CURVE_UNSELECTED_OPACITY
 	};
 
 	Vector2 previous_pos = _transform_curve_to_screen(
@@ -791,7 +793,9 @@ void CurveEditorWidget::_render_curve_by_time(
 		layer->color.r,
 		layer->color.g,
 		layer->color.b,
-		layer->is_selected ? 255 : CURVE_UNSELECTED_OPACITY
+		layer->is_selected 
+			? CURVE_SELECTED_OPACITY 
+			: CURVE_UNSELECTED_OPACITY
 	};
 
 	//  Determine bounds and steps
@@ -834,7 +838,9 @@ void CurveEditorWidget::_render_curve_by_bezier(
 		layer->color.r,
 		layer->color.g,
 		layer->color.b,
-		layer->is_selected ? 255 : CURVE_UNSELECTED_OPACITY
+		layer->is_selected 
+			? CURVE_SELECTED_OPACITY 
+			: CURVE_UNSELECTED_OPACITY
 	};
 
 	for ( int i = 0; i < points_count - 1; i += 3 )

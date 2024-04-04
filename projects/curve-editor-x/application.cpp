@@ -207,7 +207,7 @@ bool Application::import_from_file( const std::string& path )
 	layer->curve = serializer.unserialize( data );
 	layer->path = path;
 	layer->name = GetFileNameWithoutExt( path.c_str() );
-	layer->color = _get_curve_color_at( _curve_layers.size() );
+	layer->color = _get_curve_color_at( (int)_curve_layers.size() );
 	layer->is_selected = true;
 	layer->is_file_exists = true;
 	layer->has_unsaved_changes = false;
@@ -258,7 +258,7 @@ ref<CurveLayer> Application::get_selected_curve_layer()
 
 bool Application::is_valid_curve_id( int layer_id ) const
 {
-	int count = _curve_layers.size();
+	int count = (int)_curve_layers.size();
 	return _selected_curve_id >= 0 && _selected_curve_id < count;
 }
 
@@ -275,7 +275,7 @@ void Application::_add_curve_layer( ref<CurveLayer>& layer )
 	//  If asked for, select the new layer
 	if ( layer->is_selected )
 	{
-		select_curve_layer( _curve_layers.size() - 1 );
+		select_curve_layer( (int)_curve_layers.size() - 1 );
 	}
 
 	//  Create related layer row widget

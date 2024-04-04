@@ -75,6 +75,7 @@ namespace curve_editor_x
 		const Color GRID_LINE_COLOR { 120, 120, 120, 255 };
 		const Color QUICK_EVALUATION_COLOR { 90, 90, 90, 255 };
 		const unsigned char CURVE_UNSELECTED_OPACITY = 80;
+		const unsigned char CURVE_SELECTED_OPACITY = 255;
 
 		const float QUICK_EVALUATION_THICKNESS = 2.0f;
 		const float CURVE_THICKNESS = 2.0f;
