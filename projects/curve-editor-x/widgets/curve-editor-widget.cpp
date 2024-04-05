@@ -1050,8 +1050,8 @@ void CurveEditorWidget::_render_grid_line( float value, bool is_horizontal )
 	}
 
 	//  Determine style depending on line type
-	bool is_large_line = fmodf( 
-		value, GRID_LARGE_COUNT * _grid_gap ) == 0.0f;
+	bool is_large_line = Utils::near_zero( fmodf( 
+		value, GRID_LARGE_COUNT * _grid_gap ) );
 	float font_size = is_large_line 
 		? GRID_LARGE_GRID_FONT_SIZE 
 		: GRID_SMALL_GRID_FONT_SIZE;
