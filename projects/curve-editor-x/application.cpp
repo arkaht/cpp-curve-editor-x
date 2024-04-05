@@ -37,7 +37,7 @@ void Application::init()
 		auto layer = std::make_shared<CurveLayer>( curve );
 		layer->is_selected = true;
 		layer->color = _get_curve_color_at( 0 );
-		_add_curve_layer( layer );
+		add_curve_layer( layer );
 
 		//  Fit viewport
 		_curve_editor->fit_viewport();
@@ -49,13 +49,12 @@ void Application::update( float dt )
 	bool is_shift_down = IsKeyDown( KEY_LEFT_SHIFT );
 	bool is_ctrl_down = IsKeyDown( KEY_LEFT_CONTROL );
 
-	const ref<CurveLayer>& layer = get_selected_curve_layer();
-
 	if ( is_ctrl_down )
 	{
 		//  Ctrl+S: Save to current file
-		if ( IsKeyPressed( KEY_S ) )
+		if ( is_valid_selected_curve() && IsKeyPressed( KEY_S ) )
 		{
+			const ref<CurveLayer>& layer = get_selected_curve_layer();
 			std::string path = layer->path;
 
 			//  Shift-down: Choosing save file location
@@ -96,11 +95,17 @@ void Application::update( float dt )
 		}
 	}
 
+	add_pending_widgets();
+
 	//  Update widgets
+	lock_widgets_vector( true );
 	for ( auto& widget : _widgets )
 	{
 		widget->update( dt );
 	}
+	lock_widgets_vector( false );
+
+	remove_pending_widgets();
 }
 
 void Application::render()
@@ -108,10 +113,12 @@ void Application::render()
 	ClearBackground( BACKGROUND_COLOR );
 
 	//  Render widgets
+	lock_widgets_vector( true );
 	for ( auto& widget : _widgets )
 	{
 		widget->render();
 	}
+	lock_widgets_vector( false );
 
 	//  DEBUG: Draw frame
 	//DrawRectangleLinesEx( _frame, 2.0f, PINK );
@@ -211,12 +218,46 @@ bool Application::import_from_file( const std::string& path )
 	layer->is_selected = true;
 	layer->is_file_exists = true;
 	layer->has_unsaved_changes = false;
-	_add_curve_layer( layer );
+	add_curve_layer( layer );
 
 	_curve_editor->fit_viewport();
 
 	printf( "Imported curve from file '%s'\n", c_path );
 	return true;
+}
+
+void Application::add_curve_layer( ref<CurveLayer> layer )
+{
+	//  Add to layers
+	_curve_layers.push_back( layer );
+
+	//  If asked for, select the new layer
+	if ( layer->is_selected )
+	{
+		select_curve_layer( (int)_curve_layers.size() - 1 );
+	}
+
+	//  Create a layer row widget
+	auto widget = _curve_layers_tab->create_layer_row( layer );
+	add_widget( widget );
+}
+
+void Application::remove_curve_layer( ref<CurveLayer> layer )
+{
+	auto itr = std::find( _curve_layers.begin(), _curve_layers.end(), layer );
+	if ( itr == _curve_layers.end() ) return;
+
+	//  Remove from layers
+	_curve_layers.erase( itr );
+
+	//  Un-select layer
+	if ( layer->is_selected )
+	{
+		select_curve_layer( 0 );
+	}
+
+	//  Remove the layer row widget
+	_curve_layers_tab->remove_layer_row( layer );
 }
 
 void Application::unselect_curve_layer()
@@ -225,12 +266,15 @@ void Application::unselect_curve_layer()
 
 	auto selected_layer = get_selected_curve_layer();
 	selected_layer->is_selected = false;
+	_selected_curve_id = -1;
 }
 
 void Application::select_curve_layer( int layer_id )
 {
 	//  Un-select previous layer
 	unselect_curve_layer();
+
+	if ( !is_valid_curve_id( layer_id ) ) return;
 
 	//  Select specified layer
 	auto& layer = _curve_layers.at( layer_id );
@@ -259,7 +303,13 @@ ref<CurveLayer> Application::get_selected_curve_layer()
 bool Application::is_valid_curve_id( int layer_id ) const
 {
 	int count = (int)_curve_layers.size();
-	return _selected_curve_id >= 0 && _selected_curve_id < count;
+	return layer_id >= 0 && layer_id < count;
+}
+
+bool Application::is_valid_selected_curve() const
+{
+	return is_valid_curve_id( _selected_curve_id )
+		&& _curve_layers[_selected_curve_id]->curve.is_valid();
 }
 
 std::vector<ref<CurveLayer>> Application::get_curve_layers() const
@@ -267,32 +317,15 @@ std::vector<ref<CurveLayer>> Application::get_curve_layers() const
 	return _curve_layers;
 }
 
-void Application::_add_curve_layer( ref<CurveLayer>& layer )
-{
-	//  Add to layers
-	_curve_layers.push_back( layer );
-
-	//  If asked for, select the new layer
-	if ( layer->is_selected )
-	{
-		select_curve_layer( (int)_curve_layers.size() - 1 );
-	}
-
-	//  Create related layer row widget
-	auto widget = _curve_layers_tab->create_layer_row( layer );
-	add_widget( widget );
-
-	//  Update position
-	_invalidate_widgets();
-}
-
 void Application::_invalidate_widgets()
 {
 	//  Invalidate widgets
+	lock_widgets_vector( true );
 	for ( auto& widget : _widgets )
 	{
 		widget->invalidate_layout();
 	}
+	lock_widgets_vector( false );
 }
 
 Color Application::_get_curve_color_at( int index )

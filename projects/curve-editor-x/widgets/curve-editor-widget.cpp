@@ -327,8 +327,7 @@ void CurveEditorWidget::render()
 	}
 
 	//  Draw in-frame
-	const auto& layer = _application->get_selected_curve_layer();
-	if ( layer->curve.is_valid() ) 
+	if ( _application->is_valid_selected_curve() ) 
 	{
 		_render_curve_screen();
 	}
@@ -684,6 +683,8 @@ void CurveEditorWidget::_render_curve_screen()
 
 void CurveEditorWidget::_render_invalid_curve_screen()
 {
+	if ( !_application->is_valid_selected_curve() ) return;
+
 	const auto& selected_layer = _application->get_selected_curve_layer();
 	int keys_count = selected_layer->curve.get_keys_count();
 

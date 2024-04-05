@@ -16,10 +16,14 @@ namespace curve_editor_x
 
 		void invalidate_layout() override;
 
-		ref<CurveLayerRowWidget> create_layer_row( ref<CurveLayer>& layer );
+		ref<CurveLayerRowWidget> create_layer_row( 
+			ref<CurveLayer> layer 
+		);
+		void remove_layer_row( ref<CurveLayer> layer );
 
 	private:
 		void _on_curve_layer_row_selected( ref<CurveLayerRowWidget> widget );
+		void _on_curve_layer_row_deleted( ref<CurveLayerRowWidget> widget );
 
 	private:
 		Application* _application = nullptr;

@@ -37,6 +37,9 @@ namespace curve_editor_x
 		);
 		bool import_from_file( const std::string& path );
 
+		void add_curve_layer( ref<CurveLayer> layer );
+		void remove_curve_layer( ref<CurveLayer> layer );
+
 		void unselect_curve_layer();
 		void select_curve_layer( int layer_id );
 
@@ -44,14 +47,13 @@ namespace curve_editor_x
 		ref<CurveLayer> get_curve_layer( int layer_id );
 		ref<CurveLayer> get_selected_curve_layer();
 		bool is_valid_curve_id( int layer_id ) const;
+		bool is_valid_selected_curve() const;
 		/*
 		 * Returns a copy vector of the curve layers.
 		 */
 		std::vector<ref<CurveLayer>> get_curve_layers() const;
 
 	private:
-		void _add_curve_layer( ref<CurveLayer>& layer );
-
 		void _invalidate_widgets();
 
 		Color _get_curve_color_at( int index );

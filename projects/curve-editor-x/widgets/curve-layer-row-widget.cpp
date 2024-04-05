@@ -2,7 +2,9 @@
 
 using namespace curve_editor_x;
 
-CurveLayerRowWidget::CurveLayerRowWidget( ref<CurveLayer> layer )
+CurveLayerRowWidget::CurveLayerRowWidget(
+	ref<CurveLayer> layer 
+)
 	: layer( layer )
 {}
 
@@ -11,13 +13,23 @@ void CurveLayerRowWidget::update( float dt )
 	const Vector2 mouse_pos = GetMousePosition();
 	bool is_hovered = CheckCollisionPointRec( mouse_pos, frame );
 
-	if ( is_hovered && IsMouseButtonPressed( MOUSE_BUTTON_LEFT ) )
+	//  Check new selection input
+	if ( is_hovered )
 	{
-		if ( !layer->is_selected )
+		if ( !layer->is_selected 
+		  && IsMouseButtonPressed( MOUSE_BUTTON_LEFT ) )
 		{
 			auto caller = cast<CurveLayerRowWidget>();
 			on_selected.invoke( caller );
 		}
+	}
+
+	//  Check delete input
+	if ( layer->is_selected 
+		&& IsKeyPressed( KEY_DELETE ) )
+	{
+		auto caller = cast<CurveLayerRowWidget>();
+		on_deleted.invoke( caller );
 	}
 }
 

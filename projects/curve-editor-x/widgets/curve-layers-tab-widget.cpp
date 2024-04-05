@@ -26,29 +26,59 @@ void CurveLayersTabWidget::invalidate_layout()
 	const float PADDING = 2.0f;
 	for ( int i = 0; i < _curve_layer_rows.size(); i++ )
 	{
-		auto& widget = _curve_layer_rows[i];
-		widget->frame.width = frame.width - PADDING * 2.0f;
-		widget->frame.height = 32.0f;
-		widget->frame.x = frame.x + PADDING;
-		widget->frame.y = frame.y + PADDING 
-			+ i * widget->frame.height;  //  Vertical layout
-		widget->child_index = i;
+		auto& row = _curve_layer_rows[i];
+		row->frame.width = frame.width - PADDING * 2.0f;
+		row->frame.height = 32.0f;
+		row->frame.x = frame.x + PADDING;
+		row->frame.y = frame.y + PADDING 
+			+ i * row->frame.height;  //  Vertical layout
+		row->child_index = i;
 	}
 }
 
 ref<CurveLayerRowWidget> CurveLayersTabWidget::create_layer_row(
-	ref<CurveLayer>& layer 
+	ref<CurveLayer> layer 
 )
 {
-    auto widget = std::make_shared<CurveLayerRowWidget>( layer );
-	widget->on_selected.listen( "editor", 
+    auto row = std::make_shared<CurveLayerRowWidget>( layer );
+	row->on_selected.listen( "editor", 
 		std::bind( 
 			&CurveLayersTabWidget::_on_curve_layer_row_selected, this,
 			std::placeholders::_1 
 		) 
 	);
-	_curve_layer_rows.push_back( widget );
-    return widget;
+	row->on_deleted.listen( "editor",
+		std::bind(
+			&CurveLayersTabWidget::_on_curve_layer_row_deleted, this,
+			std::placeholders::_1
+		)
+	);
+	_curve_layer_rows.push_back( row );
+
+	//  Update rows
+	invalidate_layout();
+    return row;
+}
+
+void CurveLayersTabWidget::remove_layer_row( ref<CurveLayer> layer )
+{
+	//  Find associated layer row widget
+	auto itr = std::find_if( 
+		_curve_layer_rows.begin(), 
+		_curve_layer_rows.end(), 
+		[&]( const auto row ) { return row->layer == layer; } 
+	);
+	if ( itr == _curve_layer_rows.end() ) return;
+
+	//  Destroy row widget
+	auto& row = *itr;
+	_application->remove_widget( row );
+
+	//  Remove row from vector
+	_curve_layer_rows.erase( itr );
+
+	//  Update rows
+	invalidate_layout();
 }
 
 void CurveLayersTabWidget::_on_curve_layer_row_selected( 
@@ -56,4 +86,11 @@ void CurveLayersTabWidget::_on_curve_layer_row_selected(
 )
 {
 	_application->select_curve_layer( widget->child_index );
+}
+
+void CurveLayersTabWidget::_on_curve_layer_row_deleted( 
+	ref<CurveLayerRowWidget> widget 
+)
+{
+	_application->remove_curve_layer( widget->layer );
 }
