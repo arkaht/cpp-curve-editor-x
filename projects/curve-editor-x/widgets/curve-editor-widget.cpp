@@ -1043,6 +1043,12 @@ void CurveEditorWidget::_render_grid_line( float value, bool is_horizontal )
 		? _transform_curve_to_screen_y( value )
 		: _transform_curve_to_screen_x( value );
 
+	//  Fix some weird cases where zero was negative
+	if ( Utils::near_zero( value ) )
+	{
+		value = 0.0f;
+	}
+
 	//  Determine style depending on line type
 	bool is_large_line = fmodf( 
 		value, GRID_LARGE_COUNT * _grid_gap ) == 0.0f;

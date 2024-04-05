@@ -8,6 +8,8 @@ namespace curve_editor_x
 	class Utils
 	{
 	public:
+		static float near_zero( float value, float epsilon = 0.001f );
+
 		static float lerp( float a, float b, float t );
 
 		static float round( float value, float idp );

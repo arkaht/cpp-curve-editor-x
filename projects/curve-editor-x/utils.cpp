@@ -5,6 +5,11 @@
 
 using namespace curve_editor_x;
 
+float Utils::near_zero( float value, float epsilon )
+{
+	return fabs( value ) <= epsilon;
+}
+
 float Utils::lerp( float a, float b, float t )
 {
     return a + t * ( b - a );
