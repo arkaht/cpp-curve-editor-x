@@ -11,6 +11,8 @@ namespace curve_editor_x
 	public:
 		CurveLayersTabWidget( Application* application );
 
+		bool handle_key_input( UserInput key ) override;
+
 		void update( float dt ) override;
 		void render() override;
 

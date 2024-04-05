@@ -44,7 +44,7 @@ void CurveEditorWidget::update( float dt )
 
 	//  LSHIFT-down: Quick curve evaluation
 	_is_quick_evaluating = IsKeyDown( KEY_LEFT_SHIFT );
-
+	
 	//  RMB: Move viewport around
 	if ( IsMouseButtonPressed( MOUSE_BUTTON_RIGHT ) )
 	{
@@ -683,6 +683,7 @@ void CurveEditorWidget::_render_curve_screen()
 
 void CurveEditorWidget::_render_invalid_curve_screen()
 {
+	//  TODO: Add a screen for invalid curve
 	if ( !_application->is_valid_selected_curve() ) return;
 
 	const auto& selected_layer = _application->get_selected_curve_layer();

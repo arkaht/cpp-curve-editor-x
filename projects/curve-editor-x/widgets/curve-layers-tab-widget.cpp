@@ -11,6 +11,22 @@ CurveLayersTabWidget::CurveLayersTabWidget(
 {
 }
 
+bool CurveLayersTabWidget::handle_key_input( UserInput key )
+{
+	//  Gives input to children
+	//  TODO?: This is repeating code, move this in WidgetManager
+	//		   and make this class one
+	for ( auto& row : _curve_layer_rows )
+	{
+		if ( row->handle_key_input( key ) )
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void CurveLayersTabWidget::update( float dt )
 {
 }

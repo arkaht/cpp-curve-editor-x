@@ -5,6 +5,7 @@
 #include <memory>
 
 #include <curve-editor-x/usings.h>
+#include <curve-editor-x/user-input.h>
 
 namespace curve_editor_x
 {
@@ -14,10 +15,12 @@ namespace curve_editor_x
 		Widget() {}
 		virtual ~Widget() {}
 
+		virtual bool handle_key_input( UserInput input ) { return false; }
+
 		virtual void update( float dt ) = 0;
 		virtual void render() = 0;
 
-		virtual void invalidate_layout() = 0;
+		virtual void invalidate_layout() {};
 
 		template <typename T>
 		ref<T> cast()

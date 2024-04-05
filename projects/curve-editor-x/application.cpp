@@ -95,16 +95,37 @@ void Application::update( float dt )
 		}
 	}
 
+	//  Retrieve inputs
+	//  TODO: Simplify the code and add action state
+	if ( IsMouseButtonPressed( MOUSE_BUTTON_LEFT ) ) _key_inputs.push_back( UserInput::LeftClick );
+	if ( IsMouseButtonPressed( MOUSE_BUTTON_RIGHT ) ) _key_inputs.push_back( UserInput::RightClick );
+	if ( IsKeyPressed( KEY_DELETE ) ) _key_inputs.push_back( UserInput::Delete );
+
+	//  Add pending widgets
 	add_pending_widgets();
+	lock_widgets_vector( true );
+
+	//  Propagate inputs to widgets
+	for ( auto input : _key_inputs )
+	{
+		for ( auto& widget : _widgets )
+		{
+			if ( widget->handle_key_input( input ) )
+			{
+				break;
+			}
+		}
+	}
+	_key_inputs.clear();
 
 	//  Update widgets
-	lock_widgets_vector( true );
 	for ( auto& widget : _widgets )
 	{
 		widget->update( dt );
 	}
-	lock_widgets_vector( false );
 
+	//  Remove pending widgets
+	lock_widgets_vector( false );
 	remove_pending_widgets();
 }
 

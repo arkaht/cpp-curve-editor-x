@@ -8,6 +8,7 @@
 
 #include <curve-editor-x/utils.h>
 #include <curve-editor-x/curve-layer.h>
+#include <curve-editor-x/user-input.h>
 
 #include <curve-editor-x/widgets/widget-manager.h>
 #include <curve-editor-x/widgets/curve-editor-widget.h>
@@ -79,6 +80,8 @@ namespace curve_editor_x
 
 		ref<CurveEditorWidget> _curve_editor = nullptr;
 		ref<CurveLayersTabWidget> _curve_layers_tab = nullptr;
+
+		std::vector<UserInput> _key_inputs {};
 
 		std::vector<ref<CurveLayer>> _curve_layers {};
 		int _selected_curve_id = 0;

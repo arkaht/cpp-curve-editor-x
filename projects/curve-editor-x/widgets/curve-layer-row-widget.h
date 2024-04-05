@@ -12,10 +12,10 @@ namespace curve_editor_x
 	public:
 		CurveLayerRowWidget( ref<CurveLayer> layer );
 
+		bool handle_key_input( UserInput key ) override;
+
 		void update( float dt ) override;
 		void render() override;
-
-		void invalidate_layout() override;
 
 		bool is_selected() const;
 

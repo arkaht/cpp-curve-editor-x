@@ -8,29 +8,47 @@ CurveLayerRowWidget::CurveLayerRowWidget(
 	: layer( layer )
 {}
 
-void CurveLayerRowWidget::update( float dt )
+bool CurveLayerRowWidget::handle_key_input( UserInput key )
 {
-	const Vector2 mouse_pos = GetMousePosition();
-	bool is_hovered = CheckCollisionPointRec( mouse_pos, frame );
-
-	//  Check new selection input
-	if ( is_hovered )
+	switch ( key )
 	{
-		if ( !layer->is_selected 
-		  && IsMouseButtonPressed( MOUSE_BUTTON_LEFT ) )
+		case UserInput::LeftClick:
 		{
-			auto caller = cast<CurveLayerRowWidget>();
-			on_selected.invoke( caller );
+			const Vector2 mouse_pos = GetMousePosition();
+			bool is_hovered = CheckCollisionPointRec( 
+				mouse_pos, 
+				frame 
+			);
+
+			//  Select current layer
+			if ( is_hovered && !layer->is_selected )
+			{
+				auto caller = cast<CurveLayerRowWidget>();
+				on_selected.invoke( caller );
+				return true;
+			}
+
+			break;
+		}
+		case UserInput::Delete:
+		{
+			//  Delete current layer
+			if ( layer->is_selected )
+			{
+				auto caller = cast<CurveLayerRowWidget>();
+				on_deleted.invoke( caller );
+				return true;
+			}
+
+			break;
 		}
 	}
 
-	//  Check delete input
-	if ( layer->is_selected 
-		&& IsKeyPressed( KEY_DELETE ) )
-	{
-		auto caller = cast<CurveLayerRowWidget>();
-		on_deleted.invoke( caller );
-	}
+	return false;
+}
+
+void CurveLayerRowWidget::update( float dt )
+{
 }
 
 void CurveLayerRowWidget::render()
@@ -78,9 +96,6 @@ void CurveLayerRowWidget::render()
 	);
 }
 
-void CurveLayerRowWidget::invalidate_layout()
-{
-}
 
 bool CurveLayerRowWidget::is_selected() const
 {

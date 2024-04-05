@@ -74,5 +74,8 @@
     <ClInclude Include="widgets\curve-layers-tab-widget.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="user-input.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
