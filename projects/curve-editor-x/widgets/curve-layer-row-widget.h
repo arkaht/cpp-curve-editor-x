@@ -42,5 +42,10 @@ namespace curve_editor_x
 	private:
 		const Color BACKGROUND_COLOR = { 180, 180, 180, 255 };
 		const Color BACKGROUND_SELECTED_COLOR = { 161, 210, 241, 255 };
+	
+		//  TODO: Export these common variables inside an 
+		//		  ApplicationStyle class.
+		const unsigned char CURVE_UNSELECTED_OPACITY = 80;
+		const unsigned char CURVE_SELECTED_OPACITY = 255;
 	};
 }

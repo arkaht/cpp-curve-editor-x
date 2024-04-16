@@ -68,13 +68,27 @@ void CurveLayerRowWidget::render()
 		radius,
 		GRAY
 	);
+	if ( !layer->is_selected && CURVE_UNSELECTED_OPACITY < 255 )
+	{
+		DrawCircle( 
+			frame.x + frame.height * 0.5f, 
+			frame.y + frame.height * 0.5f,
+			radius * 0.8f,
+			LIGHTGRAY
+		);
+	}
 	DrawCircle( 
 		frame.x + frame.height * 0.5f, 
 		frame.y + frame.height * 0.5f,
 		radius * 0.8f,
-		is_selected() 
-			? layer->color 
-			: LIGHTGRAY
+		Color {
+			layer->color.r,
+			layer->color.g,
+			layer->color.b,
+			layer->is_selected 
+				? CURVE_SELECTED_OPACITY 
+				: CURVE_UNSELECTED_OPACITY
+		}
 	);
 
 	//  Draw layer name text
@@ -95,7 +109,6 @@ void CurveLayerRowWidget::render()
 		BLACK 
 	);
 }
-
 
 bool CurveLayerRowWidget::is_selected() const
 {
