@@ -21,10 +21,13 @@ bool CurveLayerRowWidget::handle_key_input( UserInput key )
 			);
 
 			//  Select current layer
-			if ( is_hovered && !layer->is_selected )
+			if ( is_hovered )
 			{
-				auto caller = cast<CurveLayerRowWidget>();
-				on_selected.invoke( caller );
+				if ( !layer->is_selected )
+				{
+					auto caller = cast<CurveLayerRowWidget>();
+					on_selected.invoke( caller );
+				}
 				return true;
 			}
 

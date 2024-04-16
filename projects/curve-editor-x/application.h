@@ -82,9 +82,12 @@ namespace curve_editor_x
 		ref<CurveLayersTabWidget> _curve_layers_tab = nullptr;
 
 		std::vector<UserInput> _key_inputs {};
+		ref<Widget> _focused_widget = nullptr;
 
 		std::vector<ref<CurveLayer>> _curve_layers {};
 		int _selected_curve_id = 0;
+
+		bool _is_debug_enabled = false;
 
 		Rectangle _frame {};
 	};

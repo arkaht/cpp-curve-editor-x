@@ -93,6 +93,11 @@ void Application::update( float dt )
 				import_from_file( path );
 			}
 		}
+		//  Ctrl+;: Toggle debug mode
+		else if ( IsKeyPressed( KEY_COMMA ) )
+		{
+			_is_debug_enabled = !_is_debug_enabled;
+		}
 	}
 
 	//  Retrieve inputs
@@ -106,12 +111,26 @@ void Application::update( float dt )
 	lock_widgets_vector( true );
 
 	//  Propagate inputs to widgets
+	//  TODO: Mouse inputs should change focus to the widget the 
+	//		  mouse hover.
 	for ( auto input : _key_inputs )
 	{
+		if ( _focused_widget != nullptr 
+		  && _focused_widget->handle_key_input( input ) )
+		{
+			printf( "Focused widget consumed the input!\n" );
+			continue;
+		}
+
+		//  Reset widget focus
+		_focused_widget = nullptr;
+
 		for ( auto& widget : _widgets )
 		{
 			if ( widget->handle_key_input( input ) )
 			{
+				//  Set the focus to this widget
+				_focused_widget = widget;
 				break;
 			}
 		}
@@ -141,8 +160,18 @@ void Application::render()
 	}
 	lock_widgets_vector( false );
 
-	//  DEBUG: Draw frame
-	//DrawRectangleLinesEx( _frame, 2.0f, PINK );
+	//  Debug render
+	if ( _is_debug_enabled )
+	{
+		//  Draw frame
+		DrawRectangleLinesEx( _frame, 1.0f, PINK );
+
+		//  Outline focused widget
+		if ( _focused_widget != nullptr )
+		{
+			DrawRectangleLinesEx( _focused_widget->frame, 2.0f, RED );
+		}
+	}
 }
 
 void Application::invalidate_layout()

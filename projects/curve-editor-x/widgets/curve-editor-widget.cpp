@@ -11,6 +11,79 @@ CurveEditorWidget::CurveEditorWidget(
 {
 }
 
+bool CurveEditorWidget::handle_key_input( UserInput input )
+{
+	int selected_curve_id = _application->get_selected_curve_id();
+	if ( !_application->is_valid_curve_id( selected_curve_id ) ) 
+	{
+		return false;
+	}
+	
+	auto curve_ref = _application->get_selected_curve_layer();
+	Curve& curve = curve_ref->curve;
+
+	switch ( input )
+	{
+		case UserInput::LeftClick:
+		{
+			//  Double LMB-pressed: add a key at position
+			if ( _is_double_clicking( true ) )
+			{
+				CurveKey key( 
+					_transform_screen_to_curve( 
+						_transformed_mouse_pos 
+					)
+				);
+
+				//  ALT-down: insert key
+				if ( IsKeyDown( KEY_LEFT_ALT ) )
+				{
+					//  TODO: fix this feature and Curve::compute_length
+					//  Find distance on curve from point
+					float dist = curve.get_nearest_distance_to( 
+						key.control );
+
+					//  Find the key index to insert from
+					int first_key_id, last_key_id;
+					curve.find_evaluation_keys_id_by_distance( 
+						&first_key_id, &last_key_id, dist );
+
+					//printf( "=> %d:%d\n", first_key_id, last_key_id );
+
+					//  Insert and select the point
+					curve.insert_key( last_key_id, key );
+					_selected_point_id = curve.key_to_point_id( 
+						last_key_id );
+				}
+				//  NO ALT-down: add key
+				else
+				{
+					curve.add_key( key );
+					_selected_point_id = 
+						curve.get_points_count() - 1;
+				}
+
+				curve_ref->has_unsaved_changes = true;
+				return true;
+			}
+			//  LMB-pressed: Select hovered point
+			else
+			{
+				_can_drag_selected_point = 
+					!MUST_DOUBLE_CLICK_TO_DRAG_POINT 
+				 || _hovered_point_id == _selected_point_id;
+
+				_selected_point_id = _hovered_point_id;
+				return true;
+			}
+
+			break;
+		}
+	}
+
+	return false;
+}
+
 void CurveEditorWidget::update( float dt )
 {
 	if ( !_application->is_valid_curve_id( _application->get_selected_curve_id() ) ) return;
@@ -169,55 +242,7 @@ void CurveEditorWidget::update( float dt )
 		}
 	}
 
-	if ( IsMouseButtonPressed( MOUSE_BUTTON_LEFT ) )
-	{
-		//  Double LMB-pressed: add a key at position
-		if ( _is_double_clicking( true ) )
-		{
-			CurveKey key( 
-				_transform_screen_to_curve( _transformed_mouse_pos )
-			);
-
-			//  ALT-down: insert key
-			if ( is_alt_down )
-			{
-				//  TODO: fix this feature and Curve::compute_length
-				//  Find distance on curve from point
-				float dist = curve.get_nearest_distance_to( 
-					key.control );
-
-				//  Find the key index to insert from
-				int first_key_id, last_key_id;
-				curve.find_evaluation_keys_id_by_distance( 
-					&first_key_id, &last_key_id, dist );
-
-				printf( "=> %d:%d\n", first_key_id, last_key_id );
-
-				//  Insert and select the point
-				curve.insert_key( last_key_id, key );
-				_selected_point_id = curve.key_to_point_id( 
-					last_key_id );
-			}
-			//  NO ALT-down: add key
-			else
-			{
-				curve.add_key( key );
-				_selected_point_id = curve.get_points_count() - 1;
-			}
-
-			curve_ref->has_unsaved_changes = true;
-		}
-		//  LMB-pressed: Select hovered point
-		else
-		{
-			_can_drag_selected_point = 
-				!MUST_DOUBLE_CLICK_TO_DRAG_POINT 
-			 || _hovered_point_id == _selected_point_id;
-
-			_selected_point_id = _hovered_point_id;
-		}
-	}
-	else if ( IsMouseButtonReleased( MOUSE_BUTTON_LEFT ) )
+	if ( IsMouseButtonReleased( MOUSE_BUTTON_LEFT ) )
 	{
 		_can_drag_selected_point = true;
 	}

@@ -16,6 +16,8 @@ namespace curve_editor_x
 	public:
 		CurveEditorWidget( Application* application );
 
+		bool handle_key_input( UserInput input ) override;
+		
 		void update( float dt ) override;
 		void render() override;
 
