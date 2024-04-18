@@ -102,35 +102,71 @@ void Application::update( float dt )
 
 	//  Retrieve inputs
 	//  TODO: Simplify the code and add action state
-	if ( IsMouseButtonPressed( MOUSE_BUTTON_LEFT ) ) _key_inputs.push_back( UserInput::LeftClick );
-	if ( IsMouseButtonPressed( MOUSE_BUTTON_RIGHT ) ) _key_inputs.push_back( UserInput::RightClick );
-	if ( IsKeyPressed( KEY_DELETE ) ) _key_inputs.push_back( UserInput::Delete );
+	_has_new_mouse_clicks = false;
+	_detect_mouse_input( MOUSE_BUTTON_LEFT, InputKey::LeftClick );
+	_detect_mouse_input( MOUSE_BUTTON_MIDDLE, InputKey::MiddleClick );
+	_detect_mouse_input( MOUSE_BUTTON_RIGHT, InputKey::RightClick );
+	_detect_key_input( KEY_DELETE, InputKey::Delete );
+
+	if ( _has_new_mouse_clicks )
+	{
+		const Vector2 mouse_pos = GetMousePosition();
+
+		//  Focus the widget under the cursor
+		ref<Widget> new_focus = nullptr;
+		for ( auto& widget : _widgets )
+		{
+			if ( CheckCollisionPointRec( mouse_pos, widget->frame ) )
+			{
+				new_focus = widget;
+				printf( "Mouse click focused widget!\n" );
+
+				//  Pass any mouse inputs to that widget
+				for ( 
+					auto itr = _key_inputs.begin(); 
+					itr != _key_inputs.end(); 
+				)
+				{
+					if ( itr->is_mouse_input() )
+					{
+						new_focus->consume_input( *itr );
+						itr = _key_inputs.erase( itr );
+					}
+					else
+					{
+						itr++;
+					}
+				}
+
+				break;
+			}
+		}
+		focus_widget( new_focus );
+	}
 
 	//  Add pending widgets
 	add_pending_widgets();
 	lock_widgets_vector( true );
 
 	//  Propagate inputs to widgets
-	//  TODO: Mouse inputs should change focus to the widget the 
-	//		  mouse hover.
-	for ( auto input : _key_inputs )
+	for ( const auto& input : _key_inputs )
 	{
+		//  Prioritizing sending inputs to the focused widget
 		if ( _focused_widget != nullptr 
-		  && _focused_widget->handle_key_input( input ) )
+		  && _focused_widget->consume_input( input ) )
 		{
 			printf( "Focused widget consumed the input!\n" );
 			continue;
 		}
-
-		//  Reset widget focus
-		_focused_widget = nullptr;
+		/*else if ( _focused_widget != nullptr )
+		{
+			printf( "Focused widget didn't consumed the input!" );
+		}*/
 
 		for ( auto& widget : _widgets )
 		{
-			if ( widget->handle_key_input( input ) )
+			if ( widget->consume_input( input ) )
 			{
-				//  Set the focus to this widget
-				_focused_widget = widget;
 				break;
 			}
 		}
@@ -191,6 +227,27 @@ void Application::invalidate_layout()
 	_curve_editor->frame.height = _frame.height;
 
 	_invalidate_widgets();
+}
+
+void Application::focus_widget( ref<Widget> widget )
+{
+	//  Prevent focusing once again the same widget
+	if ( widget == _focused_widget ) return;
+
+	unfocus_widget();
+
+	if ( widget == nullptr ) return;
+
+	_focused_widget = widget;
+	_focused_widget->on_focus_changed( true );
+}
+
+void Application::unfocus_widget()
+{
+	if ( _focused_widget == nullptr ) return;
+
+	_focused_widget->on_focus_changed( false );
+	_focused_widget = nullptr;
 }
 
 void Application::set_title( const std::string& title )
@@ -376,6 +433,58 @@ void Application::_invalidate_widgets()
 		widget->invalidate_layout();
 	}
 	lock_widgets_vector( false );
+}
+
+void Application::_detect_mouse_input(
+	const MouseButton button, 
+	const InputKey input_type 
+)
+{
+	if ( IsMouseButtonPressed( button ) )
+	{
+		_key_inputs.push_back( 
+			UserInput(
+				InputState::Pressed, 
+				input_type 
+			) 
+		);
+		_has_new_mouse_clicks = true;
+	}
+	else if ( IsMouseButtonReleased( button ) )
+	{
+		_key_inputs.push_back( 
+			UserInput(
+				InputState::Released,
+				input_type
+			) 
+		);
+		_has_new_mouse_clicks = true;
+	}
+}
+
+void Application::_detect_key_input( 
+	const KeyboardKey key, 
+	const InputKey input_type 
+)
+{
+	if ( IsKeyPressed( key ) )
+	{
+		_key_inputs.push_back( 
+			UserInput(
+				InputState::Pressed, 
+				input_type 
+			) 
+		);
+	}
+	else if ( IsKeyReleased( key ) )
+	{
+		_key_inputs.push_back(
+			UserInput(
+				InputState::Released,
+				input_type
+			)
+		);
+	}
 }
 
 Color Application::_get_curve_color_at( int index )

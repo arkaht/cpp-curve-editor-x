@@ -11,20 +11,20 @@ CurveLayersTabWidget::CurveLayersTabWidget(
 {
 }
 
-bool CurveLayersTabWidget::handle_key_input( UserInput key )
+bool CurveLayersTabWidget::consume_input( const UserInput& input )
 {
 	//  Gives input to children
 	//  TODO?: This is repeating code, move this in WidgetManager
 	//		   and make this class one
 	for ( auto& row : _curve_layer_rows )
 	{
-		if ( row->handle_key_input( key ) )
+		if ( row->consume_input( input ) )
 		{
 			return true;
 		}
 	}
 
-	return false;
+	return input.is_mouse_input();
 }
 
 void CurveLayersTabWidget::update( float dt )

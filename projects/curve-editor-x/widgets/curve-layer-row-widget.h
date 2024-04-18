@@ -12,7 +12,7 @@ namespace curve_editor_x
 	public:
 		CurveLayerRowWidget( ref<CurveLayer> layer );
 
-		bool handle_key_input( UserInput key ) override;
+		bool consume_input( const UserInput& input ) override;
 
 		void update( float dt ) override;
 		void render() override;

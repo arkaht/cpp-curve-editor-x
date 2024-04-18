@@ -31,6 +31,9 @@ namespace curve_editor_x
 
 		void invalidate_layout();
 
+		void focus_widget( ref<Widget> widget );
+		void unfocus_widget();
+
 		void set_title( const std::string& title );
 		bool export_to_file( 
 			ref<CurveLayer> layer, 
@@ -56,6 +59,15 @@ namespace curve_editor_x
 
 	private:
 		void _invalidate_widgets();
+
+		void _detect_mouse_input( 
+			const MouseButton button, 
+			const InputKey input_type 
+		);
+		void _detect_key_input(
+			const KeyboardKey key,
+			const InputKey input_type
+		);
 
 		Color _get_curve_color_at( int index );
 
@@ -86,6 +98,9 @@ namespace curve_editor_x
 
 		std::vector<ref<CurveLayer>> _curve_layers {};
 		int _selected_curve_id = 0;
+
+		//  Has mouse clicks been received this frame?
+		bool _has_new_mouse_clicks = false;
 
 		bool _is_debug_enabled = false;
 

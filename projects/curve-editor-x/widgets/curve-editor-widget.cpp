@@ -11,7 +11,7 @@ CurveEditorWidget::CurveEditorWidget(
 {
 }
 
-bool CurveEditorWidget::handle_key_input( UserInput input )
+bool CurveEditorWidget::consume_input( const UserInput& input )
 {
 	int selected_curve_id = _application->get_selected_curve_id();
 	if ( !_application->is_valid_curve_id( selected_curve_id ) ) 
@@ -22,66 +22,91 @@ bool CurveEditorWidget::handle_key_input( UserInput input )
 	auto curve_ref = _application->get_selected_curve_layer();
 	Curve& curve = curve_ref->curve;
 
-	switch ( input )
+	if ( input.key == InputKey::LeftClick )
 	{
-		case UserInput::LeftClick:
+		if ( input.state == InputState::Pressed )
 		{
-			//  Double LMB-pressed: add a key at position
+			//  Double clicks: Add a key at position
 			if ( _is_double_clicking( true ) )
 			{
-				CurveKey key( 
-					_transform_screen_to_curve( 
-						_transformed_mouse_pos 
-					)
-				);
-
-				//  ALT-down: insert key
-				if ( IsKeyDown( KEY_LEFT_ALT ) )
-				{
-					//  TODO: fix this feature and Curve::compute_length
-					//  Find distance on curve from point
-					float dist = curve.get_nearest_distance_to( 
-						key.control );
-
-					//  Find the key index to insert from
-					int first_key_id, last_key_id;
-					curve.find_evaluation_keys_id_by_distance( 
-						&first_key_id, &last_key_id, dist );
-
-					//printf( "=> %d:%d\n", first_key_id, last_key_id );
-
-					//  Insert and select the point
-					curve.insert_key( last_key_id, key );
-					_selected_point_id = curve.key_to_point_id( 
-						last_key_id );
-				}
-				//  NO ALT-down: add key
-				else
-				{
-					curve.add_key( key );
-					_selected_point_id = 
-						curve.get_points_count() - 1;
-				}
-
-				curve_ref->has_unsaved_changes = true;
-				return true;
+				_add_key_at_position( IsKeyDown( KEY_LEFT_ALT ) );
 			}
-			//  LMB-pressed: Select hovered point
+			//  One click: Select hovered point
 			else
 			{
-				_can_drag_selected_point = 
-					!MUST_DOUBLE_CLICK_TO_DRAG_POINT 
-				 || _hovered_point_id == _selected_point_id;
+				_is_dragging_point =
+					curve.is_valid_point_id( _hovered_point_id );
 
 				_selected_point_id = _hovered_point_id;
-				return true;
 			}
-
-			break;
 		}
+		else if ( input.state == InputState::Released )
+		{
+			_is_dragging_point = false;
+		}
+		
+		return true;
+	}
+	//  Switch tangent mode
+	else if ( input.key == InputKey::MiddleClick 
+		   && input.state == InputState::Pressed )
+	{
+		int key_id = 
+			curve.point_to_key_id( _selected_point_id );
+		TangentMode tangent_mode = 
+			curve.get_tangent_mode( key_id );
+
+		//  Cycle through tangent modes
+		TangentMode next_tangent_mode = 
+			(int)tangent_mode + 1 == (int)TangentMode::MAX
+			? (TangentMode)0
+			: (TangentMode)( (int)tangent_mode + 1 );
+
+		//  Apply the new tangent constraint
+		curve.set_tangent_mode( key_id, next_tangent_mode );
+		curve_ref->has_unsaved_changes = true;
+	}
+	//  Move viewport around
+	else if ( input.key == InputKey::RightClick )
+	{
+		if ( input.state == InputState::Pressed )
+		{
+			_is_moving_viewport = true;
+		}
+		else if ( input.state == InputState::Released )
+		{
+			_is_moving_viewport = false;
+		}
+	}
+	//  Delete the current selected key
+	else if ( input.key == InputKey::Delete
+	       && input.state == InputState::Pressed )
+	{
+		bool is_valid_selected_point = 
+			curve.is_valid_point_id( _selected_point_id );
+
+		if ( is_valid_selected_point 
+			&& curve.get_keys_count() > 2 )
+		{
+			int key_id = curve.point_to_key_id( _selected_point_id );
+			curve.remove_key( key_id );
+			curve_ref->has_unsaved_changes = true;
+		}
+
+		return true;
 	}
 
 	return false;
+}
+
+void CurveEditorWidget::on_focus_changed( bool is_focused )
+{
+	if ( !is_focused )
+	{
+		//  Un-select point & stop dragging
+		_selected_point_id = -1;
+		_is_dragging_point = false;
+	}
 }
 
 void CurveEditorWidget::update( float dt )
@@ -118,15 +143,6 @@ void CurveEditorWidget::update( float dt )
 	//  LSHIFT-down: Quick curve evaluation
 	_is_quick_evaluating = IsKeyDown( KEY_LEFT_SHIFT );
 	
-	//  RMB: Move viewport around
-	if ( IsMouseButtonPressed( MOUSE_BUTTON_RIGHT ) )
-	{
-		_is_moving_viewport = is_hovered;
-	}
-	else if ( IsMouseButtonReleased( MOUSE_BUTTON_RIGHT ) )
-	{
-		_is_moving_viewport = false;
-	}
 	if ( _is_moving_viewport )
 	{
 		_viewport.x += mouse_delta.x;
@@ -187,7 +203,6 @@ void CurveEditorWidget::update( float dt )
 			}
 		}
 	}
-
 	//  F1-press: interpolate curve in Bezier
 	if ( IsKeyPressed( KEY_F1 ) )
 	{
@@ -213,15 +228,6 @@ void CurveEditorWidget::update( float dt )
 	{
 		_is_showing_points = !_is_showing_points;
 	}
-	//  Suppr: Delete current selected key
-	else if ( IsKeyPressed( KEY_DELETE ) 
-		&& is_valid_selected_point 
-		&& curve.get_keys_count() > 2 )
-	{
-		int key_id = curve.point_to_key_id( _selected_point_id );
-		curve.remove_key( key_id );
-		curve_ref->has_unsaved_changes = true;
-	}
 
 	//  Find the mouse hovered point
 	_hovered_point_id = -1;
@@ -242,17 +248,12 @@ void CurveEditorWidget::update( float dt )
 		}
 	}
 
-	if ( IsMouseButtonReleased( MOUSE_BUTTON_LEFT ) )
-	{
-		_can_drag_selected_point = true;
-	}
-	//  LMB-down: Move selected point
-	else if ( IsMouseButtonDown( MOUSE_BUTTON_LEFT )
-		&& is_valid_selected_point 
-		&& _can_drag_selected_point )
+	//  Move selected point
+	if ( _is_dragging_point && is_valid_selected_point )
 	{
 		//  Translate mouse screen-position to curve-position
-		Point new_point = _transform_screen_to_curve( _transformed_mouse_pos );
+		Point new_point = _transform_screen_to_curve( 
+			_transformed_mouse_pos );
 
 		//  Tangents use a different function to apply the tangent 
 		//  mode constraint.
@@ -274,26 +275,7 @@ void CurveEditorWidget::update( float dt )
 
 		curve_ref->has_unsaved_changes = true;
 	}
-	//  MMB-press: Switch tangent mode
-	else if ( IsMouseButtonPressed( MOUSE_BUTTON_MIDDLE ) 
-		&& is_valid_selected_point )
-	{
-		int key_id = 
-			curve.point_to_key_id( _selected_point_id );
-		TangentMode tangent_mode = 
-			curve.get_tangent_mode( key_id );
-
-		//  Cycle through tangent modes
-		TangentMode next_tangent_mode = 
-			(int)tangent_mode + 1 == (int)TangentMode::MAX
-			? (TangentMode)0
-			: (TangentMode)( (int)tangent_mode + 1 );
-
-		//  Apply the new tangent constraint
-		curve.set_tangent_mode( key_id, next_tangent_mode );
-		curve_ref->has_unsaved_changes = true;
-	}
-	else if ( curve.is_length_dirty ) 
+	if ( curve.is_length_dirty ) 
 	{
 		curve.compute_length();
 	}
@@ -498,6 +480,46 @@ bool CurveEditorWidget::_is_double_clicking( bool should_consume )
 	}
 
 	return is_double_clicking;
+}
+
+void CurveEditorWidget::_add_key_at_position( bool is_alt_down )
+{
+	auto curve_ref = _application->get_selected_curve_layer();
+	Curve& curve = curve_ref->curve;
+
+	CurveKey key( 
+		_transform_screen_to_curve( _transformed_mouse_pos )
+	);
+
+	//  ALT-down: insert key
+	if ( is_alt_down )
+	{
+		//  TODO: fix this feature and Curve::compute_length
+		//  Find distance on curve from point
+		float dist = curve.get_nearest_distance_to( 
+			key.control );
+
+		//  Find the key index to insert from
+		int first_key_id, last_key_id;
+		curve.find_evaluation_keys_id_by_distance( 
+			&first_key_id, &last_key_id, dist );
+
+		//printf( "=> %d:%d\n", first_key_id, last_key_id );
+
+		//  Insert and select the point
+		curve.insert_key( last_key_id, key );
+		_selected_point_id = curve.key_to_point_id( 
+			last_key_id );
+	}
+	//  NO ALT-down: add key
+	else
+	{
+		curve.add_key( key );
+		_selected_point_id = 
+			curve.get_points_count() - 1;
+	}
+
+	curve_ref->has_unsaved_changes = true;
 }
 
 float CurveEditorWidget::_transform_curve_to_screen_x( float x ) const
@@ -1076,7 +1098,7 @@ void CurveEditorWidget::_render_grid_line( float value, bool is_horizontal )
 		value = 0.0f;
 	}
 
-	//  Determine style depending on line type
+	//  Determine style depending on line key
 	bool is_large_line = Utils::near_zero( fmodf( 
 		value, GRID_LARGE_COUNT * _grid_gap ) );
 	float font_size = is_large_line 

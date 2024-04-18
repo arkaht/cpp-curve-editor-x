@@ -16,8 +16,9 @@ namespace curve_editor_x
 	public:
 		CurveEditorWidget( Application* application );
 
-		bool handle_key_input( UserInput input ) override;
-		
+		bool consume_input( const UserInput& input ) override;
+		void on_focus_changed( bool is_focused ) override;
+
 		void update( float dt ) override;
 		void render() override;
 
@@ -29,6 +30,8 @@ namespace curve_editor_x
 		void _invalidate_grid();
 
 		bool _is_double_clicking( bool should_consume );
+
+		void _add_key_at_position( bool is_alt_down );
 
 		float _transform_curve_to_screen_x( float x ) const;
 		float _transform_curve_to_screen_y( float y ) const;
@@ -116,7 +119,6 @@ namespace curve_editor_x
 		//  Does the frame rendering clips its content?
 		const bool  ENABLE_CLIPPING = true;
 		const bool  DRAW_MOUSE_POSITION = true;
-		const bool  MUST_DOUBLE_CLICK_TO_DRAG_POINT = false;
 		//  Does the zoom is clamped between ZOOM_MIN and ZOOM_MAX?
 		const bool  IS_ZOOM_CLAMPED = false;
 
@@ -144,7 +146,7 @@ namespace curve_editor_x
 
 		int _hovered_point_id = -1;
 		int _selected_point_id = -1;
-		bool _can_drag_selected_point = false;
+		bool _is_dragging_point = false;
 
 		bool _is_showing_points = true;
 		float _curve_thickness = CURVE_THICKNESS;

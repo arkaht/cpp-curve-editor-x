@@ -15,7 +15,8 @@ namespace curve_editor_x
 		Widget() {}
 		virtual ~Widget() {}
 
-		virtual bool handle_key_input( UserInput input ) { return false; }
+		virtual bool consume_input( const UserInput& input ) { return false; }
+		virtual void on_focus_changed( bool is_focused ) {};
 
 		virtual void update( float dt ) = 0;
 		virtual void render() = 0;
