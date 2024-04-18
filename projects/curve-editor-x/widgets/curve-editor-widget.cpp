@@ -126,9 +126,12 @@ void CurveEditorWidget::on_focus_changed( bool is_focused )
 {
 	if ( !is_focused )
 	{
-		//  Un-select point & stop dragging
+		//  Un-select point
 		_selected_point_id = -1;
+
+		//  Stop moving behaviours
 		_is_dragging_point = false;
+		_is_moving_viewport = false;
 	}
 }
 
