@@ -100,13 +100,14 @@ void Application::update( float dt )
 		}
 	}
 
-	//  Retrieve inputs
-	//  TODO: Simplify the code and add action state
+	//  Reset inputs
+	_key_inputs.clear();
 	_has_new_mouse_clicks = false;
+
+	//  Retrieve mouse inputs
 	_detect_mouse_input( MOUSE_BUTTON_LEFT, InputKey::LeftClick );
 	_detect_mouse_input( MOUSE_BUTTON_MIDDLE, InputKey::MiddleClick );
 	_detect_mouse_input( MOUSE_BUTTON_RIGHT, InputKey::RightClick );
-	_detect_key_input( KEY_DELETE, InputKey::Delete );
 
 	if ( _has_new_mouse_clicks )
 	{
@@ -119,30 +120,27 @@ void Application::update( float dt )
 			if ( CheckCollisionPointRec( mouse_pos, widget->frame ) )
 			{
 				new_focus = widget;
-				printf( "Mouse click focused widget!\n" );
 
 				//  Pass any mouse inputs to that widget
-				for ( 
-					auto itr = _key_inputs.begin(); 
-					itr != _key_inputs.end(); 
-				)
+				for ( const auto& input : _key_inputs )
 				{
-					if ( itr->is_mouse_input() )
-					{
-						new_focus->consume_input( *itr );
-						itr = _key_inputs.erase( itr );
-					}
-					else
-					{
-						itr++;
-					}
+					new_focus->consume_input( input );
 				}
+				_key_inputs.clear();
 
 				break;
 			}
 		}
 		focus_widget( new_focus );
 	}
+
+	//  Retrieve key inputs
+	_detect_key_input( KEY_F1,		InputKey::F1 );
+	_detect_key_input( KEY_F2,		InputKey::F2 );
+	_detect_key_input( KEY_F3,		InputKey::F3 );
+	_detect_key_input( KEY_TAB,		InputKey::Mode );
+	_detect_key_input( KEY_F,		InputKey::Focus );
+	_detect_key_input( KEY_DELETE,	InputKey::Delete );
 
 	//  Add pending widgets
 	add_pending_widgets();
@@ -171,7 +169,6 @@ void Application::update( float dt )
 			}
 		}
 	}
-	_key_inputs.clear();
 
 	//  Update widgets
 	for ( auto& widget : _widgets )
@@ -240,6 +237,8 @@ void Application::focus_widget( ref<Widget> widget )
 
 	_focused_widget = widget;
 	_focused_widget->on_focus_changed( true );
+
+	printf( "Focus changed to another widget!\n" );
 }
 
 void Application::unfocus_widget()

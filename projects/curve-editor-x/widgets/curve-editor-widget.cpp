@@ -22,9 +22,9 @@ bool CurveEditorWidget::consume_input( const UserInput& input )
 	auto curve_ref = _application->get_selected_curve_layer();
 	Curve& curve = curve_ref->curve;
 
-	if ( input.key == InputKey::LeftClick )
+	if ( input.is( InputKey::LeftClick ) )
 	{
-		if ( input.state == InputState::Pressed )
+		if ( input.is_pressed() )
 		{
 			//  Double clicks: Add a key at position
 			if ( _is_double_clicking( true ) )
@@ -40,7 +40,7 @@ bool CurveEditorWidget::consume_input( const UserInput& input )
 				_selected_point_id = _hovered_point_id;
 			}
 		}
-		else if ( input.state == InputState::Released )
+		else if ( input.is_released() )
 		{
 			_is_dragging_point = false;
 		}
@@ -48,8 +48,7 @@ bool CurveEditorWidget::consume_input( const UserInput& input )
 		return true;
 	}
 	//  Switch tangent mode
-	else if ( input.key == InputKey::MiddleClick 
-		   && input.state == InputState::Pressed )
+	else if ( input.is( InputKey::MiddleClick, InputState::Pressed ) )
 	{
 		int key_id = 
 			curve.point_to_key_id( _selected_point_id );
@@ -67,20 +66,44 @@ bool CurveEditorWidget::consume_input( const UserInput& input )
 		curve_ref->has_unsaved_changes = true;
 	}
 	//  Move viewport around
-	else if ( input.key == InputKey::RightClick )
+	else if ( input.is( InputKey::RightClick ) )
 	{
-		if ( input.state == InputState::Pressed )
+		if ( input.is_pressed() )
 		{
 			_is_moving_viewport = true;
 		}
-		else if ( input.state == InputState::Released )
+		else if ( input.is_released() )
 		{
 			_is_moving_viewport = false;
 		}
 	}
+	//  Set curve interpolation as Bezier
+	else if ( input.is( InputKey::F1, InputState::Pressed ) )
+	{
+		_curve_interpolate_mode = CurveInterpolateMode::Bezier;
+	}
+	//  Set curve interpolation as Time
+	else if ( input.is( InputKey::F2, InputState::Pressed ) )
+	{
+		_curve_interpolate_mode = CurveInterpolateMode::TimeEvaluation;
+	}
+	//  Set curve interpolation as Distance
+	else if ( input.is( InputKey::F3, InputState::Pressed ) )
+	{
+		_curve_interpolate_mode = CurveInterpolateMode::DistanceEvaluation;
+	}
+	//  F: Fit viewport to curve
+	else if ( input.is( InputKey::Focus, InputState::Pressed ) )
+	{
+		fit_viewport();
+	}
+	//  TAB: Toggle editor points visibility
+	else if ( input.is( InputKey::Mode, InputState::Pressed ) )
+	{
+		_is_showing_points = !_is_showing_points;
+	}
 	//  Delete the current selected key
-	else if ( input.key == InputKey::Delete
-	       && input.state == InputState::Pressed )
+	else if ( input.is( InputKey::Delete, InputState::Pressed ) )
 	{
 		bool is_valid_selected_point = 
 			curve.is_valid_point_id( _selected_point_id );
@@ -202,31 +225,6 @@ void CurveEditorWidget::update( float dt )
 				}
 			}
 		}
-	}
-	//  F1-press: interpolate curve in Bezier
-	if ( IsKeyPressed( KEY_F1 ) )
-	{
-		_curve_interpolate_mode = CurveInterpolateMode::Bezier;
-	}
-	//  F2-press: interpolate curve in Time
-	else if ( IsKeyPressed( KEY_F2 ) )
-	{
-		_curve_interpolate_mode = CurveInterpolateMode::TimeEvaluation;
-	}
-	//  F3-press: interpolate curve in Distance
-	else if ( IsKeyPressed( KEY_F3 ) )
-	{
-		_curve_interpolate_mode = CurveInterpolateMode::DistanceEvaluation;
-	}
-	//  F: Fit viewport to curve
-	else if ( IsKeyPressed( KEY_F ) )
-	{
-		fit_viewport();
-	}
-	//  TAB: Toggle editor points visibility
-	else if ( IsKeyPressed( KEY_TAB ) )
-	{
-		_is_showing_points = !_is_showing_points;
 	}
 
 	//  Find the mouse hovered point

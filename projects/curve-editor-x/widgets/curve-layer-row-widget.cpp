@@ -10,8 +10,7 @@ CurveLayerRowWidget::CurveLayerRowWidget(
 
 bool CurveLayerRowWidget::consume_input( const UserInput& input )
 {
-	if ( input.key == InputKey::LeftClick
-	  && input.state == InputState::Pressed )
+	if ( input.is( InputKey::LeftClick, InputState::Pressed ) )
 	{
 		const Vector2 mouse_pos = GetMousePosition();
 
@@ -24,8 +23,7 @@ bool CurveLayerRowWidget::consume_input( const UserInput& input )
 			return true;
 		}
 	}
-	if ( input.key == InputKey::Delete 
-	  && input.state == InputState::Pressed )
+	else if ( input.is( InputKey::Delete, InputState::Pressed ) )
 	{
 		//  Delete current layer
 		if ( layer->is_selected )
