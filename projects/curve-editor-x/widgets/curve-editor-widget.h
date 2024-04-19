@@ -3,6 +3,7 @@
 
 #include <curve-x/curve-serializer.h>
 
+#include <curve-editor-x/settings.h>
 #include <curve-editor-x/application.fwd.h>
 #include <curve-editor-x/curve-layer.h>
 #include <curve-editor-x/curve-interpolate-mode.h>
@@ -71,58 +72,6 @@ namespace curve_editor_x
 		);
 
 	private:
-		const Color TEXT_COLOR = DARKGRAY;
-		const Color TEXT_ERROR_COLOR = RED;
-		const Color CURVE_FRAME_COLOR = GRAY;
-		const Color TANGENT_COLOR { 90, 90, 90, 255 };
-		const Color POINT_COLOR { 255, 0, 0, 255 };
-		const Color POINT_SELECTED_COLOR { 255, 255, 255, 255 };
-		const Color GRID_LINE_COLOR { 120, 120, 120, 255 };
-		const Color QUICK_EVALUATION_COLOR { 90, 90, 90, 255 };
-		const unsigned char CURVE_UNSELECTED_OPACITY = 80;
-		const unsigned char CURVE_SELECTED_OPACITY = 255;
-
-		const float QUICK_EVALUATION_THICKNESS = 2.0f;
-		const float CURVE_THICKNESS = 2.0f;
-		//  How much to offset the thickness per wheel scroll?
-		const float CURVE_THICKNESS_SENSITIVITY = 0.5f;
-		//  Subdivisions for rendering a curve
-		const float CURVE_RENDER_SUBDIVISIONS = 0.01f;
-		const float CURVE_FRAME_PADDING = 32.0f;
-		const float TANGENT_THICKNESS = 2.0f;
-		const float POINT_SIZE = CURVE_THICKNESS * 3.0f;
-		const float POINT_SELECTED_OFFSET_SIZE = 3.0f;
-		const double DOUBLE_CLICK_TIME = 0.2;
-
-		//  In curve units, the gap for each grid line
-		const float GRID_SMALL_GAP = 1.0f;
-		//  Number of small grid lines to form a larger line
-		const float GRID_LARGE_COUNT = 10.0f;
-		//  Levels to snap on for zooming inside the grid
-		const float GRID_LEVELS[3] { 1.0f, 2.0f, 5.0f };
-		const float GRID_SMALL_LINE_THICKNESS = 1.0f;
-		const float GRID_LARGE_LINE_THICKNESS = 2.0f;
-		const float GRID_SMALL_GRID_FONT_SIZE = 16.0f;
-		const float GRID_LARGE_GRID_FONT_SIZE = 20.0f;
-		const float GRID_FONT_SPACING = 1.0f;
-		const float GRID_TEXT_PADDING = 2.0f;
-
-		const float SELECTION_RADIUS = 8.0f;
-
-		const int   TITLE_FONT_SIZE = 20;
-		const float TITLE_DOCK_MARGIN_BOTTOM = 4.0f;
-
-		const float ZOOM_SENSITIVITY = 0.1f;
-		const float ZOOM_MIN = 0.1f;
-		const float ZOOM_MAX = 5.0f;
-
-		//  Does the frame rendering clips its content?
-		const bool  ENABLE_CLIPPING = true;
-		const bool  DRAW_MOUSE_POSITION = true;
-		//  Does the zoom is clamped between ZOOM_MIN and ZOOM_MAX?
-		const bool  IS_ZOOM_CLAMPED = false;
-
-	private:
 		Application* _application = nullptr;
 
 		float _zoom = 1.0f;
@@ -149,7 +98,7 @@ namespace curve_editor_x
 		bool _is_dragging_point = false;
 
 		bool _is_showing_points = true;
-		float _curve_thickness = CURVE_THICKNESS;
+		float _curve_thickness = settings::CURVE_THICKNESS;
 		double _last_click_time = 0.0;
 	};
 }

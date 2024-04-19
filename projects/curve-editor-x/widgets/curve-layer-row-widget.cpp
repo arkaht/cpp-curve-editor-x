@@ -45,8 +45,8 @@ void CurveLayerRowWidget::render()
 {
 	//  Draw background
 	const Color background_color = is_selected() 
-		? BACKGROUND_SELECTED_COLOR 
-		: BACKGROUND_COLOR;
+		? settings::ROW_BACKGROUND_SELECTED_COLOR 
+		: settings::ROW_BACKGROUND_COLOR;
 	DrawRectangleRec( frame, background_color );
 
 	//  Draw radial button
@@ -58,7 +58,8 @@ void CurveLayerRowWidget::render()
 		radius,
 		GRAY
 	);
-	if ( !layer->is_selected && CURVE_UNSELECTED_OPACITY < 255 )
+	if ( !layer->is_selected 
+	  && settings::CURVE_UNSELECTED_OPACITY < 255 )
 	{
 		DrawCircle( 
 			frame.x + frame.height * 0.5f, 
@@ -76,8 +77,8 @@ void CurveLayerRowWidget::render()
 			layer->color.g,
 			layer->color.b,
 			layer->is_selected 
-				? CURVE_SELECTED_OPACITY 
-				: CURVE_UNSELECTED_OPACITY
+				? settings::CURVE_SELECTED_OPACITY 
+				: settings::CURVE_UNSELECTED_OPACITY
 		}
 	);
 

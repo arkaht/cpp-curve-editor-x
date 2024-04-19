@@ -71,20 +71,6 @@ namespace curve_editor_x
 
 		Color _get_curve_color_at( int index );
 
-	//  Application settings
-	private:
-		const Color BACKGROUND_COLOR = LIGHTGRAY;
-		const Color TEXT_COLOR = DARKGRAY;
-		const Color TEXT_ERROR_COLOR = RED;
-		const Color CURVE_FRAME_COLOR = DARKGRAY;
-
-		const float CURVE_FRAME_PADDING = 32.0f;
-
-		const int   TITLE_FONT_SIZE = 20;
-		const float TITLE_DOCK_MARGIN_BOTTOM = 4.0f;
-
-		const std::string DEFAULT_CURVE_PATH = "tests/test.cvx";
-
 	private:
 		std::string _title {};
 

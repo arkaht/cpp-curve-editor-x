@@ -22,7 +22,7 @@ void Application::init()
 	_font = GetFontDefault();
 
 	//  Import a curve file or create a simple one by default
-	if ( !import_from_file( DEFAULT_CURVE_PATH ) )
+	if ( !import_from_file( settings::DEFAULT_CURVE_PATH ) )
 	{
 		//  Create default curve
 		Curve curve {};
@@ -183,7 +183,7 @@ void Application::update( float dt )
 
 void Application::render()
 {
-	ClearBackground( BACKGROUND_COLOR );
+	ClearBackground( settings::BACKGROUND_COLOR );
 
 	//  Render widgets
 	lock_widgets_vector( true );
@@ -220,7 +220,7 @@ void Application::invalidate_layout()
 	_curve_editor->frame.x = _frame.x;
 	_curve_editor->frame.y = _frame.y;
 	_curve_editor->frame.width = _frame.width 
-		- _curve_layers_tab->frame.width - CURVE_FRAME_PADDING;
+		- _curve_layers_tab->frame.width - settings::FRAME_PADDING;
 	_curve_editor->frame.height = _frame.height;
 
 	_invalidate_widgets();

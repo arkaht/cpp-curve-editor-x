@@ -184,8 +184,8 @@ void CurveEditorWidget::update( float dt )
 			if ( is_alt_down )
 			{
 				_curve_thickness = fmaxf( 
-					CURVE_THICKNESS, 
-					_curve_thickness + mouse_wheel_delta * CURVE_THICKNESS_SENSITIVITY 
+					settings::CURVE_THICKNESS, 
+					_curve_thickness + mouse_wheel_delta * settings::CURVE_THICKNESS_SENSITIVITY 
 				);
 			}
 			//  WHEEL: Zoom to mouse
@@ -194,13 +194,13 @@ void CurveEditorWidget::update( float dt )
 				float old_zoom = _zoom;
 
 				//  Change zoom scale
-				float scale = 1.0f + mouse_wheel_delta * ZOOM_SENSITIVITY;
-				if ( IS_ZOOM_CLAMPED )
+				float scale = 1.0f + mouse_wheel_delta * settings::ZOOM_SENSITIVITY;
+				if ( settings::IS_ZOOM_CLAMPED )
 				{
 					_zoom = fminf( 
-						ZOOM_MAX, 
+						settings::ZOOM_MAX, 
 						fmaxf( 
-							ZOOM_MIN, 
+							settings::ZOOM_MIN, 
 							_zoom * scale
 						) 
 					);
@@ -241,7 +241,7 @@ void CurveEditorWidget::update( float dt )
 		if ( CheckCollisionPointCircle( 
 			mouse_pos,
 			screen_point, 
-			SELECTION_RADIUS
+			settings::SELECTION_RADIUS
 		) )
 		{
 			_hovered_point_id = i;
@@ -326,7 +326,7 @@ void CurveEditorWidget::render()
 	DrawRectangleLinesEx( _viewport_frame, 2.0f, GRAY );
 
 	//  Enable clipping
-	if ( ENABLE_CLIPPING )
+	if ( settings::ENABLE_CLIPPING )
 	{
 		BeginScissorMode( 
 			(int)_viewport_frame.x, (int)_viewport_frame.y, 
@@ -345,7 +345,7 @@ void CurveEditorWidget::render()
 	}
 
 	//  Disable clipping
-	if ( ENABLE_CLIPPING )
+	if ( settings::ENABLE_CLIPPING )
 	{
 		EndScissorMode();
 	}
@@ -360,7 +360,7 @@ void CurveEditorWidget::invalidate_layout()
 {
 	//  Update viewport frame
 	const float offset_y = 
-		TITLE_FONT_SIZE + TITLE_DOCK_MARGIN_BOTTOM;
+		settings::TITLE_FONT_SIZE + settings::TITLE_DOCK_MARGIN_BOTTOM;
 	_viewport_frame.x = frame.x;
 	_viewport_frame.y = frame.y + offset_y;
 	_viewport_frame.width = frame.width;
@@ -368,10 +368,10 @@ void CurveEditorWidget::invalidate_layout()
 
 	//  Update viewport
 	const float ui_height = 32.0f;
-	_viewport.x = _viewport_frame.x + CURVE_FRAME_PADDING;
-	_viewport.y = _viewport_frame.y + CURVE_FRAME_PADDING + ui_height;
-	_viewport.width = _viewport_frame.width - CURVE_FRAME_PADDING * 2.0f;
-	_viewport.height = _viewport_frame.height - CURVE_FRAME_PADDING * 2.0f - ui_height;
+	_viewport.x = _viewport_frame.x + settings::CURVE_FRAME_PADDING;
+	_viewport.y = _viewport_frame.y + settings::CURVE_FRAME_PADDING + ui_height;
+	_viewport.width = _viewport_frame.width - settings::CURVE_FRAME_PADDING * 2.0f;
+	_viewport.height = _viewport_frame.height - settings::CURVE_FRAME_PADDING * 2.0f - ui_height;
 
 	_invalidate_grid();
 }
@@ -413,7 +413,7 @@ void CurveEditorWidget::_invalidate_grid()
 		visible_range, _zoom );*/
 
 	//  Subdivide visible range
-	_grid_gap = visible_range / ( GRID_LARGE_COUNT * GRID_SMALL_GAP );
+	_grid_gap = visible_range / ( settings::GRID_LARGE_COUNT * settings::GRID_SMALL_GAP );
 
 	//  Get level power depending on zoom range
 	float level_power = 0.0f;
@@ -451,7 +451,7 @@ void CurveEditorWidget::_invalidate_grid()
 	//  Snap grid gap to closest level
 	float closest_dist = visible_range;
 	float closest_level = 0; 
-	for ( float level : GRID_LEVELS )
+	for ( float level : settings::GRID_LEVELS )
 	{
 		float exponent = powf( 10.0f, level_power );
 		level *= exponent;
@@ -471,7 +471,7 @@ void CurveEditorWidget::_invalidate_grid()
 bool CurveEditorWidget::_is_double_clicking( bool should_consume )
 {
 	double time = GetTime();
-	bool is_double_clicking = time - _last_click_time <= DOUBLE_CLICK_TIME;
+	bool is_double_clicking = time - _last_click_time <= settings::DOUBLE_CLICK_TIME;
 
 	if ( should_consume )
 	{
@@ -611,20 +611,20 @@ void CurveEditorWidget::_render_title_text()
 	DrawText(
 		title.c_str(),
 		(int)frame.x, (int)frame.y,
-		TITLE_FONT_SIZE,
-		TEXT_COLOR
+		settings::TITLE_FONT_SIZE,
+		settings::TEXT_COLOR
 	);
 
 	const char* keys_text = keys.c_str();
-	int points_width = MeasureText( keys_text, TITLE_FONT_SIZE );
+	int points_width = MeasureText( keys_text, settings::TITLE_FONT_SIZE );
 
 	//  Draw keys count
 	DrawText(
 		keys_text,
 		(int)frame.x + (int)frame.width - points_width,
 		(int)frame.y,
-		TITLE_FONT_SIZE,
-		TEXT_COLOR
+		settings::TITLE_FONT_SIZE,
+		settings::TEXT_COLOR
 	);
 }
 
@@ -637,12 +637,12 @@ void CurveEditorWidget::_render_curve_screen()
 	_render_grid();
 
 	//  Draw mouse position
-	if ( DRAW_MOUSE_POSITION )
+	if ( settings::DRAW_MOUSE_POSITION )
 	{
 		DrawCircleV( 
 			_transformed_mouse_pos, 
-			SELECTION_RADIUS, 
-			TEXT_COLOR 
+			settings::SELECTION_RADIUS, 
+			settings::TEXT_COLOR 
 		);
 	}
 
@@ -684,8 +684,8 @@ void CurveEditorWidget::_render_curve_screen()
 				DrawLineEx( 
 					_transformed_mouse_pos,
 					pos,
-					QUICK_EVALUATION_THICKNESS,
-					QUICK_EVALUATION_COLOR
+					settings::QUICK_EVALUATION_THICKNESS,
+					settings::QUICK_EVALUATION_COLOR
 				);
 				break;
 
@@ -699,16 +699,16 @@ void CurveEditorWidget::_render_curve_screen()
 						pos.x,
 						frame.y + frame.height,
 					},
-					QUICK_EVALUATION_THICKNESS,
-					QUICK_EVALUATION_COLOR
+					settings::QUICK_EVALUATION_THICKNESS,
+					settings::QUICK_EVALUATION_COLOR
 				);
 				break;
 		}
 		
 		DrawCircleV( 
 			pos, 
-			QUICK_EVALUATION_THICKNESS * 2.0f, 
-			QUICK_EVALUATION_COLOR 
+			settings::QUICK_EVALUATION_THICKNESS * 2.0f, 
+			settings::QUICK_EVALUATION_COLOR 
 		);
 
 		DrawTextEx(
@@ -721,7 +721,7 @@ void CurveEditorWidget::_render_curve_screen()
 			},
 			font_size,
 			2.0f,
-			QUICK_EVALUATION_COLOR
+			settings::QUICK_EVALUATION_COLOR
 		);
 	}
 
@@ -780,7 +780,7 @@ void CurveEditorWidget::_render_invalid_curve_screen()
 			0.0f,
 			font_size,
 			spacing,
-			TEXT_ERROR_COLOR
+			settings::TEXT_ERROR_COLOR
 		);
 
 		//  Offset next line
@@ -807,15 +807,15 @@ void CurveEditorWidget::_render_curve_by_distance(
 		layer->color.g,
 		layer->color.b,
 		layer->is_selected 
-			? CURVE_SELECTED_OPACITY 
-			: CURVE_UNSELECTED_OPACITY
+			? settings::CURVE_SELECTED_OPACITY 
+			: settings::CURVE_UNSELECTED_OPACITY
 	};
 
 	Vector2 previous_pos = _transform_curve_to_screen(
 		layer->curve.evaluate_by_distance( 0.0f ) );
 
 	//  Draw curve using distance-evaluation
-	const float step = length * CURVE_RENDER_SUBDIVISIONS;
+	const float step = length * settings::CURVE_RENDER_SUBDIVISIONS;
 	for ( float dist = step; dist < length; dist += step )
 	{
 		const Vector2 pos = _transform_curve_to_screen(
@@ -844,14 +844,14 @@ void CurveEditorWidget::_render_curve_by_time(
 		layer->color.g,
 		layer->color.b,
 		layer->is_selected 
-			? CURVE_SELECTED_OPACITY 
-			: CURVE_UNSELECTED_OPACITY
+			? settings::CURVE_SELECTED_OPACITY 
+			: settings::CURVE_UNSELECTED_OPACITY
 	};
 
 	//  Determine bounds and steps
 	const float min_x = layer->curve.get_point( 0 ).x;
 	const float max_x = layer->curve.get_point( points_count - 1 ).x;
-	const float step = ( max_x - min_x ) * CURVE_RENDER_SUBDIVISIONS;
+	const float step = ( max_x - min_x ) * settings::CURVE_RENDER_SUBDIVISIONS;
 
 	Vector2 previous_pos = _transform_curve_to_screen(
 		layer->curve.evaluate_by_percent( 0.0f ) );
@@ -889,8 +889,8 @@ void CurveEditorWidget::_render_curve_by_bezier(
 		layer->color.g,
 		layer->color.b,
 		layer->is_selected 
-			? CURVE_SELECTED_OPACITY 
-			: CURVE_UNSELECTED_OPACITY
+			? settings::CURVE_SELECTED_OPACITY 
+			: settings::CURVE_UNSELECTED_OPACITY
 	};
 
 	for ( int i = 0; i < points_count - 1; i += 3 )
@@ -943,8 +943,8 @@ void CurveEditorWidget::_render_curve_points(
 			DrawLineEx(
 				control_pos,
 				tangent_pos,
-				TANGENT_THICKNESS,
-				TANGENT_COLOR
+				settings::TANGENT_THICKNESS,
+				settings::TANGENT_COLOR
 			);
 
 			_render_point( control_point_id - 1, tangent_pos );
@@ -960,8 +960,8 @@ void CurveEditorWidget::_render_curve_points(
 			DrawLineEx(
 				control_pos,
 				tangent_pos,
-				TANGENT_THICKNESS,
-				TANGENT_COLOR
+				settings::TANGENT_THICKNESS,
+				settings::TANGENT_COLOR
 			);
 
 			_render_point( control_point_id + 1, tangent_pos );
@@ -977,8 +977,8 @@ void CurveEditorWidget::_render_ui_interpolation_modes()
 	const float background_padding = 4.0f;
 
 	Vector2 pos {
-		_viewport_frame.x + CURVE_FRAME_PADDING * 1.0f,
-		_viewport_frame.y + CURVE_FRAME_PADDING * 0.75f
+		_viewport_frame.x + settings::CURVE_FRAME_PADDING * 1.0f,
+		_viewport_frame.y + settings::CURVE_FRAME_PADDING * 0.75f
 	};
 
 	for ( int i = 0; i < (int)CurveInterpolateMode::MAX; i++ )
@@ -1101,18 +1101,18 @@ void CurveEditorWidget::_render_grid_line( float value, bool is_horizontal )
 
 	//  Determine style depending on line key
 	bool is_large_line = Utils::near_zero( fmodf( 
-		value, GRID_LARGE_COUNT * _grid_gap ) );
+		value, settings::GRID_LARGE_COUNT * _grid_gap ) );
 	float font_size = is_large_line 
-		? GRID_LARGE_GRID_FONT_SIZE 
-		: GRID_SMALL_GRID_FONT_SIZE;
+		? settings::GRID_LARGE_GRID_FONT_SIZE 
+		: settings::GRID_SMALL_GRID_FONT_SIZE;
 	float line_thickness = is_large_line 
-		? GRID_LARGE_LINE_THICKNESS 
-		: GRID_SMALL_LINE_THICKNESS;
+		? settings::GRID_LARGE_LINE_THICKNESS 
+		: settings::GRID_SMALL_LINE_THICKNESS;
 
 	//  Compute text & its size
 	const char* text = TextFormat( _grid_label_format.c_str(), value );
 	Vector2 text_size = MeasureTextEx( 
-		GetFontDefault(), text, font_size, GRID_FONT_SPACING );
+		GetFontDefault(), text, font_size, settings::GRID_FONT_SPACING );
 
 	//  Determine positions
 	Vector2 text_pos {};
@@ -1120,11 +1120,11 @@ void CurveEditorWidget::_render_grid_line( float value, bool is_horizontal )
 	Vector2 line_end_pos {};
 	if ( is_horizontal )
 	{
-		text_pos.x = _viewport_frame.x + GRID_TEXT_PADDING * 2.0f;
+		text_pos.x = _viewport_frame.x + settings::GRID_TEXT_PADDING * 2.0f;
 		text_pos.y = screen_value - text_size.y * 0.5f;
 
 		line_start_pos.x = _viewport_frame.x 
-			+ GRID_TEXT_PADDING * 4.0f + text_size.x;
+			+ settings::GRID_TEXT_PADDING * 4.0f + text_size.x;
 		line_start_pos.y = screen_value;
 
 		line_end_pos.x = _viewport_frame.x + _viewport_frame.width;
@@ -1133,11 +1133,11 @@ void CurveEditorWidget::_render_grid_line( float value, bool is_horizontal )
 	else
 	{
 		text_pos.x = screen_value - text_size.x * 0.5f;
-		text_pos.y = _viewport_frame.y + GRID_TEXT_PADDING;
+		text_pos.y = _viewport_frame.y + settings::GRID_TEXT_PADDING;
 
 		line_start_pos.x = screen_value;
 		line_start_pos.y = _viewport_frame.y 
-			+ GRID_TEXT_PADDING + text_size.y;
+			+ settings::GRID_TEXT_PADDING + text_size.y;
 
 		line_end_pos.x = screen_value;
 		line_end_pos.y = _viewport_frame.y + _viewport_frame.height;
@@ -1148,7 +1148,7 @@ void CurveEditorWidget::_render_grid_line( float value, bool is_horizontal )
 		line_start_pos,
 		line_end_pos,
 		line_thickness,
-		GRID_LINE_COLOR
+		settings::GRID_LINE_COLOR
 	);
 
 	//  Draw label
@@ -1157,8 +1157,8 @@ void CurveEditorWidget::_render_grid_line( float value, bool is_horizontal )
 		text, 
 		text_pos,
 		font_size,
-		GRID_FONT_SPACING,
-		GRID_LINE_COLOR
+		settings::GRID_FONT_SPACING,
+		settings::GRID_LINE_COLOR
 	);
 }
 
@@ -1174,13 +1174,13 @@ void CurveEditorWidget::_render_point( int point_id, const Vector2& pos )
 	Color color;
 	if ( is_hovered )
 	{
-		color = POINT_SELECTED_COLOR;
+		color = settings::POINT_SELECTED_COLOR;
 	}
 	else
 	{
 		color = is_tangent
-			? TANGENT_COLOR
-			: POINT_COLOR;
+			? settings::TANGENT_COLOR
+			: settings::POINT_COLOR;
 	}
 
 	//  Draw point
@@ -1233,7 +1233,7 @@ void CurveEditorWidget::_render_point( int point_id, const Vector2& pos )
 				},
 				font_size,
 				spacing,
-				TANGENT_COLOR
+				settings::TANGENT_COLOR
 			);
 		}
 	}
@@ -1251,12 +1251,12 @@ void CurveEditorWidget::_render_point( int point_id, const Vector2& pos )
 			GetFontDefault(),
 			TextFormat( "x=%.3f\ny=%.3f", point.x, point.y ),
 			Vector2 {
-				pos.x + POINT_SIZE * 2.0f,
-				pos.y - POINT_SIZE,
+				pos.x + settings::POINT_SIZE * 2.0f,
+				pos.y - settings::POINT_SIZE,
 			},
 			20.0f,
 			1.0f,
-			TANGENT_COLOR
+			settings::TANGENT_COLOR
 		);
 	}
 }
@@ -1270,7 +1270,7 @@ void CurveEditorWidget::_render_circle_point(
 	//  Draw point
 	DrawCircleV( 
 		pos, 
-		POINT_SIZE * 0.5f, 
+		settings::POINT_SIZE * 0.5f, 
 		color
 	);
 
@@ -1279,8 +1279,8 @@ void CurveEditorWidget::_render_circle_point(
 	{
 		DrawCircleLinesV( 
 			pos, 
-			POINT_SIZE * 0.5f + POINT_SELECTED_OFFSET_SIZE, 
-			POINT_SELECTED_COLOR 
+			settings::POINT_SIZE * 0.5f + settings::POINT_SELECTED_OFFSET_SIZE, 
+			settings::POINT_SELECTED_COLOR 
 		);
 	}
 }
@@ -1291,7 +1291,7 @@ void CurveEditorWidget::_render_square_point(
 	bool is_selected
 )
 {
-	int size = (int)POINT_SIZE;
+	int size = (int)settings::POINT_SIZE;
 
 	//  Draw point
 	DrawRectangle( 
@@ -1305,14 +1305,14 @@ void CurveEditorWidget::_render_square_point(
 	//  Draw selected
 	if ( is_selected )
 	{
-		size += (int)( POINT_SELECTED_OFFSET_SIZE + 1.0f );
+		size += (int)( settings::POINT_SELECTED_OFFSET_SIZE + 1.0f );
 
 		DrawRectangleLines(
 			(int)pos.x - size / 2,
 			(int)pos.y - size / 2,
 			size,
 			size,
-			POINT_SELECTED_COLOR
+			settings::POINT_SELECTED_COLOR
 		);
 	}
 }
