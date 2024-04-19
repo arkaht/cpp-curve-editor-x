@@ -64,6 +64,8 @@ bool CurveEditorWidget::consume_input( const UserInput& input )
 		//  Apply the new tangent constraint
 		curve.set_tangent_mode( key_id, next_tangent_mode );
 		curve_ref->has_unsaved_changes = true;
+
+		return true;
 	}
 	//  Move viewport around
 	else if ( input.is( InputKey::RightClick ) )
@@ -76,31 +78,37 @@ bool CurveEditorWidget::consume_input( const UserInput& input )
 		{
 			_is_moving_viewport = false;
 		}
+		return true;
 	}
 	//  Set curve interpolation as Bezier
 	else if ( input.is( InputKey::F1, InputState::Pressed ) )
 	{
 		_curve_interpolate_mode = CurveInterpolateMode::Bezier;
+		return true;
 	}
 	//  Set curve interpolation as Time
 	else if ( input.is( InputKey::F2, InputState::Pressed ) )
 	{
 		_curve_interpolate_mode = CurveInterpolateMode::TimeEvaluation;
+		return true;
 	}
 	//  Set curve interpolation as Distance
 	else if ( input.is( InputKey::F3, InputState::Pressed ) )
 	{
 		_curve_interpolate_mode = CurveInterpolateMode::DistanceEvaluation;
+		return true;
 	}
 	//  F: Fit viewport to curve
 	else if ( input.is( InputKey::Focus, InputState::Pressed ) )
 	{
 		fit_viewport();
+		return true;
 	}
 	//  TAB: Toggle editor points visibility
 	else if ( input.is( InputKey::Mode, InputState::Pressed ) )
 	{
 		_is_showing_points = !_is_showing_points;
+		return true;
 	}
 	//  Delete the current selected key
 	else if ( input.is( InputKey::Delete, InputState::Pressed ) )
