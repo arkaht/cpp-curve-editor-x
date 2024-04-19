@@ -9,10 +9,12 @@ namespace curve_editor_x
 
 	struct CurveLayer
 	{
+	public:
 		CurveLayer() {}
 		CurveLayer( const Curve& curve )
 			: curve( curve ) {}
 
+	public:
 		Curve curve;
 		Color color = RED;
 		bool is_selected = false;
