@@ -9,7 +9,7 @@ add_compile_definitions(UNICODE)
 message("Forcing Unicode over Multi-byte (using Windows.h)")
 
 #  Execute other CMakeLists.txt
-add_subdirectory("external")
+add_subdirectory("libs")
 
 #  List all .cpp files
 file(GLOB_RECURSE CURVE_EDITOR_X_SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
@@ -20,7 +20,7 @@ target_include_directories(curve_editor_x PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/"
 target_link_libraries(curve_editor_x PRIVATE curve_x raylib)
 
 #  Additional include directories
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/external/")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/libs/")
 
 #  List include directories
 # message("Included directories: ${INCLUDE_DIRECTORIES}")
