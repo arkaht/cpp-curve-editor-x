@@ -1,12 +1,12 @@
 #pragma once
 #include "widget.h"
 
-#include <curve-x/curve-serializer.h>
+#include <external/curve-x/curve-serializer.h>
 
-#include <curve-editor-x/settings.h>
-#include <curve-editor-x/application.fwd.h>
-#include <curve-editor-x/curve-layer.h>
-#include <curve-editor-x/curve-interpolate-mode.h>
+#include <src/settings.h>
+#include <src/application.fwd.h>
+#include <src/curve-layer.h>
+#include <src/curve-interpolate-mode.h>
 
 namespace curve_editor_x
 {

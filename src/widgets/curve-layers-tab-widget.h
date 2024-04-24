@@ -2,7 +2,7 @@
 #include "widget.h"
 #include "curve-layer-row-widget.h"
 
-#include <curve-editor-x/application.fwd.h>
+#include <src/application.fwd.h>
 
 namespace curve_editor_x
 {

@@ -3,8 +3,9 @@
 #include "widget.h"
 
 #include <vector>
+#include <algorithm>
 
-#include <curve-editor-x/usings.h>
+#include <src/usings.h>
 
 namespace curve_editor_x
 {

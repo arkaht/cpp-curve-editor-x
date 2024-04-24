@@ -38,6 +38,7 @@ out/
 
 # IDE
 .vs/
+.vscode/
 *.sln
 *.vcxproj*
 .idea/

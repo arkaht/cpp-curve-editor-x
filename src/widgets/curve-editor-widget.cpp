@@ -1,6 +1,6 @@
 #include "curve-editor-widget.h"
 
-#include <curve-editor-x/application.h>
+#include <src/application.h>
 
 using namespace curve_editor_x;
 

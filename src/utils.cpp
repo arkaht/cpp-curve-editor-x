@@ -1,7 +1,7 @@
 #include "utils.h"
 
-#include <Windows.h>
-#include <corecrt_math.h>
+#include <windows.h>
+#include <cmath>
 
 using namespace curve_editor_x;
 

@@ -1,10 +1,10 @@
 #pragma once
 #include "widget.h"
 
-#include <curve-editor-x/application.fwd.h>
-#include <curve-editor-x/event.h>
-#include <curve-editor-x/curve-layer.h>
-#include <curve-editor-x/settings.h>
+#include <src/application.fwd.h>
+#include <src/event.h>
+#include <src/curve-layer.h>
+#include <src/settings.h>
 
 namespace curve_editor_x
 {

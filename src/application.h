@@ -6,13 +6,13 @@
 
 #include <string>
 
-#include <curve-editor-x/utils.h>
-#include <curve-editor-x/curve-layer.h>
-#include <curve-editor-x/user-input.h>
+#include <src/utils.h>
+#include <src/curve-layer.h>
+#include <src/user-input.h>
 
-#include <curve-editor-x/widgets/widget-manager.h>
-#include <curve-editor-x/widgets/curve-editor-widget.h>
-#include <curve-editor-x/widgets/curve-layers-tab-widget.h>
+#include <src/widgets/widget-manager.h>
+#include <src/widgets/curve-editor-widget.h>
+#include <src/widgets/curve-layers-tab-widget.h>
 
 namespace curve_editor_x
 {

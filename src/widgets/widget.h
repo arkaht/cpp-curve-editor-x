@@ -4,8 +4,8 @@
 
 #include <memory>
 
-#include <curve-editor-x/usings.h>
-#include <curve-editor-x/user-input.h>
+#include <src/usings.h>
+#include <src/user-input.h>
 
 namespace curve_editor_x
 {

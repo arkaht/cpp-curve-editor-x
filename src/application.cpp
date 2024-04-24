@@ -1,6 +1,6 @@
 #include "application.h"
 
-#include <curve-x/curve-serializer.h>
+#include <external/curve-x/curve-serializer.h>
 
 #include <fstream>
 
