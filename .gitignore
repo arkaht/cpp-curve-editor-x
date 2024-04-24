@@ -31,5 +31,15 @@
 *.out
 *.app
 
+# CMake
+bin/
+build/
+out/
+
+# IDE
 .vs/
+*.sln
+*.vcxproj*
+.idea/
+
 x64/
