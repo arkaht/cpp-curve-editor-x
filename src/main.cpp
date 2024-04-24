@@ -46,7 +46,7 @@
 #include "raylib.h"
 #include "raymath.h"
 
-#include <external/curve-x/curve.h>
+#include <curve-x/curve.h>
 //#include <curve-x/curve.h>
 #include <src/application.h>
 

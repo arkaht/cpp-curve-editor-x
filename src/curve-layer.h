@@ -1,7 +1,7 @@
 #pragma once
 
 #include <raylib.h>
-#include <external/curve-x/curve.h>
+#include <curve-x/curve.h>
 
 namespace curve_editor_x
 {

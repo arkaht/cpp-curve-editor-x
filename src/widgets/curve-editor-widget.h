@@ -1,7 +1,7 @@
 #pragma once
 #include "widget.h"
 
-#include <external/curve-x/curve-serializer.h>
+#include <curve-x/curve-serializer.h>
 
 #include <src/settings.h>
 #include <src/application.fwd.h>
