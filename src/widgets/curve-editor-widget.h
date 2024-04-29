@@ -82,20 +82,22 @@ namespace curve_editor_x
 		Vector2 _transformed_mouse_pos {};
 
 		bool _is_moving_viewport = false;
-
 		bool _is_grid_snapping = false;
+		bool _is_dragging_point = false;
+		bool _is_showing_points = true;
+
 		float _grid_gap = 1.0f;
 		std::string _grid_label_format;
 
-		bool _is_quick_evaluating = false;
 		Vector2 _quick_evaluation_pos {};
+
+		double _last_click_time = 0.0;
 
 		int _hovered_point_id = -1;
 		int _selected_point_id = -1;
-		bool _is_dragging_point = false;
 
-		bool _is_showing_points = true;
 		float _curve_thickness = 1.0f;
-		double _last_click_time = 0.0;
+
+		bool _is_quick_evaluating = false;
 	};
 }

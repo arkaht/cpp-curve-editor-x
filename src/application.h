@@ -73,6 +73,7 @@ namespace curve_editor_x
 		std::string _title {};
 
 		Font _font {};
+		Rectangle _frame {};
 
 		ref<CurveEditorWidget> _curve_editor = nullptr;
 		ref<CurveLayersTabWidget> _curve_layers_tab = nullptr;
@@ -85,9 +86,6 @@ namespace curve_editor_x
 
 		//  Has mouse clicks been received this frame?
 		bool _has_new_mouse_clicks = false;
-
 		bool _is_debug_enabled = false;
-
-		Rectangle _frame {};
 	};
 }
