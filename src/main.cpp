@@ -49,7 +49,7 @@ using namespace curve_editor_x;
 
 const int	WINDOW_WIDTH = 1000;
 const int	WINDOW_HEIGHT = 600;
-const char*	WINDOW_TITLE = "Curve-X Application";
+const char*	WINDOW_TITLE = "Curve Editor X";
 const int	WINDOW_TARGET_FPS = 60;
 
 const float	WINDOW_PADDING = 16.0f;
