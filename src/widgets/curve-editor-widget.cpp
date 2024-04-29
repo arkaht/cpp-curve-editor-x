@@ -1,6 +1,8 @@
 #include "curve-editor-widget.h"
 
 #include <src/application.h>
+#include <src/utils.h>
+#include <src/settings.h>
 
 using namespace curve_editor_x;
 
@@ -9,6 +11,7 @@ CurveEditorWidget::CurveEditorWidget(
 )
 	: _application( application )
 {
+	_curve_thickness = settings::CURVE_THICKNESS;
 }
 
 bool CurveEditorWidget::consume_input( const UserInput& input )

@@ -33,7 +33,7 @@
  *  - [x] add & remove points
  *  - [x] export to file
  *  - [x] import from file
- *  - [*] multiple curves layering
+ *  - [x] multiple curves layering
  *  - [ ] dev-tool to build a quick release of the library
  *  - [ ] fix evaluation by time not accounting tangents X-axis
  *  - [ ] fix distance computation for keys
@@ -41,16 +41,8 @@
 
  //  Includes
 
-#include <iostream>
-
-#include "raylib.h"
-#include "raymath.h"
-
-#include <curve-x/curve.h>
-//#include <curve-x/curve.h>
 #include <src/application.h>
 
-using namespace curve_x;
 using namespace curve_editor_x;
 
 //  Application settings

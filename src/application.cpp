@@ -2,6 +2,9 @@
 
 #include <curve-x/curve-serializer.h>
 
+#include <src/utils.h>
+#include <src/settings.h>
+
 #include <fstream>
 
 using namespace curve_editor_x;

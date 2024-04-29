@@ -2,11 +2,9 @@
 #include "application.fwd.h"
 
 #include <raylib.h>
-#include <raymath.h>
 
 #include <string>
 
-#include <src/utils.h>
 #include <src/curve-layer.h>
 #include <src/user-input.h>
 

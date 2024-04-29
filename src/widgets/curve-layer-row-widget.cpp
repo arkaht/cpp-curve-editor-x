@@ -1,5 +1,7 @@
 #include "curve-layer-row-widget.h"
 
+#include <src/settings.h>
+
 using namespace curve_editor_x;
 
 CurveLayerRowWidget::CurveLayerRowWidget(

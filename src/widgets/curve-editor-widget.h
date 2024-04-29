@@ -1,9 +1,6 @@
 #pragma once
 #include "widget.h"
 
-#include <curve-x/curve-serializer.h>
-
-#include <src/settings.h>
 #include <src/application.fwd.h>
 #include <src/curve-layer.h>
 #include <src/curve-interpolate-mode.h>
@@ -98,7 +95,7 @@ namespace curve_editor_x
 		bool _is_dragging_point = false;
 
 		bool _is_showing_points = true;
-		float _curve_thickness = settings::CURVE_THICKNESS;
+		float _curve_thickness = 1.0f;
 		double _last_click_time = 0.0;
 	};
 }
