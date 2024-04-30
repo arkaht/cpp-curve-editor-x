@@ -287,6 +287,8 @@ bool Application::export_to_file(
 	//  Apply file
 	layer->has_unsaved_changes = false;
 	layer->is_file_exists = true;
+	layer->path = path;
+	layer->name = GetFileNameWithoutExt( c_path );
 
 	printf( "Exported curve '%s' to file '%s'\n", 
 		layer->name.c_str(), c_path );
