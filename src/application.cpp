@@ -24,27 +24,23 @@ void Application::init()
 	//  Set the default font after raylib has been initialized
 	_font = GetFontDefault();
 
-	//  Import a curve file or create a simple one by default
-	if ( !import_from_file( settings::DEFAULT_CURVE_PATH ) )
-	{
-		//  Create default curve
-		Curve curve {};
-		curve.add_key( CurveKey(
-			{ 0.0f, 1.0f }
-		) );
-		curve.add_key( CurveKey(
-			{ 1.0f, 0.0f }
-		) );
+	//  Create default curve
+	Curve curve {};
+	curve.add_key( CurveKey(
+		{ 0.0f, 1.0f }
+	) );
+	curve.add_key( CurveKey(
+		{ 1.0f, 0.0f }
+	) );
 
-		//  Create associated layer and select it
-		auto layer = std::make_shared<CurveLayer>( curve );
-		layer->is_selected = true;
-		layer->color = _get_curve_color_at( 0 );
-		add_curve_layer( layer );
+	//  Create associated layer and select it
+	auto layer = std::make_shared<CurveLayer>( curve );
+	layer->is_selected = true;
+	layer->color = _get_curve_color_at( 0 );
+	add_curve_layer( layer );
 
-		//  Fit viewport
-		_curve_editor->fit_viewport();
-	}
+	//  Fit viewport
+	_curve_editor->fit_viewport();
 }
 
 void Application::update( float dt )

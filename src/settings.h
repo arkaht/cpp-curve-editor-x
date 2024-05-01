@@ -20,8 +20,6 @@ namespace curve_editor_x
 		constexpr unsigned char CURVE_UNSELECTED_OPACITY = 80;
 		constexpr unsigned char CURVE_SELECTED_OPACITY = 255;
 
-		constexpr const char* DEFAULT_CURVE_PATH = "tests/test.cvx";
-		
 		constexpr float QUICK_EVALUATION_THICKNESS = 2.0f;
 		constexpr float CURVE_THICKNESS = 2.0f;
 		//  How much to offset the thickness per wheel scroll?
