@@ -27,10 +27,14 @@ void Application::init()
 	//  Create default curve
 	Curve curve {};
 	curve.add_key( CurveKey(
-		{ 0.0f, 1.0f }
+		{ 0.0f, 1.0f },
+		{ -0.1f, 0.0f },
+		{ 1.0f, 0.0f }
 	) );
 	curve.add_key( CurveKey(
-		{ 1.0f, 0.0f }
+		{ 1.0f, 0.0f },
+		{ -1.0f, 0.0f },
+		{ 0.1f, 0.0f }
 	) );
 
 	//  Create associated layer and select it
