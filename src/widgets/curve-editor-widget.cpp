@@ -243,8 +243,12 @@ void CurveEditorWidget::update( float dt )
 
 	//  Find the mouse hovered point
 	_hovered_point_id = -1;
-	for ( int i = 0; i < curve.get_points_count(); i++ )
+	int points_count = curve.get_points_count();
+	for ( int i = 0; i < points_count; i++ )
 	{
+		//  Ignore first left tangent and last right tangent
+		if ( i == 2 || i == points_count - 2 ) continue;
+
 		const Point& point = curve.get_point( i, PointSpace::Global );
 		const Vector2 screen_point = _transform_curve_to_screen( 
 			point );
@@ -527,8 +531,8 @@ void CurveEditorWidget::_add_key_at_position( bool is_alt_down )
 	else
 	{
 		curve.add_key( key );
-		_selected_point_id = 
-			curve.get_points_count() - 1;
+		_selected_point_id = curve.key_to_point_id( 
+			curve.get_keys_count() - 1 );
 	}
 
 	curve_ref->has_unsaved_changes = true;
@@ -861,7 +865,7 @@ void CurveEditorWidget::_render_curve_by_time(
 
 	//  Determine bounds and steps
 	const float min_x = layer->curve.get_point( 0 ).x;
-	const float max_x = layer->curve.get_point( points_count - 1 ).x;
+	const float max_x = layer->curve.get_point( points_count - 3 ).x;
 	const float step = ( max_x - min_x ) * settings::CURVE_RENDER_SUBDIVISIONS;
 
 	Vector2 previous_pos = _transform_curve_to_screen(
@@ -893,7 +897,7 @@ void CurveEditorWidget::_render_curve_by_bezier(
 	const ref<CurveLayer>& layer 
 )
 {
-	int points_count = layer->curve.get_points_count();
+	int keys_count = layer->curve.get_keys_count();
 
 	const Color color {
 		layer->color.r,
@@ -904,19 +908,23 @@ void CurveEditorWidget::_render_curve_by_bezier(
 			: settings::CURVE_UNSELECTED_OPACITY
 	};
 
-	for ( int i = 0; i < points_count - 1; i += 3 )
+	for ( int i = 0; i < keys_count - 1; i++ )
 	{
+		//  Get keys
+		const CurveKey current_key = layer->curve.get_key( i );
+		const CurveKey next_key = layer->curve.get_key( i + 1 );
+
 		//  Get points
-		Point p0 = layer->curve.get_point( i );
-		Point t0 = layer->curve.get_point( i + 1 );
-		Point t1 = layer->curve.get_point( i + 2 );
-		Point p1 = layer->curve.get_point( i + 3 );
+		const Point p0 = current_key.control;
+		const Point t0 = current_key.right_tangent;
+		const Point t1 = next_key.left_tangent;
+		const Point p1 = next_key.control;
 
 		//  Translate them from curve-space to screen-space
-		Vector2 pos0 = _transform_curve_to_screen( p0 );
-		Vector2 pos1 = _transform_curve_to_screen( p0 + t0 );
-		Vector2 pos2 = _transform_curve_to_screen( p1 + t1 );
-		Vector2 pos3 = _transform_curve_to_screen( p1 );
+		const Vector2 pos0 = _transform_curve_to_screen( p0 );
+		const Vector2 pos1 = _transform_curve_to_screen( p0 + t0 );
+		const Vector2 pos2 = _transform_curve_to_screen( p1 + t1 );
+		const Vector2 pos3 = _transform_curve_to_screen( p1 );
 
 		//  Draw curve
 		DrawSplineSegmentBezierCubic(
@@ -958,7 +966,7 @@ void CurveEditorWidget::_render_curve_points(
 				settings::TANGENT_COLOR
 			);
 
-			_render_point( control_point_id - 1, tangent_pos );
+			_render_point( control_point_id + 2, tangent_pos );
 		}
 
 		//  Draw right tangent
@@ -1177,9 +1185,8 @@ void CurveEditorWidget::_render_point( int point_id, const Vector2& pos )
 {
 	const auto& selected_layer = _application->get_selected_curve_layer();
 	bool is_tangent = !selected_layer->curve.is_control_point_id( point_id );
-	bool is_hovered = point_id == _hovered_point_id 
-				   || point_id == _selected_point_id;
 	bool is_selected = point_id == _selected_point_id;
+	bool is_hovered = point_id == _hovered_point_id || is_selected;
 
 	//  Choose color
 	Color color;
