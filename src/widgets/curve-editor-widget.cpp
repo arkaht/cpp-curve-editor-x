@@ -500,8 +500,8 @@ bool CurveEditorWidget::_is_double_clicking( bool should_consume )
 
 void CurveEditorWidget::_add_key_at_position( bool is_alt_down )
 {
-	auto curve_ref = _application->get_selected_curve_layer();
-	Curve& curve = curve_ref->curve;
+	auto layer = _application->get_selected_curve_layer();
+	Curve& curve = layer->curve;
 
 	CurveKey key( 
 		_transform_screen_to_curve( _transformed_mouse_pos )
@@ -535,7 +535,7 @@ void CurveEditorWidget::_add_key_at_position( bool is_alt_down )
 			curve.get_keys_count() - 1 );
 	}
 
-	curve_ref->has_unsaved_changes = true;
+	layer->has_unsaved_changes = true;
 }
 
 float CurveEditorWidget::_transform_curve_to_screen_x( float x ) const
