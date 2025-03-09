@@ -22,9 +22,32 @@ Read the [Curve-X](https://github.com/arkaht/cpp-curve-x) repository's for more 
 + Support for both geometrical shapes and timed-based curves.
 + Multiple evaluation methods: progress (from 0.0 to 1.0), time (using X-axis) and distance.
 + Add, remove and move curve points as well as changing their tangent mode.
-+ Evaluate the values of the splines in-editor.
++ Evaluate the values of the curves in-editor.
 + Saving and loading .cvx files inside the editor.
++ Grid scaling with zoom.
 + **Free and open-source**.
+
+## Inputs
++ **Ctrl+S**: Save the selected spline to a file
++ **Ctrl+L**: Import a spline from a file
++ **Ctrl+;**: Toggle debug mode
+
+Focusing editor:
++ **F1**, **F2**, **F3**: Switch curve interpolation mode to Bezier, Time or Distance respectively.
++ **F**: Fit viewport to all curves.
++ **TAB**: Toggle visibility of control points.
++ **Delete**: Delete selected control point.
++ **Left Click**: Select control or tangent points.
++ Double **Left Click**: Add a control point to mouse location.
++ Holding **Ctrl** while moving a point: Snap the selected point to the grid.
++ Holding **Shift**: Evaluate the selected curve with the current interpolation mode.
++ **ALT+Wheel**: Change curve drawing thickness.
++ **Wheel**: Zoom to mouse location.
+
+
+Focusing layers tab:
++ **Left Click**: Select a curve layer
++ **Delete**: Delete selected curve layer
 
 ## Project Structure
 This project is split into two Github repositories: the GUI editor (this one) and the [library](https://github.com/arkaht/cpp-curve-x). You are not forced to use the editor, it is entirely optional but it is here to facilitate your experience with Curve-X.
